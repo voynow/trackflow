@@ -1,14 +1,15 @@
 import os
 
+from dotenv import load_dotenv
 from stravalib.client import Client
+from supabase_client import upsert_user_auth
+from supabase_models import UserAuthRow
 
-from src.supabase.client import upsert_user_auth
-from src.supabase.models import UserAuthRow
-
+load_dotenv()
 strava_client = Client()
 
 
-code = "..."
+code = "e70a0271324f03d9429ef755b54b23d9cc19efa5"
 token = strava_client.exchange_code_for_token(
     client_id=os.environ["STRAVA_CLIENT_ID"],
     client_secret=os.environ["STRAVA_CLIENT_SECRET"],

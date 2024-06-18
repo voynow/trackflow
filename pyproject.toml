@@ -9,6 +9,7 @@ readme = "README.md"
 python = "^3.10"
 stravalib = "^v1.7"
 supabase = "*"
+python-dotenv = "^1.0.1"
 
 
 [build-system]
