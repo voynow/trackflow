@@ -54,10 +54,13 @@ def clean_activities_df(df: pl.DataFrame) -> pl.DataFrame:
             (pl.col("distance") / 1609.34).alias("distance_in_miles"),
             (pl.col("total_elevation_gain") * 3.28084).alias("elevation_gain_in_feet"),
             (pl.col("moving_time") / 60_000_000).alias("moving_time_in_minutes"),
-            (pl.col("moving_time_in_minutes") / pl.col("distance_in_miles")).alias(
-                "pace_minutes_per_mile"
-            ),
         ]
+    )
+
+    df = df.with_columns(
+        (pl.col("moving_time_in_minutes") / pl.col("distance_in_miles")).alias(
+            "pace_minutes_per_mile"
+        )
     )
     df = df.drop(["distance", "total_elevation_gain", "moving_time"])
     return df
