@@ -37,3 +37,19 @@ def upsert_user_auth(user_auth_row: UserAuthRow) -> APIResponse:
     response = table.upsert(user_auth_row, on_conflict="athlete_id").execute()
 
     return response
+
+
+def get_user_auth(athlete_id: int) -> UserAuthRow:
+    """
+    Get user_auth row by athlete_id
+
+    :param athlete_id: int
+    :return: APIResponse
+    """
+    table = client.table("user_auth")
+    response = table.select("*").eq("athlete_id", athlete_id).execute()
+
+    if not response.data:
+        raise ValueError(f"Cound not find user_auth row with {athlete_id=}")
+
+    return UserAuthRow(**response.data[0])
