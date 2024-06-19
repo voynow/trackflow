@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 
 class UserAuthRow(BaseModel):
-    id: int
+    athlete_id: int
     access_token: str
     refresh_token: str
     expires_at: datetime.datetime
