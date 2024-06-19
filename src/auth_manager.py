@@ -40,6 +40,6 @@ def refresh_and_update_user_token(athlete_id: int, refresh_token: str) -> UserAu
 def authenticate_athlete(athlete_id: int) -> UserAuthRow:
     user_auth = get_user_auth(athlete_id)
     if datetime.now(timezone.utc) < user_auth.expires_at:
-        print(f"{athlete_id=} token still valid")
+        print(f"{athlete_id=} token still valid until {user_auth.expires_at}")
         return user_auth
     return refresh_and_update_user_token(athlete_id, user_auth.refresh_token)
