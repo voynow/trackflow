@@ -117,14 +117,19 @@ def agg_by_week(df: pl.DataFrame) -> pl.DataFrame:
     """
     df = df.groupby("week_num").agg(
         [
+            pl.count("id").alias("num_runs"),
             pl.sum("distance_in_miles").round(2).alias("total_distance_miles"),
-            pl.mean("distance_in_miles").round(2).alias("avg_distance_miles"),
-            pl.mean("elevation_gain_in_feet").round(2).alias("avg_elevation_gain_feet"),
-            pl.mean("pace_minutes_per_mile")
-            .round(2)
-            .alias("avg_pace_minutes_per_mile"),
+            pl.sum("moving_time_in_minutes").round(2).alias("total_moving_time_minutes"),
+            pl.sum("elevation_gain_in_feet").round(2).alias("total_elevation_gain_feet"),
         ]
     )
+
+    df = df.with_columns(
+        (pl.col("total_moving_time_minutes") / pl.col("total_distance_miles")).round(2).alias(
+            "avg_pace_minutes_per_mile"
+        ),
+    )
+
     return df.sort("week_num", descending=False)
 
 

@@ -12,6 +12,7 @@ supabase = "*"
 python-dotenv = "^1.0.1"
 polars = "^0.20.31"
 urllib3 = "2.2.1"
+openai = "^1.35.3"
 
 
 [tool.poetry.group.dev.dependencies]
