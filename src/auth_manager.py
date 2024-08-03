@@ -43,3 +43,8 @@ def authenticate_athlete(athlete_id: int) -> UserAuthRow:
         print(f"{athlete_id=} token still valid until {user_auth.expires_at}")
         return user_auth
     return refresh_and_update_user_token(athlete_id, user_auth.refresh_token)
+
+
+def get_strava_client(athlete_id: int) -> Client:
+    user_auth = authenticate_athlete(athlete_id)
+    return get_configured_strava_client(user_auth)

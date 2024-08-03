@@ -2,9 +2,9 @@ import os
 from datetime import datetime, timedelta
 from typing import Dict, List
 
-import auth_manager
 import polars as pl
 from dotenv import load_dotenv
+from stravalib.client import Client
 from stravalib.model import Activity
 
 load_dotenv()
@@ -12,8 +12,7 @@ load_dotenv()
 
 def activities_to_df(activities: List[Activity]) -> pl.DataFrame:
     """
-    Converts a list of activities into a polars DataFrame according to a
-    predefined schema
+    Converts a list of activities into polars DataFrame
 
     :param activities: List of activity objects to be converted to DataFrame
     :return: A polars DataFrame with activities data
@@ -40,33 +39,36 @@ def activities_to_df(activities: List[Activity]) -> pl.DataFrame:
     )
 
 
-def clean_activities_df(df: pl.DataFrame) -> pl.DataFrame:
+def preprocess_activities_df(df: pl.DataFrame) -> pl.DataFrame:
     """
     Cleans and transforms the activities DataFrame by sorting, converting units,
-    and adding derived columns
+    and adding derived columns.
 
     :param df: The initial polars DataFrame containing activity data
     :return: A transformed polars DataFrame with cleansed data
     """
-    df = df.sort("start_date_local", descending=True)
-    df = df.with_columns(
-        [
-            (pl.col("distance") / 1609.34).alias("distance_in_miles"),
-            (pl.col("total_elevation_gain") * 3.28084).alias("elevation_gain_in_feet"),
-            (pl.col("moving_time") / 60_000_000).alias("moving_time_in_minutes"),
-        ]
-    )
-
-    df = df.with_columns(
-        (pl.col("moving_time_in_minutes") / pl.col("distance_in_miles")).alias(
+    # Define transformation operations for each column
+    col_operations = [
+        pl.col("start_date_local").dt.strftime("%a").alias("day_of_week"),
+        pl.col("start_date_local").dt.week().alias("week_of_year"),
+        pl.col("start_date_local").dt.year().alias("year"),
+        (pl.col("distance") / 1609.34).alias("distance_in_miles"),
+        (pl.col("total_elevation_gain") * 3.28084).alias("elevation_gain_in_feet"),
+        (pl.col("moving_time") / 60).alias("moving_time_in_minutes"),
+        ((pl.col("moving_time") / 60) / (pl.col("distance") / 1609.34)).alias(
             "pace_minutes_per_mile"
-        )
+        ),
+    ]
+
+    # Apply transformations, sorting, and column removals
+    return (
+        df.sort("start_date_local")
+        .with_columns(col_operations)
+        .drop(["distance", "total_elevation_gain", "moving_time"])
     )
-    df = df.drop(["distance", "total_elevation_gain", "moving_time"])
-    return df
 
 
-def get_activities_df(athlete_id: str) -> pl.DataFrame:
+def get_activities_df(strava_client: Client) -> pl.DataFrame:
     """
     Fetches and returns activities data for a given athlete ID as a DataFrame,
     cleansed and processed
@@ -74,99 +76,66 @@ def get_activities_df(athlete_id: str) -> pl.DataFrame:
     :param athlete_id: The Strava athlete ID
     :return: A cleaned and processed DataFrame of the athlete's activities
     """
-    user_auth = auth_manager.authenticate_athlete(athlete_id)
-    strava_client = auth_manager.get_configured_strava_client(user_auth)
     timedelta_6_weeks = datetime.now() - timedelta(weeks=7)
     activities = strava_client.get_activities(after=timedelta_6_weeks)
-
-    df = activities_to_df(activities)
-    df = clean_activities_df(df)
-    return df
+    raw_df = activities_to_df(activities)
+    return preprocess_activities_df(raw_df)
 
 
-def get_week_nums(df: pl.DataFrame) -> pl.DataFrame:
+def get_days_of_week_summary(activities_df: pl.DataFrame) -> pl.DataFrame:
     """
-    Adds a 'week_num' column to the DataFrame based on the 'start_date_local'
-    date
-
-    :param df: The DataFrame with activities data
-    :return: DataFrame with an additional 'week_num' column
+    Aggregate activities DataFrame by day of the week and calculate
+    summary statistics for each day
+    ------------------------------------------------------------
+    day_of_week	number_of_runs	avg_miles	avg_minutes	avg_pace
+    "Mon"	    6	            7.585097	7.2053e7	9.5744e6
+    "Tue"	    7	            3.317314	3.4145e7	1.0248e7
+    ...
+    ------------------------------------------------------------
+    :param activities_df: The DataFrame containing activities data
+    :return: A DataFrame with summary statistics for each day of the week
     """
-    current_date = datetime.now().date()
-    min_date = pl.lit(current_date - timedelta(weeks=7))
-    max_date = pl.lit(current_date)
-    date_range = max_date - min_date
-    interval = date_range / 7
-
-    df = df.with_columns(pl.col("start_date_local").cast(pl.Date).alias("date"))
-    df = df.with_columns(
-        (((pl.col("date") - min_date) / interval).floor().cast(pl.UInt32)).alias(
-            "week_num"
+    days_of_week_order = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+    return (
+        activities_df.groupby("day_of_week")
+        .agg(
+            [
+                pl.col("id").count().alias("number_of_runs"),
+                pl.col("distance_in_miles").mean().alias("avg_miles"),
+                pl.col("moving_time_in_minutes").mean().alias("avg_minutes"),
+                pl.col("pace_minutes_per_mile").mean().alias("avg_pace"),
+            ]
         )
-    )
-    return df
-
-
-def agg_by_week(df: pl.DataFrame) -> pl.DataFrame:
-    """
-    Aggregates activities data by week, calculating total and average distances,
-    average elevation gain, and pace
-
-    :param df: The DataFrame with 'week_num' assigned
-    :return: Aggregated DataFrame by week
-    """
-    df = df.groupby("week_num").agg(
-        [
-            pl.count("id").alias("num_runs"),
-            pl.sum("distance_in_miles").round(2).alias("total_distance_miles"),
-            pl.sum("moving_time_in_minutes").round(2).alias("total_moving_time_minutes"),
-            pl.sum("elevation_gain_in_feet").round(2).alias("total_elevation_gain_feet"),
-        ]
+        .with_columns(
+            pl.col("day_of_week")
+            .apply(lambda x: days_of_week_order.index(x))
+            .alias("day_order")
+        )
+        .sort("day_order")
+        .drop("day_order")
     )
 
-    df = df.with_columns(
-        (pl.col("total_moving_time_minutes") / pl.col("total_distance_miles")).round(2).alias(
-            "avg_pace_minutes_per_mile"
-        ),
-    )
 
-    return df.sort("week_num", descending=False)
-
-
-def get_pct_change(df: pl.DataFrame) -> pl.DataFrame:
+def get_weekly_summary(activities_df: pl.DataFrame) -> pl.DataFrame:
     """
-    Calculates the percentage change in total distance between weeks
-
-    :param df: The DataFrame containing weekly aggregated data
-    :return: DataFrame with the percentage change added as a column
-    """
-    df = df.with_columns(
-        (
-            (pl.col("total_distance_miles") - pl.col("total_distance_miles").shift(1))
-            / pl.col("total_distance_miles").shift(1)
-            * 100
-        ).alias("percent_change_total_miles")
-    )
-    df = df.with_columns(
-        pl.when(pl.col("percent_change_total_miles").is_finite())
-        .then(pl.col("percent_change_total_miles"))
-        .otherwise(None)
-        .alias("percent_change_total_miles")
-    )
-    return df
-
-
-def group_by_weeks(df: pl.DataFrame) -> pl.DataFrame:
-    """
-    Processes the given DataFrame to group activities by week, aggregate them,
-    and calculate percentage changes
-
-    :param df: DataFrame with activities data
-    :return: Processed DataFrame grouped by weeks with percentage changes
+    Aggregate activities DataFrame by week of the year and calculate
+    load for each week
+    --------------------------------------
+    year	week_of_year	total_distance
+    2024	23	            7.585097
+    2024	22	            3.317314
+    ...
+    --------------------------------------
+    :param activities_df: The DataFrame containing activities data
+    :return: A DataFrame with weekly load for each week of the year
     """
     return (
-        df.pipe(get_week_nums)
-        .pipe(agg_by_week)
-        .pipe(get_pct_change)
-        .sort("week_num", descending=True)[:-1]
+        activities_df.groupby(["year", "week_of_year"])
+        .agg(
+            [
+                pl.col("distance_in_miles").sum().alias("total_distance"),
+            ]
+        )
+        .sort(["year", "week_of_year"])
+        .reverse()
     )
