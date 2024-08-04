@@ -142,11 +142,9 @@ def get_weekly_summaries(activities_df: pl.DataFrame) -> List[WeekSummary]:
             [
                 pl.col("distance_in_miles").sum().alias("total_distance"),
                 pl.col("distance_in_miles").max().alias("longest_run"),
-                
             ]
         )
         .sort(["year", "week_of_year"])
-        .reverse()
     )
 
     return [
