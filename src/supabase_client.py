@@ -5,7 +5,8 @@ from typing import Dict
 from dotenv import load_dotenv
 from postgrest.base_request_builder import APIResponse
 from supabase import Client, create_client
-from supabase_models import UserAuthRow
+
+from src.types.user_auth_row import UserAuthRow
 
 load_dotenv()
 

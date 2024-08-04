@@ -7,6 +7,8 @@ from dotenv import load_dotenv
 from stravalib.client import Client
 from stravalib.model import Activity
 
+from src.types.day_of_week_summary import DayOfWeek, DayOfWeekSummary
+
 load_dotenv()
 
 
@@ -54,10 +56,10 @@ def preprocess_activities_df(df: pl.DataFrame) -> pl.DataFrame:
         pl.col("start_date_local").dt.year().alias("year"),
         (pl.col("distance") / 1609.34).alias("distance_in_miles"),
         (pl.col("total_elevation_gain") * 3.28084).alias("elevation_gain_in_feet"),
-        (pl.col("moving_time") / 60).alias("moving_time_in_minutes"),
-        ((pl.col("moving_time") / 60) / (pl.col("distance") / 1609.34)).alias(
-            "pace_minutes_per_mile"
-        ),
+        (pl.col("moving_time") / 1_000_000 / 60).alias("moving_time_in_minutes"),
+        (
+            (pl.col("moving_time") / 1_000_000 / 60) / (pl.col("distance") / 1609.34)
+        ).alias("pace_minutes_per_mile"),
     ]
 
     # Apply transformations, sorting, and column removals
@@ -82,38 +84,52 @@ def get_activities_df(strava_client: Client) -> pl.DataFrame:
     return preprocess_activities_df(raw_df)
 
 
-def get_days_of_week_summary(activities_df: pl.DataFrame) -> pl.DataFrame:
+def get_day_of_week_summaries(activities_df: pl.DataFrame) -> List[DayOfWeekSummary]:
     """
-    Aggregate activities DataFrame by day of the week and calculate
-    summary statistics for each day
-    ------------------------------------------------------------
-    day_of_week	number_of_runs	avg_miles	avg_minutes	avg_pace
-    "Mon"	    6	            7.585097	7.2053e7	9.5744e6
-    "Tue"	    7	            3.317314	3.4145e7	1.0248e7
-    ...
-    ------------------------------------------------------------
+    Aggregate activities DataFrame by day of the week and calculate summary statistics
+    for each day. The resulting objects provide insights into the average week of
+    the athlete from a day-of-week perspective.
+
     :param activities_df: The DataFrame containing activities data
-    :return: A DataFrame with summary statistics for each day of the week
+    :return: A list of DayOfWeekSummary objects with summary statistics
     """
-    days_of_week_order = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-    return (
+    day_of_week_order = [
+        DayOfWeek.MON,
+        DayOfWeek.TUE,
+        DayOfWeek.WED,
+        DayOfWeek.THU,
+        DayOfWeek.FRI,
+        DayOfWeek.SAT,
+        DayOfWeek.SUN,
+    ]
+
+    df = (
         activities_df.groupby("day_of_week")
         .agg(
             [
                 pl.col("id").count().alias("number_of_runs"),
                 pl.col("distance_in_miles").mean().alias("avg_miles"),
-                pl.col("moving_time_in_minutes").mean().alias("avg_minutes"),
                 pl.col("pace_minutes_per_mile").mean().alias("avg_pace"),
             ]
         )
         .with_columns(
             pl.col("day_of_week")
-            .apply(lambda x: days_of_week_order.index(x))
+            .apply(lambda x: day_of_week_order.index(x))
             .alias("day_order")
         )
         .sort("day_order")
         .drop("day_order")
     )
+
+    return [
+        DayOfWeekSummary(
+            day_of_week=DayOfWeek(row["day_of_week"]),
+            number_of_runs=row["number_of_runs"],
+            avg_miles=round(row["avg_miles"], 2),
+            avg_pace=round(row["avg_pace"], 2),
+        )
+        for row in df.to_dicts()
+    ]
 
 
 def get_weekly_summary(activities_df: pl.DataFrame) -> pl.DataFrame:

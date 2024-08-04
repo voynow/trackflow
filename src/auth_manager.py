@@ -3,8 +3,9 @@ from datetime import datetime, timezone
 
 from dotenv import load_dotenv
 from stravalib.client import Client
-from supabase_client import get_user_auth, upsert_user_auth
-from supabase_models import UserAuthRow
+
+from src.supabase_client import get_user_auth, upsert_user_auth
+from src.types.user_auth_row import UserAuthRow
 
 load_dotenv()
 strava_client = Client()
