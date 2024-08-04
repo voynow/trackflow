@@ -1,43 +1,52 @@
 import json
-from typing import Type
+from typing import Dict, List, Optional, Type
+
 from openai import OpenAI
+from openai.types.chat.chat_completion_message import ChatCompletionMessage
 from pydantic import BaseModel
 
 client = OpenAI()
+
+
+def get_completion(
+    messages: List[ChatCompletionMessage],
+    model: str = "gpt-4o",
+    response_format: Optional[Dict] = None,
+):
+    response = client.chat.completions.create(
+        model=model, messages=messages, response_format=response_format
+    )
+    return response.choices[0].message.content
 
 
 def get_completion_json(
     message: str,
     response_model: Type[BaseModel],
     model: str = "gpt-4o",
-    max_retries: int = 3,
 ) -> BaseModel:
 
-    response_model_content = f"Your json response must follow the following: {response_model.schema()=}"
+    response_model_content = (
+        f"Your json response must follow the following: {response_model.schema()=}"
+    )
 
-    retries = 0
-    while retries < max_retries:
-        response = client.chat.completions.create(
+    messages = [
+        {
+            "role": "system",
+            "content": "You are a helpful assistant designed to output JSON."
+            + response_model_content,
+        },
+        {"role": "user", "content": message},
+    ]
+
+    response = json.loads(
+        get_completion(
             model=model,
-            messages=[
-                {
-                    "role": "system",
-                    "content": "You are a helpful assistant designed to output JSON."
-                    + response_model_content,
-                },
-                {"role": "user", "content": message},
-            ],
+            messages=messages,
             response_format={"type": "json_object"},
         )
-        response_content = json.loads(response.choices[0].message.content)
+    )
 
-        try:
-            return response_model(**response_content)
-        except Exception as e:
-            retries += 1
-            if retries < max_retries:
-                continue
-            else:
-                raise Exception(
-                    f"Failed to get a valid response after {max_retries} attempts: {response_content=}, {e=}"
-                )
+    try:
+        return response_model(**response)
+    except Exception as e:
+        raise Exception(f"Failed to get a valid response: {response=}, {e=}")

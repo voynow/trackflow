@@ -7,7 +7,8 @@ from dotenv import load_dotenv
 from stravalib.client import Client
 from stravalib.model import Activity
 
-from src.types.day_of_week_summary import DayOfWeek, DayOfWeekSummary
+from src.types.day_of_week_summary import DayOfWeekSummary
+from src.types.week_summary import WeekSummary
 
 load_dotenv()
 
@@ -51,7 +52,10 @@ def preprocess_activities_df(df: pl.DataFrame) -> pl.DataFrame:
     """
     # Define transformation operations for each column
     col_operations = [
-        pl.col("start_date_local").dt.strftime("%a").alias("day_of_week"),
+        pl.col("start_date_local")
+        .dt.strftime("%a")
+        .str.to_lowercase()
+        .alias("day_of_week"),
         pl.col("start_date_local").dt.week().alias("week_of_year"),
         pl.col("start_date_local").dt.year().alias("year"),
         (pl.col("distance") / 1609.34).alias("distance_in_miles"),
@@ -93,15 +97,7 @@ def get_day_of_week_summaries(activities_df: pl.DataFrame) -> List[DayOfWeekSumm
     :param activities_df: The DataFrame containing activities data
     :return: A list of DayOfWeekSummary objects with summary statistics
     """
-    day_of_week_order = [
-        DayOfWeek.MON,
-        DayOfWeek.TUE,
-        DayOfWeek.WED,
-        DayOfWeek.THU,
-        DayOfWeek.FRI,
-        DayOfWeek.SAT,
-        DayOfWeek.SUN,
-    ]
+    day_of_week_order = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
 
     df = (
         activities_df.groupby("day_of_week")
@@ -123,7 +119,7 @@ def get_day_of_week_summaries(activities_df: pl.DataFrame) -> List[DayOfWeekSumm
 
     return [
         DayOfWeekSummary(
-            day_of_week=DayOfWeek(row["day_of_week"]),
+            day_of_week=row["day_of_week"],
             number_of_runs=row["number_of_runs"],
             avg_miles=round(row["avg_miles"], 2),
             avg_pace=round(row["avg_pace"], 2),
@@ -132,26 +128,33 @@ def get_day_of_week_summaries(activities_df: pl.DataFrame) -> List[DayOfWeekSumm
     ]
 
 
-def get_weekly_summary(activities_df: pl.DataFrame) -> pl.DataFrame:
+def get_weekly_summaries(activities_df: pl.DataFrame) -> List[WeekSummary]:
     """
     Aggregate activities DataFrame by week of the year and calculate
     load for each week
-    --------------------------------------
-    year	week_of_year	total_distance
-    2024	23	            7.585097
-    2024	22	            3.317314
-    ...
-    --------------------------------------
+
     :param activities_df: The DataFrame containing activities data
-    :return: A DataFrame with weekly load for each week of the year
+    :return: A list of WeekSummary objects with summary statistics
     """
-    return (
+    df = (
         activities_df.groupby(["year", "week_of_year"])
         .agg(
             [
                 pl.col("distance_in_miles").sum().alias("total_distance"),
+                pl.col("distance_in_miles").max().alias("longest_run"),
+                
             ]
         )
         .sort(["year", "week_of_year"])
         .reverse()
     )
+
+    return [
+        WeekSummary(
+            year=row["year"],
+            week_of_year=row["week_of_year"],
+            longest_run=round(row["longest_run"], 2),
+            total_distance=round(row["total_distance"], 2),
+        )
+        for row in df.to_dicts()
+    ]
