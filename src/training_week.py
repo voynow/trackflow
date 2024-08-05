@@ -68,7 +68,7 @@ Build out their next week of training. As a general rule, distribute volume and 
 def generate_training_week(
     day_of_week_summaries: List[DayOfWeekSummary],
     weekly_summaries: List[WeekSummary],
-):
+) -> TrainingWeek:
 
     training_week_verbose = get_typical_training_week_verbose(day_of_week_summaries)
     training_week_skeleton = get_training_week_skeleton(training_week_verbose)
