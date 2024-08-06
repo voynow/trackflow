@@ -1,12 +1,12 @@
 #!/bin/bash
 
 rm -rf package
-rm function.zip
+rm -f function.zip
 
 poetry export -f requirements.txt --output requirements.txt --without-hashes
 pip install --target ./package -r requirements.txt
 
-cd package
+cd package || exit
 zip -r ../function.zip .
 cd ..
 zip -g function.zip src/lambda_function.py
