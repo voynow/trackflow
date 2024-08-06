@@ -25,7 +25,7 @@ jobs:
           poetry self add poetry-plugin-export
 
       - name: Install dependencies and package code
-        run: ./build.sh
+        run: ./scripts/build.sh
 
       - name: Setup AWS CLI
         uses: aws-actions/configure-aws-credentials@v2

@@ -9,4 +9,7 @@ pip install --target ./package -r requirements.txt
 cd package || exit
 zip -r ../function.zip .
 cd ..
-zip -g function.zip src/lambda_function.py
+
+cp src/lambda_function.py .
+zip -g function.zip lambda_function.py
+rm lambda_function.py
