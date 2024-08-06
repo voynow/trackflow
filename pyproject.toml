@@ -1,9 +1,28 @@
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
 [tool.poetry]
 name = "strava"
 version = "0.1.0"
 description = ""
 authors = ["voynow <voynow99@gmail.com>"]
 readme = "README.md"
+
+[tool.turbo_docs]
+ignore = [
+    "pyproject.toml",
+    "__pycache__",
+    ".venv",
+    "build",
+    "dist",
+    "*.egg-info",
+    ".git",
+    ".env",
+    "poetry.lock",
+    ".gitignore",
+    "*.ipynb"
+]
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -14,10 +33,5 @@ polars = "^0.20.31"
 urllib3 = "2.2.1"
 openai = "^1.35.3"
 
-
 [tool.poetry.group.dev.dependencies]
 ipykernel = "^6.29.4"
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
