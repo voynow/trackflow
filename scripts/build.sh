@@ -12,4 +12,5 @@ cd ..
 
 cp src/lambda_function.py .
 zip -g function.zip lambda_function.py
+zip -r function.zip src -x "src/lambda_function.py"
 rm lambda_function.py
