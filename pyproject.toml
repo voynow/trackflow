@@ -9,21 +9,6 @@ description = ""
 authors = ["voynow <voynow99@gmail.com>"]
 readme = "README.md"
 
-[tool.turbo_docs]
-ignore = [
-    "pyproject.toml",
-    "__pycache__",
-    ".venv",
-    "build",
-    "dist",
-    "*.egg-info",
-    ".git",
-    ".env",
-    "poetry.lock",
-    ".gitignore",
-    "*.ipynb",
-]
-
 [tool.poetry.dependencies]
 python = "^3.10"
 stravalib = "^v1.7"
