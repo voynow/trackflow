@@ -6,7 +6,6 @@ from src.types.day_of_week_summary import DayOfWeekSummary
 from src.types.training_week import TrainingWeek
 from src.types.training_week_with_coaching import TrainingWeekWithCoaching
 from src.types.week_summary import WeekSummary
-from src.types.weekly_mileage_target_response import WeeklyMileageTargetResponse
 
 
 def get_typical_week_training_review(
@@ -26,9 +25,10 @@ def get_typical_week_training_review(
 def get_weekly_mileage_target(
     sysmsg_base: str,
     weekly_summaries: List[WeekSummary],
-) -> WeeklyMileageTargetResponse:
+) -> str:
     sysmsg = f"""{sysmsg_base} You will be provided summary statistics (aggregated by week) of your client's training over the past several weeks."""
-    usermsg = f"""{weekly_summaries}
+    usermsg = f"""Starting from earliest to most recent, here are the weekly summaries:
+{weekly_summaries}
 As the coach, provide very concise feedback and prescribe your client a target weekly mileage for next week. Be specific and refer to the data provided. Write in paragraph form."""
     return get_completion(
         [{"role": "assistant", "content": sysmsg}, {"role": "user", "content": usermsg}]
@@ -61,7 +61,8 @@ def generate_training_week(
 ) -> TrainingWeekWithCoaching:
 
     sysmsg_base = f"""{COACH_ROLE}
-Your client has included the following preferenced: {client_preferences}"""
+Your client has included the following preferenced: {client_preferences}
+Note: convert pace values where applicable e.g. 7.5 -> 7m 30s"""
 
     typical_week_training_review = get_typical_week_training_review(
         sysmsg_base=sysmsg_base, day_of_week_summaries=day_of_week_summaries

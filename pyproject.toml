@@ -23,3 +23,5 @@ postgrest = "^0.16.8"
 
 [tool.poetry.group.dev.dependencies]
 ipykernel = "^6.29.4"
+freezegun = "^1.5.1"
+pytest = "^8.3.2"

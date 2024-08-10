@@ -1,4 +1,3 @@
-import os
 from datetime import datetime, timedelta
 from typing import Dict, List
 
@@ -66,11 +65,12 @@ def preprocess_activities_df(df: pl.DataFrame) -> pl.DataFrame:
         ).alias("pace_minutes_per_mile"),
     ]
 
-    # Apply transformations, sorting, and column removals
+    # Apply transformations, sorting, column removals, and filtering
     return (
         df.sort("start_date_local")
         .with_columns(col_operations)
         .drop(["distance", "total_elevation_gain", "moving_time"])
+        .filter(pl.col("week_of_year") != pl.col("week_of_year").min())
     )
 
 
@@ -82,8 +82,11 @@ def get_activities_df(strava_client: Client) -> pl.DataFrame:
     :param athlete_id: The Strava athlete ID
     :return: A cleaned and processed DataFrame of the athlete's activities
     """
-    timedelta_6_weeks = datetime.now() - timedelta(weeks=7)
-    activities = strava_client.get_activities(after=timedelta_6_weeks)
+    num_weeks = 8
+    timedela_x_weeks = datetime.now() - timedelta(weeks=num_weeks)
+    activities = strava_client.get_activities(
+        after=timedela_x_weeks, before=datetime.now()
+    )
     raw_df = activities_to_df(activities)
     return preprocess_activities_df(raw_df)
 
