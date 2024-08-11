@@ -9,7 +9,7 @@ class TrainingSession(BaseModel):
     notes: str = Field(description="notes for the session e.g. pace, terrain, etc.")
 
     def __str__(self):
-        return f"{self.day}: {self.session_type}"
+        return f"session_type={self.session_type}, distance={self.distance}, notes={self.notes}"
 
     def __repr__(self):
         return self.__str__()
