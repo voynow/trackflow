@@ -12,3 +12,9 @@ class TrainingWeekWithCoaching(BaseModel):
 
     weekly_mileage_target: str
     """Coach's prescribed weekly mileage target for the client"""
+
+    def __str__(self):
+        return f"{self.training_week}\n\ntypical_week_training_review: {self.typical_week_training_review}\nweekly_mileage_target: {self.weekly_mileage_target}"
+
+    def __repr__(self):
+        return self.__str__()

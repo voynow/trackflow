@@ -1,4 +1,5 @@
 import datetime
+import json
 import os
 
 from dotenv import load_dotenv
@@ -78,3 +79,36 @@ def upsert_training_week_with_coaching(
     response = table.upsert(row_data).execute()
 
     return response
+
+
+def get_training_week_with_coaching(athlete_id: int) -> TrainingWeekWithCoaching:
+    """
+    Get the most recent training_week_with_coaching row by athlete_id
+
+    :param athlete_id: The ID of the athlete
+    :return: An instance of TrainingWeekWithCoaching
+    """
+    table = client.table("training_week_with_coaching")
+    response = (
+        table.select("*")
+        .eq("athlete_id", athlete_id)
+        .order("created_at", desc=True)
+        .limit(1)
+        .execute()
+    )
+
+    try:
+        response_data = response.data[0]
+    except Exception:
+        raise ValueError(
+            f"Could not find training_week_with_coaching row with {athlete_id=}",
+            exc_info=True,
+        )
+
+    # clean up the response data
+    del response_data["id"]
+    del response_data["athlete_id"]
+    del response_data["created_at"]
+    response_data["training_week"] = json.loads(response_data["training_week"])
+
+    return TrainingWeekWithCoaching(**response_data)
