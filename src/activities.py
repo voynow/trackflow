@@ -74,7 +74,7 @@ def preprocess_activities_df(df: pl.DataFrame) -> pl.DataFrame:
     )
 
 
-def get_activities_df(strava_client: Client) -> pl.DataFrame:
+def get_activities_df(strava_client: Client, num_weeks: int = 8) -> pl.DataFrame:
     """
     Fetches and returns activities data for a given athlete ID as a DataFrame,
     cleansed and processed
@@ -82,7 +82,6 @@ def get_activities_df(strava_client: Client) -> pl.DataFrame:
     :param athlete_id: The Strava athlete ID
     :return: A cleaned and processed DataFrame of the athlete's activities
     """
-    num_weeks = 8
     timedela_x_weeks = datetime.now() - timedelta(weeks=num_weeks)
     activities = strava_client.get_activities(
         after=timedela_x_weeks, before=datetime.now()
