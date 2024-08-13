@@ -10,7 +10,7 @@ cd package || exit
 zip -r ../function.zip .
 cd ..
 
-cp src/training_week_generation.py .
-zip -g function.zip training_week_generation.py
-zip -r function.zip src -x "src/training_week_generation.py"
-rm training_week_generation.py
+cp src/training_week_generation/lambda_function.py .
+zip -g function.zip training_week_generation/lambda_function.py
+zip -r function.zip src -x "src/training_week_generation/lambda_function.py"
+rm training_week_generation/lambda_function.py
