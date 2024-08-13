@@ -37,5 +37,5 @@ jobs:
       - name: Deploy to Lambda
         run: |
           aws lambda update-function-code \
-            --function-name strava \
+            --function-name strava-training-week-generation \
             --zip-file fileb://function.zip
