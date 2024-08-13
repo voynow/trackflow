@@ -13,3 +13,4 @@ cd ..
 cp src/training_week_generation/lambda_function.py .
 zip -g function.zip training_week_generation/lambda_function.py
 zip -r function.zip src -x "src/training_week_generation/lambda_function.py"
+rm lambda_function.py
