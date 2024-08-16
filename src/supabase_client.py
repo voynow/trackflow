@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from postgrest.base_request_builder import APIResponse
 from supabase import Client, create_client
 
-from src.types.training_week_with_coaching import TrainingWeekWithCoaching
+from src.types.training_week import TrainingWeekWithCoaching
 from src.types.user_auth_row import UserAuthRow
 
 load_dotenv()
@@ -70,7 +70,10 @@ def upsert_training_week_with_coaching(
     """
     row_data = {
         "athlete_id": athlete_id,
-        "training_week": training_week_with_coaching.training_week.json(),
+        "training_week_planning": training_week_with_coaching.training_week_planning,
+        "training_week": json.dumps(
+            [session.dict() for session in training_week_with_coaching.training_week]
+        ),
         "typical_week_training_review": training_week_with_coaching.typical_week_training_review,
         "weekly_mileage_target": training_week_with_coaching.weekly_mileage_target,
     }

@@ -22,7 +22,7 @@ def lambda_handler(event, context):
     # gen training week pipeline
     day_of_week_summaries = get_day_of_week_summaries(activities_df)
     weekly_summaries = get_weekly_summaries(activities_df)
-    training_week = generate_training_week(
+    training_week_with_coaching = generate_training_week(
         client_preferences=client_preferences,
         weekly_summaries=weekly_summaries,
         day_of_week_summaries=day_of_week_summaries,
@@ -30,9 +30,9 @@ def lambda_handler(event, context):
 
     # save data to db and trigger email
     upsert_training_week_with_coaching(
-        athlete_id=athlete_id, training_week_with_coaching=training_week
+        athlete_id=athlete_id, training_week_with_coaching=training_week_with_coaching
     )
     send_email(
         subject="Training Schedule Just Dropped 🏃",
-        html_content=training_week_to_html(training_week),
+        html_content=training_week_to_html(training_week_with_coaching),
     )
