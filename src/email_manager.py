@@ -5,7 +5,7 @@ from typing import Dict
 import sib_api_v3_sdk
 from dotenv import load_dotenv
 
-from src.types.training_week_with_coaching import TrainingWeekWithCoaching
+from src.types.training_week import TrainingWeekWithCoaching
 
 load_dotenv()
 
@@ -26,11 +26,7 @@ def training_week_to_html(training_week_with_coaching: TrainingWeekWithCoaching)
     """
     uid = str(uuid.uuid4())
     total_miles = sum(
-        [
-            session["distance"]
-            for session in training_week_with_coaching.training_week.dict().values()
-            if isinstance(session, dict)
-        ]
+        [session.distance for session in training_week_with_coaching.training_week]
     )
 
     html_content = """
@@ -115,24 +111,19 @@ def training_week_to_html(training_week_with_coaching: TrainingWeekWithCoaching)
                 <h2>Get pumped for this week's training.</h2>
                 <ul>
     """
-    for day, session in training_week_with_coaching.training_week.dict().items():
-        if isinstance(session, dict):  # Skip non-session fields
-            html_content += f"""
-                    <li>
-                        <strong>{day.capitalize()}</strong>
-                        <span>{session['session_type'].value} {session['distance']} miles</span><br>
-                        <span>Notes: {session['notes']}</span>
-                    </li>
-            """
+    for session in training_week_with_coaching.training_week:
+        html_content += f"""
+                <li>
+                    <strong>{session.day.capitalize()}</strong>
+                    <span>{session.session_type.value} {session.distance} miles</span><br>
+                    <span>Notes: {session.notes}</span>
+                </li>
+        """
     html_content += f"""
                 </ul>
                 <h2>Total Miles Planned: {total_miles}</h2>
-                <div class="review-section">
-                    <h2>Coach's Review</h2>
-                    <p>{training_week_with_coaching.typical_week_training_review}</p>
-                </div>
                 <div class="mileage-target-section">
-                    <h2>Weekly Mileage Target</h2>
+                    <h2>Coach's Recommendation</h2>
                     <p>{training_week_with_coaching.weekly_mileage_target}</p>
                 </div>
             </div>

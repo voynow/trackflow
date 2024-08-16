@@ -1,36 +1,63 @@
+from enum import StrEnum
+from typing import Dict, List
+
 from pydantic import BaseModel, Field
 
-from src.types.session_type import SessionType
+
+class Day(StrEnum):
+    MON = "mon"
+    TUES = "tues"
+    WED = "wed"
+    THURS = "thurs"
+    FRI = "fri"
+    SAT = "sat"
+    SUN = "sun"
+
+
+class SessionType(StrEnum):
+    EASY = "easy run"
+    LONG = "long run"
+    SPEED = "speed workout"
+    REST = "rest day"
+    MODERATE = "moderate run"
 
 
 class TrainingSession(BaseModel):
+    day: Day
     session_type: SessionType
     distance: float = Field(description="Distance in miles")
-    notes: str = Field(description="notes for the session e.g. pace, terrain, etc.")
+    notes: str = Field(
+        description="Concise notes about the session, e.g. '2x2mi @ 10k pace' or 'easy pace'"
+    )
 
     def __str__(self):
-        return f"session_type={self.session_type}, distance={self.distance}, notes={self.notes}"
-
-    def __repr__(self):
-        return self.__str__()
+        return f"TrainingSession(session_type={self.session_type}, distance={self.distance}, weekly_mileage_cumulative={self.weekly_mileage_cumulative}, notes={self.notes})"
 
 
-class TrainingWeek(BaseModel):
-    mon: TrainingSession
-    tues: TrainingSession
-    wed: TrainingSession
-    thurs: TrainingSession
-    fri: TrainingSession
-    sat: TrainingSession
-    sun: TrainingSession
+class TrainingWeekWithPlanning(BaseModel):
+    planning: str = Field(
+        description="Draft a plan (used internally) to aid in training week generation. You must adhere to the weekly mileage target and long run range. Do required math (step by step out loud) to plan the week successfully. If you end up exceeding the weekly mileage target, adjust one of the easy runs to be shorter."
+    )
+    training_week: List[TrainingSession] = Field(
+        description="Unordered collection of training sessions for the week"
+    )
+
+
+class TrainingWeekWithCoaching(BaseModel):
+    typical_week_training_review: str
+    """Coach's review of the client's typical week of training"""
+
+    weekly_mileage_target: str
+    """Coach's prescribed weekly mileage target for the client"""
+
+    training_week_planning: str
+    """Internal planning for the client's training week"""
+
+    training_week: List[TrainingSession]
+    """Client's recommended training week"""
 
     def __str__(self):
-        return "\n".join(
-            [
-                f"{day}: {session['session_type']}, {session['distance']} miles, {session['notes']}"
-                for day, session in self.dict().items()
-            ]
-        )
+        return f"{self.typical_week_training_review=}\n{self.weekly_mileage_target=}\n{self.training_week_planning=}\n{self.training_week=}"
 
     def __repr__(self):
         return self.__str__()
