@@ -1,6 +1,5 @@
 from typing import List
 
-from src.constants import COACH_ROLE
 from src.llm import get_completion, get_completion_json
 from src.types.day_of_week_summary import DayOfWeekSummary
 from src.types.training_week import (
@@ -54,14 +53,10 @@ Build out their next week of training."""
 
 
 def generate_training_week(
-    client_preferences: str,
+    sysmsg_base: str,
     day_of_week_summaries: List[DayOfWeekSummary],
     weekly_summaries: List[WeekSummary],
 ) -> TrainingWeekWithCoaching:
-
-    sysmsg_base = f"""{COACH_ROLE}
-Your client has included the following preferenced: {client_preferences}\n"""
-
     typical_week_training_review = get_typical_week_training_review(
         sysmsg_base=sysmsg_base, day_of_week_summaries=day_of_week_summaries
     )
