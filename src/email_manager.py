@@ -1,11 +1,13 @@
 import os
 import uuid
+from datetime import datetime
 from typing import Dict
 
 import sib_api_v3_sdk
 from dotenv import load_dotenv
 
-from src.types.training_week import TrainingWeekWithCoaching
+from src.types.mid_week_analysis import MidWeekAnalysis
+from src.types.training_week import TrainingWeekWithCoaching, TrainingWeekWithPlanning
 
 load_dotenv()
 
@@ -15,6 +17,171 @@ configuration.api_key["api-key"] = os.environ["EMAIL_API_KEY"]
 api_instance = sib_api_v3_sdk.TransactionalEmailsApi(
     sib_api_v3_sdk.ApiClient(configuration)
 )
+
+
+def training_week_update_to_html(
+    mid_week_analysis: MidWeekAnalysis,
+    training_week_update_with_planning: TrainingWeekWithPlanning,
+) -> str:
+    """
+    Convert updated training week data to HTML content for email.
+
+    :param mid_week_analysis: MidWeekAnalysis object containing completed activities.
+    :param training_week_update_with_planning: TrainingWeekWithPlanning object containing updated plan.
+    :return: HTML content for email.
+    """
+    uid = str(uuid.uuid4())
+
+    completed_sessions = {}
+    for activity in mid_week_analysis.activities:
+        # Assuming the date_and_time is in a format like "Monday, August 12, 2024 06:06 AM"
+        activity_datetime = datetime.strptime(
+            activity.date_and_time, "%A, %B %d, %Y %I:%M %p"
+        )
+        completed_sessions[activity_datetime.strftime("%A").lower()] = activity
+
+    total_planned_miles = sum(
+        session.distance for session in training_week_update_with_planning.training_week
+    )
+
+    html_content = """
+    <html>
+    <head>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                background-color: #f4f4f4;
+                color: #333;
+                margin: 0;
+                padding: 0;
+            }
+            .container {
+                width: 100%;
+                max-width: 600px;
+                margin: 20px auto;
+                background-color: #ffffff;
+                border-radius: 10px;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                overflow: hidden;
+            }
+            .header {
+                background-color: #6495ED;
+                color: #ffffff;
+                text-align: center;
+                padding: 20px;
+            }
+            .header h1 {
+                margin: 0;
+                font-size: 24px;
+            }
+            .content {
+                padding: 20px;
+            }
+            .content h2 {
+                color: #6495ED;
+                font-size: 20px;
+                margin-bottom: 10px;
+            }
+            .content ul {
+                list-style-type: none;
+                padding: 0;
+                margin: 0;
+            }
+            .content li {
+                margin-bottom: 10px;
+                padding: 15px;
+                border-left: 5px solid #6495ED;
+                border-radius: 5px;
+                color: #333;
+            }
+            .content li.completed {
+                background-color: #d4edda;
+                border-left-color: #28a745;
+            }
+            .content li.upcoming {
+                background-color: #f9f9f9;
+                border-left-color: #6495ED;
+            }
+            .content li strong {
+                display: block;
+                font-size: 16px;
+                margin-bottom: 5px;
+                color: #333;
+            }
+            .mileage-target-section {
+                margin-top: 30px;
+                padding: 20px;
+                background-color: #f9f9f9;
+                border-radius: 10px;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            }
+            .footer {
+                background-color: #f1f1f1;
+                text-align: center;
+                padding: 10px;
+                font-size: 9px;
+                color: #777;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>Your Updated Training Schedule</h1>
+            </div>
+            <div class="content">
+                <h2>Completed Activities</h2>
+                <ul>
+    """
+    # Add completed activities
+    for day, activity in completed_sessions.items():
+        html_content += f"""
+                <li class="completed">
+                    <strong>{day.capitalize()}</strong>
+                    <span>Completed: {activity.distance_in_miles} miles</span><br>
+                    <span>Pace: {activity.pace_minutes_per_mile} min/mile</span><br>
+                    <span>Elevation Gain: {activity.elevation_gain_in_feet} feet</span>
+                </li>
+        """
+
+    html_content += """
+                </ul>
+                <h2>Upcoming Training Plan</h2>
+                <ul>
+    """
+    # Add upcoming training plan
+    for session in training_week_update_with_planning.training_week:
+        session_day = session.day.lower()
+        if session_day in completed_sessions:
+            session_class = "completed"
+            session_notes = (
+                f"Completed: {completed_sessions[session_day].distance_in_miles} miles"
+            )
+        else:
+            session_class = "upcoming"
+            session_notes = f"Planned: {session.notes}"
+
+        html_content += f"""
+                <li class="{session_class}">
+                    <strong>{session.day.capitalize()}</strong>
+                    <span>{session.session_type.value} {session.distance} miles</span><br>
+                    <span>{session_notes}</span>
+                </li>
+        """
+
+    html_content += f"""
+                </ul>
+                <h2>Total Miles Planned: {total_planned_miles}</h2>
+            </div>
+            <div class="footer">
+                <p style="font-size: 15px; color: #777;">Powered by the Strava API and OpenAI</p>
+                <p>{uid}</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    return html_content
 
 
 def training_week_to_html(training_week_with_coaching: TrainingWeekWithCoaching) -> str:

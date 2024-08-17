@@ -6,7 +6,8 @@ from dotenv import load_dotenv
 from postgrest.base_request_builder import APIResponse
 from supabase import Client, create_client
 
-from src.types.training_week import TrainingWeekWithCoaching
+from src.types.mid_week_analysis import MidWeekAnalysis
+from src.types.training_week import TrainingWeekWithCoaching, TrainingWeekWithPlanning
 from src.types.user_auth_row import UserAuthRow
 
 load_dotenv()
@@ -115,3 +116,33 @@ def get_training_week_with_coaching(athlete_id: int) -> TrainingWeekWithCoaching
     response_data["training_week"] = json.loads(response_data["training_week"])
 
     return TrainingWeekWithCoaching(**response_data)
+
+
+def upsert_training_week_update(
+    athlete_id: int,
+    mid_week_analysis: MidWeekAnalysis,
+    training_week_update_with_planning: TrainingWeekWithPlanning,
+) -> APIResponse:
+    """Upsert a row into the training_week_update table"""
+
+    row_data = {
+        "athlete_id": athlete_id,
+        "activities": json.dumps(
+            [activity.dict() for activity in mid_week_analysis.activities]
+        ),
+        "training_week": json.dumps(
+            [session.dict() for session in mid_week_analysis.training_week]
+        ),
+        "planning": training_week_update_with_planning.planning,
+        "training_week_update": json.dumps(
+            [
+                session.dict()
+                for session in training_week_update_with_planning.training_week
+            ]
+        ),
+    }
+
+    table = client.table("training_week_update")
+    response = table.upsert(row_data).execute()
+
+    return response
