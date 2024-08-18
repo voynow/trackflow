@@ -45,7 +45,7 @@ def get_training_week(
 Additionally, here is the weekly mileage target you provided:
 {weekly_mileage_target}
 
-Build out their next week of training."""
+Build out their next week of training. Distribute volume and intensity evenly throughout the week. You must adhere to the weekly mileage target and long run range."""
     return get_completion_json(
         message=message,
         response_model=TrainingWeekWithPlanning,

@@ -36,7 +36,7 @@ class TrainingSession(BaseModel):
 
 class TrainingWeekWithPlanning(BaseModel):
     planning: str = Field(
-        description="Draft a plan (used internally) to aid in training week generation. You must adhere to the weekly mileage target and long run range. Do required math (step by step out loud) to plan the week successfully. If you end up exceeding the weekly mileage target, adjust one of the easy runs to be shorter."
+        description="Draft a plan (used internally) to aid in training week generation. You must adhere to the weekly mileage target and long run range. Do required math (step by step out loud) to plan the week successfully. Distribute volume and intensity evenly throughout the week. If you end up exceeding the weekly mileage target, adjust one of the easy runs to be shorter."
     )
     training_week: List[TrainingSession] = Field(
         description="Unordered collection of training sessions for the week"
