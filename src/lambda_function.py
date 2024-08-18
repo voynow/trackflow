@@ -9,7 +9,7 @@ from src.auth_manager import get_strava_client
 from src.constants import COACH_ROLE
 from src.email_manager import send_email, training_week_to_html
 from src.supabase_client import upsert_training_week_with_coaching
-from src.training_week_generation.training_week import generate_training_week
+from src.training_week import generate_training_week
 
 
 def lambda_handler(event, context):

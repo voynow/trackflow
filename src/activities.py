@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from stravalib.client import Client
 from stravalib.model import Activity
 
+from src.types.activity_summary import ActivitySummary
 from src.types.day_of_week_summary import DayOfWeekSummary
 from src.types.week_summary import WeekSummary
 
@@ -80,6 +81,7 @@ def get_activities_df(strava_client: Client, num_weeks: int = 8) -> pl.DataFrame
     cleansed and processed
 
     :param athlete_id: The Strava athlete ID
+    :param num_weeks: The number of weeks to fetch activities for
     :return: A cleaned and processed DataFrame of the athlete's activities
     """
     timedela_x_weeks = datetime.now() - timedelta(weeks=num_weeks)
@@ -88,6 +90,34 @@ def get_activities_df(strava_client: Client, num_weeks: int = 8) -> pl.DataFrame
     )
     raw_df = activities_to_df(activities)
     return preprocess_activities_df(raw_df)
+
+
+def get_activity_summaries(strava_client, num_weeks=8) -> List[ActivitySummary]:
+    """
+    Fetches and returns activity summaries for a given athlete ID
+
+    :param athlete_id: The Strava athlete ID
+    :param num_weeks: The number of weeks to fetch activities for
+    :return: A list of ActivitySummary objects, lighter weight than the full get_activities_df DataFrame
+    """
+    df = get_activities_df(strava_client, num_weeks)
+    concise_activities_df = df.with_columns(
+        pl.col("start_date_local")
+        .apply(lambda x: x.strftime("%A, %B %d, %Y %I:%M %p"), return_dtype=pl.Utf8)
+        .alias("date_and_time"),
+        pl.col("distance_in_miles").apply(lambda x: round(x, 2)),
+        pl.col("elevation_gain_in_feet").apply(lambda x: round(x, 2)),
+        pl.col("pace_minutes_per_mile").apply(lambda x: round(x, 2)),
+    ).drop(
+        "id",
+        "name",
+        "day_of_week",
+        "week_of_year",
+        "year",
+        "moving_time_in_minutes",
+        "start_date_local",
+    )
+    return [ActivitySummary(**row) for row in concise_activities_df.rows(named=True)]
 
 
 def get_day_of_week_summaries(activities_df: pl.DataFrame) -> List[DayOfWeekSummary]:
