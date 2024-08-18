@@ -19,6 +19,10 @@ api_instance = sib_api_v3_sdk.TransactionalEmailsApi(
 )
 
 
+def space(n: int = 1):
+    return "&nbsp;" * n
+
+
 def training_week_update_to_html(
     mid_week_analysis: MidWeekAnalysis,
     training_week_update_with_planning: TrainingWeekWithPlanning,
@@ -125,17 +129,6 @@ def training_week_update_to_html(
                 color: #ffffff;
                 margin-bottom: 5px;
             }
-            .miles-value {
-                font-size: 28px;
-                font-weight: bold;
-                color: #ffffff;
-            }
-            .separator {
-                width: 2px;
-                background-color: #ddd;
-                height: 50px;
-                margin: 0 20px;
-            }
             .footer {
                 background-color: #f1f1f1;
                 text-align: center;
@@ -180,15 +173,9 @@ def training_week_update_to_html(
 
     html_content += f"""
                 </ul>
-                <div class="miles-summary">
-                    <div class="miles-info">
-                        <span class="miles-label">Total Miles Planned </span>
-                        <span class="miles-value">{total_miles}</span>
-                    </div>
-                    <div class="separator"></div>
-                    <div class="miles-info">
-                        <span class="miles-label">Miles Remaining </span>
-                        <span class="miles-value">{miles_remaining}</span>
+                <div class="miles-summary" style="text-align: center;">
+                    <div class="miles-info" style="margin: 0 auto;">
+                        <span class="miles-label">Total Miles Planned: {total_miles}{space(8)}Miles Remaining: {miles_remaining}</span>
                     </div>
                 </div>
             </div>
@@ -291,11 +278,6 @@ def training_week_to_html(training_week_with_coaching: TrainingWeekWithCoaching)
                 color: #ffffff;
                 margin-bottom: 5px;
             }
-            .miles-value {
-                font-size: 28px;
-                font-weight: bold;
-                color: #ffffff;
-            }
             .mileage-target-section {
                 margin-top: 30px;
                 padding: 20px;
@@ -333,8 +315,7 @@ def training_week_to_html(training_week_with_coaching: TrainingWeekWithCoaching)
                 </ul>
                 <div class="miles-summary" style="text-align: center;">
                     <div class="miles-info" style="margin: 0 auto;">
-                        <span class="miles-label">Total Miles Planned </span>
-                        <span class="miles-value">{total_miles}</span>
+                        <span class="miles-label">Total Miles Planned: {total_miles}</span>
                     </div>
                 </div>
                 <div class="mileage-target-section">
