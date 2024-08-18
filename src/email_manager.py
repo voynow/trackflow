@@ -34,15 +34,13 @@ def training_week_update_to_html(
 
     completed_sessions = {}
     for activity in mid_week_analysis.activities:
-        # Assuming the date_and_time is in a format like "Monday, August 12, 2024 06:06 AM"
         activity_datetime = datetime.strptime(
             activity.date_and_time, "%A, %B %d, %Y %I:%M %p"
         )
         completed_sessions[activity_datetime.strftime("%A").lower()] = activity
 
-    total_planned_miles = sum(
-        session.distance for session in training_week_update_with_planning.training_week
-    )
+    total_miles = round(mid_week_analysis.miles_target, 1)
+    miles_remaining = round(mid_week_analysis.miles_remaining, 1)
 
     html_content = """
     <html>
@@ -95,7 +93,7 @@ def training_week_update_to_html(
                 color: #333;
             }
             .content li.completed {
-                background-color: #d4edda;
+                background-color: #f9f9f9;
                 border-left-color: #28a745;
             }
             .content li.upcoming {
@@ -108,12 +106,35 @@ def training_week_update_to_html(
                 margin-bottom: 5px;
                 color: #333;
             }
-            .mileage-target-section {
-                margin-top: 30px;
-                padding: 20px;
-                background-color: #f9f9f9;
+            .miles-summary {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                background-color: #6495ED;
+                padding: 20px 30px;
+                margin-top: 20px;
                 border-radius: 10px;
                 box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                text-align: center;
+            }
+            .miles-info {
+                flex: 1;
+            }
+            .miles-label {
+                font-size: 18px;
+                color: #ffffff;
+                margin-bottom: 5px;
+            }
+            .miles-value {
+                font-size: 28px;
+                font-weight: bold;
+                color: #ffffff;
+            }
+            .separator {
+                width: 2px;
+                background-color: #ddd;
+                height: 50px;
+                margin: 0 20px;
             }
             .footer {
                 background-color: #f1f1f1;
@@ -127,10 +148,9 @@ def training_week_update_to_html(
     <body>
         <div class="container">
             <div class="header">
-                <h1>Your Updated Training Schedule</h1>
+                <h1>Updated Training Schedule</h1>
             </div>
             <div class="content">
-                <h2>Completed Activities</h2>
                 <ul>
     """
     # Add completed activities
@@ -146,32 +166,31 @@ def training_week_update_to_html(
 
     html_content += """
                 </ul>
-                <h2>Upcoming Training Plan</h2>
                 <ul>
     """
     # Add upcoming training plan
     for session in training_week_update_with_planning.training_week:
-        session_day = session.day.lower()
-        if session_day in completed_sessions:
-            session_class = "completed"
-            session_notes = (
-                f"Completed: {completed_sessions[session_day].distance_in_miles} miles"
-            )
-        else:
-            session_class = "upcoming"
-            session_notes = f"Planned: {session.notes}"
-
         html_content += f"""
-                <li class="{session_class}">
+                <li class="upcoming">
                     <strong>{session.day.capitalize()}</strong>
                     <span>{session.session_type.value} {session.distance} miles</span><br>
-                    <span>{session_notes}</span>
+                    <span>Planned: {session.notes}</span>
                 </li>
         """
 
     html_content += f"""
                 </ul>
-                <h2>Total Miles Planned: {total_planned_miles}</h2>
+                <div class="miles-summary">
+                    <div class="miles-info">
+                        <span class="miles-label">Total Miles Planned </span>
+                        <span class="miles-value">{total_miles}</span>
+                    </div>
+                    <div class="separator"></div>
+                    <div class="miles-info">
+                        <span class="miles-label">Miles Remaining </span>
+                        <span class="miles-value">{miles_remaining}</span>
+                    </div>
+                </div>
             </div>
             <div class="footer">
                 <p style="font-size: 15px; color: #777;">Powered by the Strava API and OpenAI</p>
@@ -253,7 +272,31 @@ def training_week_to_html(training_week_with_coaching: TrainingWeekWithCoaching)
                 margin-bottom: 5px;
                 color: #333;
             }
-            .review-section, .mileage-target-section {
+           .miles-summary {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                background-color: #6495ED;
+                padding: 20px 30px;
+                margin-top: 20px;
+                border-radius: 10px;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                text-align: center;
+            }
+            .miles-info {
+                flex: 1;
+            }
+            .miles-label {
+                font-size: 18px;
+                color: #ffffff;
+                margin-bottom: 5px;
+            }
+            .miles-value {
+                font-size: 28px;
+                font-weight: bold;
+                color: #ffffff;
+            }
+            .mileage-target-section {
                 margin-top: 30px;
                 padding: 20px;
                 background-color: #f9f9f9;
@@ -288,7 +331,12 @@ def training_week_to_html(training_week_with_coaching: TrainingWeekWithCoaching)
         """
     html_content += f"""
                 </ul>
-                <h2>Total Miles Planned: {total_miles}</h2>
+                <div class="miles-summary" style="text-align: center;">
+                    <div class="miles-info" style="margin: 0 auto;">
+                        <span class="miles-label">Total Miles Planned </span>
+                        <span class="miles-value">{total_miles}</span>
+                    </div>
+                </div>
                 <div class="mileage-target-section">
                     <h2>Coach's Recommendation</h2>
                     <p>{training_week_with_coaching.weekly_mileage_target}</p>
