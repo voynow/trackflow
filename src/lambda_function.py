@@ -1,5 +1,5 @@
 import os
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 from stravalib.client import Client
 
@@ -84,8 +84,12 @@ def lambda_handler(event, context):
     athlete_id = os.environ["JAMIES_ATHLETE_ID"]
     strava_client = get_strava_client(athlete_id)
 
+    # get current time in EST
+    est = timezone(timedelta(hours=-5))
+    datetime_now_est = datetime.now(tz=timezone.utc).astimezone(est)
+
     # weekday 6 is Sunday
-    if datetime.now().weekday() == 6:
+    if datetime_now_est.weekday() == 6:
         run_gen_training_week_process(strava_client, sysmsg_base, athlete_id)
     else:
         run_update_training_week_process(strava_client, sysmsg_base, athlete_id)
