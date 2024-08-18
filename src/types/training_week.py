@@ -56,6 +56,10 @@ class TrainingWeekWithCoaching(BaseModel):
     training_week: List[TrainingSession]
     """Client's recommended training week"""
 
+    @property
+    def total_weekly_mileage(self) -> float:
+        return sum(session.distance for session in self.training_week)
+
     def __str__(self):
         return f"{self.typical_week_training_review=}\n{self.weekly_mileage_target=}\n{self.training_week_planning=}\n{self.training_week=}"
 
