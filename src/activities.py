@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import Dict, List
 
 import polars as pl
@@ -9,6 +9,7 @@ from stravalib.model import Activity
 from src.types.activity_summary import ActivitySummary
 from src.types.day_of_week_summary import DayOfWeekSummary
 from src.types.week_summary import WeekSummary
+from src.utils import datetime_now_est
 
 load_dotenv()
 
@@ -84,9 +85,9 @@ def get_activities_df(strava_client: Client, num_weeks: int = 8) -> pl.DataFrame
     :param num_weeks: The number of weeks to fetch activities for
     :return: A cleaned and processed DataFrame of the athlete's activities
     """
-    timedela_x_weeks = datetime.now() - timedelta(weeks=num_weeks)
+    timedela_x_weeks = datetime_now_est() - timedelta(weeks=num_weeks)
     activities = strava_client.get_activities(
-        after=timedela_x_weeks, before=datetime.now()
+        after=timedela_x_weeks, before=datetime_now_est()
     )
     raw_df = activities_to_df(activities)
     return preprocess_activities_df(raw_df)

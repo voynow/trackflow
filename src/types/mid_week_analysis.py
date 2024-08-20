@@ -1,10 +1,10 @@
-from datetime import datetime
 from typing import List
 
 from pydantic import BaseModel
 
 from src.types.activity_summary import ActivitySummary
 from src.types.training_week import TrainingSession
+from src.utils import datetime_now_est
 
 
 class MidWeekAnalysis(BaseModel):
@@ -13,7 +13,7 @@ class MidWeekAnalysis(BaseModel):
 
     @property
     def training_week_future(self):
-        return self.training_week[datetime.now().weekday() + 1 :]
+        return self.training_week[datetime_now_est().weekday() + 1 :]
 
     @property
     def miles_ran(self):
