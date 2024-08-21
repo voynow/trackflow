@@ -18,6 +18,7 @@ from src.email_manager import (
 )
 from src.supabase_client import (
     get_training_week_with_coaching,
+    list_users,
     upsert_training_week_update,
     upsert_training_week_with_coaching,
 )
@@ -77,19 +78,22 @@ def run_update_training_week_process(
 
 
 def lambda_handler(event, context):
-    client_preferences = "A) Training for a marathon B) This will be my second marathon C) Prefer workouts on Wednesdays and long runs on Saturdays"
-    sysmsg_base = f"{COACH_ROLE}\nYour client has included the following preferences: {client_preferences}\n"
 
-    # activities setup
-    athlete_id = os.environ["JAMIES_ATHLETE_ID"]
-    strava_client = get_strava_client(athlete_id)
+    for user in list_users():
 
-    # get current time in EST
-    est = timezone(timedelta(hours=-5))
-    datetime_now_est = datetime.now(tz=timezone.utc).astimezone(est)
+        strava_client = get_strava_client(user.athlete_id)
+        sysmsg_base = f"{COACH_ROLE}\nYour client has included the following preferences: {user.preferences}\n"
 
-    # weekday 6 is Sunday
-    if datetime_now_est.weekday() == 6:
-        run_gen_training_week_process(strava_client, sysmsg_base, athlete_id)
-    else:
-        run_update_training_week_process(strava_client, sysmsg_base, athlete_id)
+        # get current time in EST
+        est = timezone(timedelta(hours=-5))
+        datetime_now_est = datetime.now(tz=timezone.utc).astimezone(est)
+
+        # TODO add user.email to send_email
+
+        # weekday 6 is Sunday
+        if datetime_now_est.weekday() == 6:
+            run_gen_training_week_process(strava_client, sysmsg_base, user.athlete_id)
+        else:
+            run_update_training_week_process(
+                strava_client, sysmsg_base, user.athlete_id
+            )
