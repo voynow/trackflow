@@ -19,10 +19,6 @@ api_instance = sib_api_v3_sdk.TransactionalEmailsApi(
 )
 
 
-def space(n: int = 1):
-    return "&nbsp;" * n
-
-
 def training_week_update_to_html(
     mid_week_analysis: MidWeekAnalysis,
     training_week_update_with_planning: TrainingWeekWithPlanning,
@@ -38,15 +34,15 @@ def training_week_update_to_html(
 
     completed_sessions = {}
     for activity in mid_week_analysis.activities:
-        activity_datetime = datetime.strptime(
-            activity.date_and_time, "%A, %B %d, %Y %I:%M %p"
-        )
+        activity_datetime = datetime.strptime(activity.date, "%A, %B %d, %Y")
         completed_sessions[activity_datetime.strftime("%A").lower()] = activity
 
-    total_miles = round(mid_week_analysis.miles_target, 1)
-    miles_remaining = round(mid_week_analysis.miles_remaining, 1)
+    miles_ran = round(mid_week_analysis.miles_ran, 2)
+    miles_target = round(mid_week_analysis.miles_target, 2)
+    progress_percentage = (miles_ran / miles_target) * 100 if miles_target > 0 else 0
 
-    html_content = """
+    html_content = (
+        """
     <html>
     <head>
         <style>
@@ -129,6 +125,24 @@ def training_week_update_to_html(
                 color: #ffffff;
                 margin-bottom: 5px;
             }
+            .progress-bar {
+                width: 100%;
+                background-color: #f3f3f3;
+                border-radius: 5px;
+                overflow: hidden;
+                margin-top: 10px;
+            }
+            .progress {
+                height: 20px;
+                width: """
+        + f"{progress_percentage}%"
+        + """;
+                background-color: #28a745;
+                text-align: center;
+                color: white;
+                line-height: 20px;
+                border-radius: 5px 0 0 5px;
+            }
             .footer {
                 background-color: #f1f1f1;
                 text-align: center;
@@ -146,6 +160,7 @@ def training_week_update_to_html(
             <div class="content">
                 <ul>
     """
+    )
     # Add completed activities
     for day, activity in completed_sessions.items():
         html_content += f"""
@@ -175,7 +190,10 @@ def training_week_update_to_html(
                 </ul>
                 <div class="miles-summary" style="text-align: center;">
                     <div class="miles-info" style="margin: 0 auto;">
-                        <span class="miles-label">Total Miles Planned: {total_miles}{space(8)}Miles Remaining: {miles_remaining}</span>
+                        <span class="miles-label">Completed {miles_ran} out of {miles_target} miles</span>
+                        <div class="progress-bar">
+                            <div class="progress">{round(progress_percentage)}%</div>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Dict, List
 
 import polars as pl
@@ -43,54 +43,83 @@ def activities_to_df(activities: List[Activity]) -> pl.DataFrame:
     )
 
 
-def preprocess_activities_df(df: pl.DataFrame) -> pl.DataFrame:
+def add_missing_dates(
+    df: pl.DataFrame, start_date: datetime, end_date: datetime
+) -> pl.DataFrame:
     """
-    Cleans and transforms the activities DataFrame by sorting, converting units,
-    and adding derived columns.
+    Ensures that the DataFrame contains all dates between the start and end date
 
+    :param df: The initial polars DataFrame containing activity data
+    :param start_date: The start date of the range
+    :param end_date: The end date of the range
+    """
+    df_with_date = df.with_columns(df["start_date_local"].dt.date().alias("date")).drop(
+        "start_date_local"
+    )
+    n_days = (end_date.date() - start_date.date()).days + 1
+    date_range_df = pl.DataFrame(
+        {"date": [start_date.date() + timedelta(days=i) for i in range(n_days)]}
+    )
+    return date_range_df.join(df_with_date, on="date", how="left")
+
+
+def preprocess(df: pl.DataFrame) -> pl.DataFrame:
+    """
     :param df: The initial polars DataFrame containing activity data
     :return: A transformed polars DataFrame with cleansed data
     """
+    METERS_PER_MILE = 1609.34
+    FEET_PER_METER = 3.28084
+    MICROSECONDS_PER_MINUTE = 1_000_000 * 60
+
     # Define transformation operations for each column
     col_operations = [
-        pl.col("start_date_local")
+        pl.col("date")
         .dt.strftime("%a")
         .str.to_lowercase()
+        .first()
         .alias("day_of_week"),
-        pl.col("start_date_local").dt.week().alias("week_of_year"),
-        pl.col("start_date_local").dt.year().alias("year"),
-        (pl.col("distance") / 1609.34).alias("distance_in_miles"),
-        (pl.col("total_elevation_gain") * 3.28084).alias("elevation_gain_in_feet"),
-        (pl.col("moving_time") / 1_000_000 / 60).alias("moving_time_in_minutes"),
+        pl.col("date").dt.week().first().alias("week_of_year"),
+        pl.col("date").dt.year().first().alias("year"),
+        pl.col("distance").sum().alias("distance_in_miles") / METERS_PER_MILE,
+        pl.col("total_elevation_gain").sum().alias("elevation_gain_in_feet")
+        * FEET_PER_METER,
+        (pl.col("moving_time").sum() / MICROSECONDS_PER_MINUTE).alias(
+            "moving_time_in_minutes"
+        ),
         (
-            (pl.col("moving_time") / 1_000_000 / 60) / (pl.col("distance") / 1609.34)
+            (pl.col("moving_time").sum() / MICROSECONDS_PER_MINUTE)
+            / (pl.col("distance").sum() / METERS_PER_MILE)
         ).alias("pace_minutes_per_mile"),
     ]
 
     # Apply transformations, sorting, column removals, and filtering
     return (
-        df.sort("start_date_local")
-        .with_columns(col_operations)
-        .drop(["distance", "total_elevation_gain", "moving_time"])
+        df.groupby("date")
+        .agg(col_operations)
+        .sort("date")
+        # drop incomplete first week
         .filter(pl.col("week_of_year") != pl.col("week_of_year").min())
     )
 
 
 def get_activities_df(strava_client: Client, num_weeks: int = 8) -> pl.DataFrame:
     """
-    Fetches and returns activities data for a given athlete ID as a DataFrame,
-    cleansed and processed
+    Fetches activities for a given athlete ID and returns a DataFrame with daily aggregated activities
 
-    :param athlete_id: The Strava athlete ID
-    :param num_weeks: The number of weeks to fetch activities for
-    :return: A cleaned and processed DataFrame of the athlete's activities
+    :param strava_client: The Strava client object to fetch data.
+    :param num_weeks: The number of weeks to fetch activities for.
+    :return: A cleaned and processed DataFrame of the athlete's daily aggregated activities.
     """
-    timedela_x_weeks = datetime_now_est() - timedelta(weeks=num_weeks)
-    activities = strava_client.get_activities(
-        after=timedela_x_weeks, before=datetime_now_est()
-    )
+    end_date = datetime_now_est()
+    start_date = end_date - timedelta(weeks=num_weeks)
+
+    activities = strava_client.get_activities(after=start_date, before=end_date)
     raw_df = activities_to_df(activities)
-    return preprocess_activities_df(raw_df)
+    all_dates_df = add_missing_dates(
+        df=raw_df, start_date=start_date, end_date=end_date
+    )
+    return preprocess(all_dates_df)
 
 
 def get_activity_summaries(strava_client, num_weeks=8) -> List[ActivitySummary]:
@@ -103,9 +132,9 @@ def get_activity_summaries(strava_client, num_weeks=8) -> List[ActivitySummary]:
     """
     df = get_activities_df(strava_client, num_weeks)
     concise_activities_df = df.with_columns(
-        pl.col("start_date_local")
-        .apply(lambda x: x.strftime("%A, %B %d, %Y %I:%M %p"), return_dtype=pl.Utf8)
-        .alias("date_and_time"),
+        pl.col("date").apply(
+            lambda x: x.strftime("%A, %B %d, %Y"), return_dtype=pl.Utf8
+        ),
         pl.col("distance_in_miles").apply(lambda x: round(x, 2)),
         pl.col("elevation_gain_in_feet").apply(lambda x: round(x, 2)),
         pl.col("pace_minutes_per_mile").apply(lambda x: round(x, 2)),
@@ -116,7 +145,6 @@ def get_activity_summaries(strava_client, num_weeks=8) -> List[ActivitySummary]:
         "week_of_year",
         "year",
         "moving_time_in_minutes",
-        "start_date_local",
     )
     return [ActivitySummary(**row) for row in concise_activities_df.rows(named=True)]
 
@@ -136,9 +164,13 @@ def get_day_of_week_summaries(activities_df: pl.DataFrame) -> List[DayOfWeekSumm
         activities_df.groupby("day_of_week")
         .agg(
             [
-                pl.col("id").count().alias("number_of_runs"),
+                pl.when(pl.col("distance_in_miles") > 0.25)
+                .then(pl.lit(1))
+                .otherwise(pl.lit(0))
+                .sum()
+                .alias("number_of_runs"),
                 pl.col("distance_in_miles").mean().alias("avg_miles"),
-                pl.col("pace_minutes_per_mile").mean().alias("avg_pace"),
+                pl.col("pace_minutes_per_mile").drop_nans().mean().alias("avg_pace"),
             ]
         )
         .with_columns(
