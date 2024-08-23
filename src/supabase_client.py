@@ -110,6 +110,32 @@ def upsert_training_week_with_coaching(
     return response
 
 
+def mock_upsert_training_week_with_coaching(
+    athlete_id: int,
+    training_week_with_coaching: TrainingWeekWithCoaching,
+) -> APIResponse:
+    """
+    Mock version of upsert_training_week_with_coaching for testing.
+
+    :param athlete_id: The ID of the athlete.
+    :param training_week_with_coaching: An instance of TrainingWeekWithCoaching.
+    :return: Mocked APIResponse object.
+    """
+    row_data = {
+        "athlete_id": athlete_id,
+        "training_week_planning": training_week_with_coaching.training_week_planning,
+        "training_week": json.dumps(
+            [session.dict() for session in training_week_with_coaching.training_week]
+        ),
+        "typical_week_training_review": training_week_with_coaching.typical_week_training_review,
+        "weekly_mileage_target": training_week_with_coaching.weekly_mileage_target,
+    }
+
+    # Log the data for testing purposes
+    print(f"Mock Upsert Data: {json.dumps(row_data, indent=2)}")
+    return APIResponse(data=[row_data], count=1)
+
+
 def get_training_week_with_coaching(athlete_id: int) -> TrainingWeekWithCoaching:
     """
     Get the most recent training_week_with_coaching row by athlete_id
@@ -171,6 +197,33 @@ def upsert_training_week_update(
     response = table.upsert(row_data).execute()
 
     return response
+
+
+def mock_upsert_training_week_update(
+    athlete_id: int,
+    mid_week_analysis: MidWeekAnalysis,
+    training_week_update_with_planning: TrainingWeekWithPlanning,
+) -> APIResponse:
+    """Mock version of upsert_training_week_update for testing"""
+
+    row_data = {
+        "athlete_id": athlete_id,
+        "activities": json.dumps(
+            [activity.dict() for activity in mid_week_analysis.activities]
+        ),
+        "training_week": json.dumps(
+            [session.dict() for session in mid_week_analysis.training_week]
+        ),
+        "planning": training_week_update_with_planning.planning,
+        "training_week_update": json.dumps(
+            [
+                session.dict()
+                for session in training_week_update_with_planning.training_week
+            ]
+        ),
+    }
+    print(f"Mock Upsert Data: {json.dumps(row_data, indent=2)}")
+    return APIResponse(data=[row_data], count=1)
 
 
 def get_training_week_update(athlete_id: int) -> TrainingWeekWithPlanning:
