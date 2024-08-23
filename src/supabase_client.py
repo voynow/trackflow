@@ -9,6 +9,7 @@ from supabase import Client, create_client
 from src.types.mid_week_analysis import MidWeekAnalysis
 from src.types.training_week import TrainingWeekWithCoaching, TrainingWeekWithPlanning
 from src.types.user_auth_row import UserAuthRow
+from src.types.user_row import UserRow
 
 load_dotenv()
 
@@ -56,6 +57,30 @@ def get_user_auth(athlete_id: int) -> UserAuthRow:
         raise ValueError(f"Cound not find user_auth row with {athlete_id=}")
 
     return UserAuthRow(**response.data[0])
+
+
+def list_athlete_ids() -> list[int]:
+    """
+    List all athlete_ids in the user_auth table
+
+    :return: list of athlete_ids
+    """
+    table = client.table("user_auth")
+    response = table.select("athlete_id").execute()
+
+    return [row["athlete_id"] for row in response.data]
+
+
+def list_users() -> list[UserRow]:
+    """
+    List all users in the user_auth table
+
+    :return: list of UserAuthRow
+    """
+    table = client.table("user")
+    response = table.select("*").execute()
+
+    return [UserRow(**row) for row in response.data]
 
 
 def upsert_training_week_with_coaching(
@@ -146,3 +171,35 @@ def upsert_training_week_update(
     response = table.upsert(row_data).execute()
 
     return response
+
+
+def get_training_week_update(athlete_id: int) -> TrainingWeekWithPlanning:
+    """Get the most recent training_week_update row by athlete_id"""
+
+    table = client.table("training_week_update")
+    response = (
+        table.select("*")
+        .eq("athlete_id", athlete_id)
+        .order("created_at", desc=True)
+        .limit(1)
+        .execute()
+    )
+
+    try:
+        response_data = response.data[0]
+    except Exception:
+        raise ValueError(
+            f"Could not find training_week_update row with {athlete_id=}", exc_info=True
+        )
+
+    # clean up the response data
+    del response_data["id"]
+    del response_data["athlete_id"]
+    del response_data["created_at"]
+    response_data["activities"] = json.loads(response_data["activities"])
+    response_data["training_week"] = json.loads(response_data["training_week"])
+    response_data["training_week_update"] = json.loads(
+        response_data["training_week_update"]
+    )
+
+    return TrainingWeekWithPlanning(**response_data)
