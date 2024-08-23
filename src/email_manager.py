@@ -5,6 +5,7 @@ from typing import Dict
 
 import sib_api_v3_sdk
 from dotenv import load_dotenv
+from urllib3.exceptions import ProtocolError
 
 from src.types.mid_week_analysis import MidWeekAnalysis
 from src.types.training_week import TrainingWeekWithCoaching, TrainingWeekWithPlanning
@@ -63,7 +64,7 @@ def training_week_update_to_html(
                 overflow: hidden;
             }
             .header {
-                background-color: #6495ED;
+                background-color: #5A86D5;
                 color: #ffffff;
                 text-align: center;
                 padding: 20px;
@@ -76,7 +77,7 @@ def training_week_update_to_html(
                 padding: 20px;
             }
             .content h2 {
-                color: #6495ED;
+                color: #5A86D5;
                 font-size: 20px;
                 margin-bottom: 10px;
             }
@@ -88,7 +89,7 @@ def training_week_update_to_html(
             .content li {
                 margin-bottom: 10px;
                 padding: 15px;
-                border-left: 5px solid #6495ED;
+                border-left: 5px solid #5A86D5;
                 border-radius: 5px;
                 color: #333;
             }
@@ -98,7 +99,7 @@ def training_week_update_to_html(
             }
             .content li.upcoming {
                 background-color: #f9f9f9;
-                border-left-color: #6495ED;
+                border-left-color: #5A86D5;
             }
             .content li strong {
                 display: block;
@@ -110,7 +111,7 @@ def training_week_update_to_html(
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                background-color: #6495ED;
+                background-color: #5A86D5;
                 padding: 20px 30px;
                 margin-top: 20px;
                 border-radius: 10px;
@@ -241,7 +242,7 @@ def training_week_to_html(training_week_with_coaching: TrainingWeekWithCoaching)
                 overflow: hidden;
             }
             .header {
-                background-color: #6495ED;
+                background-color: #5A86D5;
                 color: #ffffff;
                 text-align: center;
                 padding: 20px;
@@ -254,7 +255,7 @@ def training_week_to_html(training_week_with_coaching: TrainingWeekWithCoaching)
                 padding: 20px;
             }
             .content h2 {
-                color: #6495ED;
+                color: #5A86D5;
                 font-size: 20px;
                 margin-bottom: 10px;
             }
@@ -267,7 +268,7 @@ def training_week_to_html(training_week_with_coaching: TrainingWeekWithCoaching)
                 background-color: #f9f9f9;
                 margin-bottom: 10px;
                 padding: 15px;
-                border-left: 5px solid #6495ED;
+                border-left: 5px solid #5A86D5;
                 border-radius: 5px;
                 color: #333;
             }
@@ -281,7 +282,7 @@ def training_week_to_html(training_week_with_coaching: TrainingWeekWithCoaching)
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                background-color: #6495ED;
+                background-color: #5A86D5;
                 padding: 20px 30px;
                 margin-top: 20px;
                 border-radius: 10px;
@@ -355,13 +356,16 @@ def training_week_to_html(training_week_with_coaching: TrainingWeekWithCoaching)
 def send_email(
     subject: str,
     html_content: str,
-    to: list = [{"email": "voynow99@gmail.com", "name": "Jamie Voynow"}],
+    to: Dict[str, str],
     sender: Dict[str, str] = {
         "name": "Jamie Voynow",
         "email": "voynowtestaddress@gmail.com",
     },
 ) -> sib_api_v3_sdk.CreateSmtpEmail:
     send_smtp_email = sib_api_v3_sdk.SendSmtpEmail(
-        to=to, html_content=html_content, sender=sender, subject=subject
+        to=[to], html_content=html_content, sender=sender, subject=subject
     )
-    return api_instance.send_transac_email(send_smtp_email)
+    try:
+        return api_instance.send_transac_email(send_smtp_email)
+    except ProtocolError:
+        return api_instance.send_transac_email(send_smtp_email)

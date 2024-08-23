@@ -171,3 +171,35 @@ def upsert_training_week_update(
     response = table.upsert(row_data).execute()
 
     return response
+
+
+def get_training_week_update(athlete_id: int) -> TrainingWeekWithPlanning:
+    """Get the most recent training_week_update row by athlete_id"""
+
+    table = client.table("training_week_update")
+    response = (
+        table.select("*")
+        .eq("athlete_id", athlete_id)
+        .order("created_at", desc=True)
+        .limit(1)
+        .execute()
+    )
+
+    try:
+        response_data = response.data[0]
+    except Exception:
+        raise ValueError(
+            f"Could not find training_week_update row with {athlete_id=}", exc_info=True
+        )
+
+    # clean up the response data
+    del response_data["id"]
+    del response_data["athlete_id"]
+    del response_data["created_at"]
+    response_data["activities"] = json.loads(response_data["activities"])
+    response_data["training_week"] = json.loads(response_data["training_week"])
+    response_data["training_week_update"] = json.loads(
+        response_data["training_week_update"]
+    )
+
+    return TrainingWeekWithPlanning(**response_data)
