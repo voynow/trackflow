@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI SaaS App</title>
+    <title>TrackFlow 🎯</title>
     <style>
         body {
             font-family: 'Helvetica Neue', Arial, sans-serif;
@@ -18,12 +18,38 @@
             color: #333;
         }
         h1 {
-            font-size: 2.5rem;
+            font-size: 2rem;
             margin: 0;
         }
         p {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             margin: 1rem 0;
+        }
+        form {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 400px;
+        }
+        input, textarea {
+            margin: 0.8rem 0;
+            padding: 0.8rem;
+            width: 100%;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        textarea {
+            height: 100px;
+            line-height: 1.5;
+        }
+        .hint {
+            font-size: 0.9rem;
+            color: #909090;
+            text-align: center;
+            width: 95%;
         }
         button {
             background-color: #007BFF;
@@ -33,6 +59,9 @@
             font-size: 1rem;
             cursor: pointer;
             border-radius: 4px;
+            margin-top: 1rem;
+            width: 100%;
+            max-width: 150px;
         }
         button:hover {
             background-color: #0056b3;
@@ -40,8 +69,21 @@
     </style>
 </head>
 <body>
-    <h1>Super Duper SaaS App</h1>
-    <p>Blessed are the meek for they shall inherit the earth.</p>
-    <button>Get Started</button>
+    <h1>TrackFlow 🎯</h1>
+    <p>Hyperpersonalized training recs straight to your inbox</p>
+    <button id="getStartedBtn">Get Started</button>
+    <form id="signupForm">
+        <input type="email" placeholder="Email" required>
+        <textarea placeholder="Preferences"></textarea>
+        <div class="hint">Preferences example:<br>"Training for my second marathon, typically have workouts on Wednesdays and long runs on Saturdays"</div>
+        <button type="submit">Sign Up</button>
+    </form>
+
+    <script>
+        document.getElementById('getStartedBtn').addEventListener('click', function() {
+            document.getElementById('signupForm').style.display = 'flex';
+            this.style.display = 'none';
+        });
+    </script>
 </body>
 </html>
