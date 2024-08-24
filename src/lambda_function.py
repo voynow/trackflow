@@ -117,7 +117,7 @@ def core_executor(user: UserRow) -> None:
 def lambda_handler(event, context):
     """Main entry point for production workload"""
     if event:
-        print(event)
-    else:
-        print("No event received")
-        # [core_executor(user) for user in list_users()]
+        print("event received:", event)
+    # else:
+    # print("No event received")
+    [core_executor(user) for user in list_users()]

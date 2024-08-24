@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TrackFlow 🎯</title>
+    <title>Super Duper</title>
     <style>
         body {
             font-family: 'Helvetica Neue', Arial, sans-serif;
@@ -47,9 +47,11 @@
         }
         .hint {
             font-size: 0.9rem;
-            color: #909090;
-            text-align: center;
-            width: 95%;
+            color: #888;
+            margin-top: -0.5rem;
+            margin-bottom: 1rem;
+            text-align: left;
+            width: 100%;
         }
         button {
             background-color: #007BFF;
@@ -69,13 +71,13 @@
     </style>
 </head>
 <body>
-    <h1>TrackFlow 🎯</h1>
-    <p>Hyperpersonalized training recs straight to your inbox</p>
+    <h1>Super Duper SaaS App</h1>
+    <p>Blessed are the meek for they shall inherit the earth.</p>
     <button id="getStartedBtn">Get Started</button>
     <form id="signupForm">
-        <input type="email" placeholder="Email" required>
-        <textarea placeholder="Preferences"></textarea>
-        <div class="hint">Preferences example:<br>"Training for my second marathon, typically have workouts on Wednesdays and long runs on Saturdays"</div>
+        <input type="email" id="email" placeholder="Email" required>
+        <textarea id="preferences" placeholder="Preferences"></textarea>
+        <div class="hint">*Preferences example: Training for my second Marathon. Prefer workouts on Wednesdays and long runs on Saturdays.</div>
         <button type="submit">Sign Up</button>
     </form>
 
@@ -84,6 +86,50 @@
             document.getElementById('signupForm').style.display = 'flex';
             this.style.display = 'none';
         });
+
+        document.getElementById('signupForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const clientId = "UPDATE_ME";
+            const redirectUri = window.location.href;
+            const scope = 'read_all,profile:read_all,activity:read_all';
+            const stravaAuthUrl = `https://www.strava.com/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&approval_prompt=auto&scope=${scope}`;
+            
+            window.location.href = stravaAuthUrl;
+        });
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+
+        if (code) {
+            const email = document.getElementById('email').value;
+            const preferences = document.getElementById('preferences').value;
+
+            if (email && preferences) {
+                fetch('https://UPDATE_ME.execute-api.us-east-1.amazonaws.com/prod/signup', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        preferences: preferences,
+                        code: code
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Success:', data);
+                    alert('Sign-up successful!');
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                    alert('Sign-up failed.');
+                });
+            } else {
+                alert('Please complete the form to sign up.');
+            }
+        }
     </script>
 </body>
 </html>
