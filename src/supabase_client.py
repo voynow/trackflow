@@ -124,15 +124,15 @@ def mock_upsert_training_week_with_coaching(
     row_data = {
         "athlete_id": athlete_id,
         "training_week_planning": training_week_with_coaching.training_week_planning,
-        "training_week": json.dumps(
-            [session.dict() for session in training_week_with_coaching.training_week]
-        ),
+        "training_week": [
+            session.dict() for session in training_week_with_coaching.training_week
+        ],
         "typical_week_training_review": training_week_with_coaching.typical_week_training_review,
         "weekly_mileage_target": training_week_with_coaching.weekly_mileage_target,
     }
 
-    # Log the data for testing purposes
-    print(f"Mock Upsert Data: {json.dumps(row_data, indent=2)}")
+    print(json.dumps(row_data, indent=4))
+    print(f"{training_week_with_coaching.total_weekly_mileage=}")
     return APIResponse(data=[row_data], count=1)
 
 
@@ -208,21 +208,17 @@ def mock_upsert_training_week_update(
 
     row_data = {
         "athlete_id": athlete_id,
-        "activities": json.dumps(
-            [activity.dict() for activity in mid_week_analysis.activities]
-        ),
-        "training_week": json.dumps(
-            [session.dict() for session in mid_week_analysis.training_week]
-        ),
+        "activities": [activity.dict() for activity in mid_week_analysis.activities],
+        "training_week": [
+            session.dict() for session in mid_week_analysis.training_week
+        ],
         "planning": training_week_update_with_planning.planning,
-        "training_week_update": json.dumps(
-            [
-                session.dict()
-                for session in training_week_update_with_planning.training_week
-            ]
-        ),
+        "training_week_update": [
+            session.dict()
+            for session in training_week_update_with_planning.training_week
+        ],
     }
-    print(f"Mock Upsert Data: {json.dumps(row_data, indent=2)}")
+    print(json.dumps(row_data, indent=4))
     return APIResponse(data=[row_data], count=1)
 
 
