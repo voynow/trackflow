@@ -369,3 +369,20 @@ def send_email(
         return api_instance.send_transac_email(send_smtp_email)
     except ProtocolError:
         return api_instance.send_transac_email(send_smtp_email)
+
+
+def mock_send_email(
+    subject: str,
+    html_content: str,
+    to: Dict[str, str],
+    sender: Dict[str, str] = {
+        "name": "Jamie Voynow",
+        "email": "voynowtestaddress@gmail.com",
+    },
+) -> sib_api_v3_sdk.CreateSmtpEmail:
+    """Mock version of send_email for testing"""
+    print(f"Subject: {subject}")
+    print(f"To: {to}")
+    print(f"Sender: {sender}")
+    print(f"HTML Content: {html_content[:100] + '...'}")
+    return sib_api_v3_sdk.CreateSmtpEmail(message_id="12345")

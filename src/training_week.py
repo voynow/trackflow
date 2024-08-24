@@ -28,7 +28,7 @@ def get_weekly_mileage_target(
     sysmsg = f"""{sysmsg_base}\nYou will be provided summary statistics (aggregated by week) of your client's training over the past several weeks."""
     usermsg = f"""Starting from earliest to most recent, here are the weekly summaries:
 {weekly_summaries}
-As the coach, prescribe your client a target weekly mileage and long run range for next week. Be specific and refer to the data provided. Write 2-3 sentences while being as concise as possible."""
+As the coach, prescribe your client a target weekly mileage and long run range for next week. Be conservative when increasing volume & distance, it's important that the goals are very achievable. Be specific and refer to the data provided. Write 3-4 sentences while being as concise as possible."""
     return get_completion(
         [{"role": "assistant", "content": sysmsg}, {"role": "user", "content": usermsg}]
     )
