@@ -71,6 +71,23 @@ def list_athlete_ids() -> list[int]:
     return [row["athlete_id"] for row in response.data]
 
 
+def upsert_user(user_row: UserRow) -> APIResponse:
+    """
+    Upsert a row into the user table
+
+    :param user_row: An instance of UserRow
+    :return: APIResponse from Supabase
+    """
+    row_data = user_row.dict()
+    if isinstance(row_data["created_at"], datetime.datetime):
+        row_data["created_at"] = row_data["created_at"].isoformat()
+
+    table = client.table("user")
+    response = table.upsert(row_data, on_conflict="athlete_id").execute()
+
+    return response
+
+
 def list_users() -> list[UserRow]:
     """
     List all users in the user_auth table

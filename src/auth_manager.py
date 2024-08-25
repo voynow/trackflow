@@ -11,6 +11,29 @@ load_dotenv()
 strava_client = Client()
 
 
+def authenticate_with_code(code: str) -> UserAuthRow:
+    """Core functionality of signup workflow"""
+    token = strava_client.exchange_code_for_token(
+        client_id=os.environ["STRAVA_CLIENT_ID"],
+        client_secret=os.environ["STRAVA_CLIENT_SECRET"],
+        code=code,
+    )
+    strava_client.access_token = token["access_token"]
+    strava_client.refresh_token = token["refresh_token"]
+    strava_client.token_expires_at = token["expires_at"]
+
+    athlete = strava_client.get_athlete()
+
+    user_auth_row = UserAuthRow(
+        athlete_id=athlete.id,
+        access_token=strava_client.access_token,
+        refresh_token=strava_client.refresh_token,
+        expires_at=strava_client.token_expires_at,
+    )
+    upsert_user_auth(user_auth_row)
+    return user_auth_row
+
+
 def get_configured_strava_client(user_auth: UserAuthRow) -> Client:
     strava_client.access_token = user_auth.access_token
     strava_client.refresh_token = user_auth.refresh_token
@@ -47,5 +70,6 @@ def authenticate_athlete(athlete_id: int) -> UserAuthRow:
 
 
 def get_strava_client(athlete_id: int) -> Client:
+    """Interface for retrieving a Strava client with valid authentication"""
     user_auth = authenticate_athlete(athlete_id)
     return get_configured_strava_client(user_auth)
