@@ -1,8 +1,8 @@
-import os
+import logging
 from datetime import datetime, timedelta, timezone
 from typing import Callable, Dict
 
-from stravalib.client import Client
+from postgrest.base_request_builder import APIResponse
 
 from src.activities import (
     get_activities_df,
@@ -10,7 +10,7 @@ from src.activities import (
     get_day_of_week_summaries,
     get_weekly_summaries,
 )
-from src.auth_manager import get_strava_client
+from src.auth_manager import authenticate_with_code, get_strava_client
 from src.constants import COACH_ROLE
 from src.email_manager import (
     send_email,
@@ -22,12 +22,32 @@ from src.supabase_client import (
     list_users,
     upsert_training_week_update,
     upsert_training_week_with_coaching,
+    upsert_user,
 )
 from src.training_week import generate_training_week
 from src.training_week_update import get_updated_training_week
 from src.types.mid_week_analysis import MidWeekAnalysis
 from src.types.training_week import TrainingWeekWithPlanning
 from src.types.user_row import UserRow
+
+
+def signup(email: str, preferences: str, code: str) -> APIResponse:
+    """
+    Get authenticated user, upsert user with email and preferences
+
+    :param email: user email
+    :param preferences: user preferences
+    :param code: strava code
+    :return: APIResponse from DB upsert
+    """
+    user_auth = authenticate_with_code(code)
+    return upsert_user(
+        UserRow(
+            athlete_id=user_auth.athlete_id,
+            email=email,
+            preferences=preferences,
+        )
+    )
 
 
 def get_athlete_full_name(strava_client) -> str:
@@ -40,6 +60,7 @@ def run_weekly_update_process(
     upsert_fn: Callable[[str, TrainingWeekWithPlanning], None],
     email_fn: Callable[[Dict[str, str], str, str], None],
 ) -> None:
+    """New training plan generation triggered weekly"""
     sysmsg_base = f"{COACH_ROLE}\nYour client has included the following preferences: {user.preferences}\n"
     strava_client = get_strava_client(user.athlete_id)
 
@@ -65,6 +86,7 @@ def run_mid_week_update_process(
     upsert_fn: Callable[[str, MidWeekAnalysis, TrainingWeekWithPlanning], None],
     email_fn: Callable[[Dict[str, str], str, str], None],
 ) -> None:
+    """Mid-week training plan update triggered daily"""
     sysmsg_base = f"{COACH_ROLE}\nYour client has included the following preferences: {user.preferences}\n"
     strava_client = get_strava_client(user.athlete_id)
 
@@ -91,9 +113,10 @@ def run_mid_week_update_process(
     )
 
 
-def core_executor(user: UserRow) -> None:
+def daily_executor(user: UserRow) -> None:
     """
-    On sundays, generate a new training week, otherwise update the current training week
+    On sundays, generate a new training week, otherwise update the current
+    training week
     """
     # get current time in EST
     est = timezone(timedelta(hours=-5))
@@ -116,7 +139,12 @@ def core_executor(user: UserRow) -> None:
 
 def lambda_handler(event, context):
     """Main entry point for production workload"""
-    if event and event.get("email") and event.get("preferences"):
-        print(f"Triggered lambda with {event=}")
+    if event and event.get("email") and event.get("preferences") and event.get("code"):
+        response = signup(
+            email=event["email"],
+            preferences=event["preferences"],
+            code=event["code"],
+        )
+        logging.info(response)
     else:
-        [core_executor(user) for user in list_users()]
+        [daily_executor(user) for user in list_users()]
