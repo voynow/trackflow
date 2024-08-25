@@ -102,7 +102,7 @@
         document.getElementById('signupForm').addEventListener('submit', function (event) {
             event.preventDefault();
 
-            const clientId = '__STRAVA_CLIENT_ID__';
+            const clientId = 95101;
             const redirectUri = window.location.href;
             const scope = 'read_all,profile:read_all,activity:read_all';
             const stravaAuthUrl = `https://www.strava.com/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&approval_prompt=auto&scope=${scope}`;
@@ -116,7 +116,7 @@
         if (code) {
             const email = document.getElementById('email').value;
             const preferences = document.getElementById('preferences').value;
-            const apiGatewayUrl = '__API_GATEWAY_URL__';
+            const apiGatewayUrl = 'https://lwg77yq7dd.execute-api.us-east-1.amazonaws.com/prod/signup';
 
             if (email && preferences) {
                 fetch(apiGatewayUrl, {
