@@ -6,8 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TrackFlow 🎯</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+
         body {
-            font-family: 'Helvetica Neue', Arial, sans-serif;
+            font-family: 'Inter', Arial, sans-serif;
             margin: 0;
             padding: 0;
             display: flex;
@@ -15,17 +17,17 @@
             height: 100vh;
             justify-content: center;
             align-items: center;
-            background-color: #ffffff;
-            color: #333;
+            background-color: rgb(240, 240, 240);
+            color: #434343;
         }
 
         h1 {
-            font-size: 2rem;
+            font-size: 4rem;
             margin: 0;
         }
 
         p {
-            font-size: 1.1rem;
+            font-size: 1.75rem;
             margin: 1rem 0;
         }
 
@@ -35,15 +37,16 @@
             align-items: center;
             width: 100%;
             max-width: 400px;
+            padding: 20px;
         }
 
         input,
         textarea {
             margin: 0.8rem 0;
-            padding: 0.8rem;
+            padding: 1rem;
             width: 100%;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
             font-size: 1rem;
             box-sizing: border-box;
         }
@@ -55,41 +58,42 @@
 
         .hint {
             font-size: 0.9rem;
-            color: #888;
+            color: #9f9f9f;
             margin-top: -0.5rem;
             margin-bottom: 1rem;
-            text-align: left;
+            text-align: center;
             width: 100%;
         }
 
         button {
-            background-color: #007BFF;
+            background-color: rgb(110, 72, 213);
             color: #fff;
             border: none;
             padding: 0.8rem 1.5rem;
             font-size: 1rem;
             cursor: pointer;
-            border-radius: 4px;
+            border-radius: 8px;
             margin-top: 1rem;
             width: 100%;
             max-width: 150px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease;
         }
 
         button:hover {
-            background-color: #0056b3;
+            background-color: #9422ff;
         }
     </style>
 </head>
 
 <body>
     <h1>TrackFlow 🎯</h1>
-    <p>Blessed are the meek for they shall inherit the earth.</p>
+    <p>Hyperpersonalized training recs straight to your inbox</p>
     <button id="getStartedBtn">Get Started</button>
     <form id="signupForm">
         <input type="email" id="email" placeholder="Email" required>
         <textarea id="preferences" placeholder="Preferences"></textarea>
-        <div class="hint">*Preferences example: Training for my second Marathon. Prefer workouts on Wednesdays and long
-            runs on Saturdays.</div>
+        <div class="hint">Preferences example: Training for my second Marathon. Prefer workouts on Wednesdays and long runs on Saturdays.</div>
         <button type="submit">Sign Up</button>
     </form>
 
@@ -98,40 +102,40 @@
             document.getElementById('signupForm').style.display = 'flex';
             this.style.display = 'none';
         });
-    
+
         document.getElementById('signupForm').addEventListener('submit', function (event) {
             event.preventDefault();
-    
+
             const email = document.getElementById('email').value;
             const preferences = document.getElementById('preferences').value;
-    
+
             localStorage.setItem('email', email);
             localStorage.setItem('preferences', preferences);
-    
+
             const clientId = 95101;
             const redirectUri = 'https://voynow.github.io/strava/';
             const scope = 'read_all,profile:read_all,activity:read_all';
             const stravaAuthUrl = `https://www.strava.com/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&approval_prompt=auto&scope=${scope}`;
-    
+
             console.log('Redirecting to Strava OAuth:', stravaAuthUrl);
             window.location.href = stravaAuthUrl;
         });
-    
+
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
-    
+
         console.log('URL parameters:', urlParams.toString());
         console.log('OAuth code:', code);
-    
+
         if (code) {
             const email = localStorage.getItem('email');
             const preferences = localStorage.getItem('preferences');
-    
+
             const apiGatewayUrl = 'https://lwg77yq7dd.execute-api.us-east-1.amazonaws.com/prod/signup';
-    
+
             console.log('Email:', email);
             console.log('Preferences:', preferences);
-    
+
             if (email && preferences) {
                 console.log('Sending POST request to API Gateway:', apiGatewayUrl);
                 fetch(apiGatewayUrl, {
@@ -151,21 +155,21 @@
                     })
                     .then(data => {
                         console.log('Success:', data);
-                        alert('Sign-up successful!');
+                        alert('Sign-up successful! ✅');
 
                         localStorage.removeItem('email');
                         localStorage.removeItem('preferences');
                     })
                     .catch((error) => {
                         console.error('Error:', error);
-                        alert('Sign-up failed.');
+                        alert('Sign-up failed. ❌');
                     });
             } else {
                 alert('Please complete the form to sign up.');
             }
         }
     </script>
-    
+
 
 </body>
 
