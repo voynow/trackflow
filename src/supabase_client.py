@@ -79,6 +79,8 @@ def upsert_user(user_row: UserRow) -> APIResponse:
     :return: APIResponse from Supabase
     """
     row_data = user_row.dict()
+    if isinstance(row_data["created_at"], datetime.datetime):
+        row_data["created_at"] = row_data["created_at"].isoformat()
 
     table = client.table("user")
     response = table.upsert(row_data, on_conflict="athlete_id").execute()

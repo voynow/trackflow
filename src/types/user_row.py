@@ -8,4 +8,4 @@ class UserRow(BaseModel):
     athlete_id: int
     email: str
     preferences: str
-    created_at: Optional[datetime] = None
+    created_at: datetime = datetime.now()
