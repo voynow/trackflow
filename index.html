@@ -10,11 +10,11 @@
 
         body {
             font-family: 'Inter', Arial, sans-serif;
-            margin: 0;
+            margin: 20px;
             padding: 0;
             display: flex;
             flex-direction: column;
-            height: 100vh;
+            height: calc(100vh - 40px);
             justify-content: center;
             align-items: center;
             background-color: rgb(240, 240, 240);
@@ -24,20 +24,24 @@
         h1 {
             font-size: 4rem;
             margin: 0;
+            text-align: center;
         }
 
         p {
             font-size: 1.75rem;
             margin: 1rem 0;
+            text-align: center;
+            padding: 0 1rem;
         }
 
         form {
             display: none;
             flex-direction: column;
             align-items: center;
-            width: 100%;
+            width: 90%;
             max-width: 400px;
             padding: 20px;
+            box-sizing: border-box;
         }
 
         input,
@@ -83,6 +87,21 @@
         button:hover {
             background-color: #9422ff;
         }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            p {
+                font-size: 1rem;
+            }
+
+            button {
+                width: 100%;
+                max-width: 100%;
+            }
+        }
     </style>
 </head>
 
@@ -93,7 +112,8 @@
     <form id="signupForm">
         <input type="email" id="email" placeholder="Email" required>
         <textarea id="preferences" placeholder="Preferences"></textarea>
-        <div class="hint">Preferences example: Training for my second Marathon. Prefer workouts on Wednesdays and long runs on Saturdays.</div>
+        <div class="hint">Preferences example: Training for my second Marathon. Prefer workouts on Wednesdays and long
+            runs on Saturdays.</div>
         <button type="submit">Sign Up</button>
     </form>
 
