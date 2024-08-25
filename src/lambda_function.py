@@ -116,4 +116,7 @@ def core_executor(user: UserRow) -> None:
 
 def lambda_handler(event, context):
     """Main entry point for production workload"""
-    [core_executor(user) for user in list_users()]
+    if event and event.get("email") and event.get("preferences"):
+        print(f"Triggered lambda with {event=}")
+    else:
+        [core_executor(user) for user in list_users()]
