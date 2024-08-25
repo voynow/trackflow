@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -17,14 +18,17 @@
             background-color: #ffffff;
             color: #333;
         }
+
         h1 {
             font-size: 2rem;
             margin: 0;
         }
+
         p {
             font-size: 1.1rem;
             margin: 1rem 0;
         }
+
         form {
             display: none;
             flex-direction: column;
@@ -32,7 +36,9 @@
             width: 100%;
             max-width: 400px;
         }
-        input, textarea {
+
+        input,
+        textarea {
             margin: 0.8rem 0;
             padding: 0.8rem;
             width: 100%;
@@ -41,10 +47,12 @@
             font-size: 1rem;
             box-sizing: border-box;
         }
+
         textarea {
             height: 100px;
             line-height: 1.5;
         }
+
         .hint {
             font-size: 0.9rem;
             color: #888;
@@ -53,6 +61,7 @@
             text-align: left;
             width: 100%;
         }
+
         button {
             background-color: #007BFF;
             color: #fff;
@@ -65,11 +74,13 @@
             width: 100%;
             max-width: 150px;
         }
+
         button:hover {
             background-color: #0056b3;
         }
     </style>
 </head>
+
 <body>
     <h1>TrackFlow 🎯</h1>
     <p>Blessed are the meek for they shall inherit the earth.</p>
@@ -77,24 +88,25 @@
     <form id="signupForm">
         <input type="email" id="email" placeholder="Email" required>
         <textarea id="preferences" placeholder="Preferences"></textarea>
-        <div class="hint">*Preferences example: Training for my second Marathon. Prefer workouts on Wednesdays and long runs on Saturdays.</div>
+        <div class="hint">*Preferences example: Training for my second Marathon. Prefer workouts on Wednesdays and long
+            runs on Saturdays.</div>
         <button type="submit">Sign Up</button>
     </form>
 
     <script>
-        document.getElementById('getStartedBtn').addEventListener('click', function() {
+        document.getElementById('getStartedBtn').addEventListener('click', function () {
             document.getElementById('signupForm').style.display = 'flex';
             this.style.display = 'none';
         });
 
-        document.getElementById('signupForm').addEventListener('submit', function(event) {
+        document.getElementById('signupForm').addEventListener('submit', function (event) {
             event.preventDefault();
 
-            const clientId = "UPDATE_ME";
+            const clientId = '__STRAVA_CLIENT_ID__';
             const redirectUri = window.location.href;
             const scope = 'read_all,profile:read_all,activity:read_all';
             const stravaAuthUrl = `https://www.strava.com/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&approval_prompt=auto&scope=${scope}`;
-            
+
             window.location.href = stravaAuthUrl;
         });
 
@@ -104,9 +116,10 @@
         if (code) {
             const email = document.getElementById('email').value;
             const preferences = document.getElementById('preferences').value;
+            const apiGatewayUrl = '__API_GATEWAY_URL__';
 
             if (email && preferences) {
-                fetch('https://UPDATE_ME.execute-api.us-east-1.amazonaws.com/prod/signup', {
+                fetch(apiGatewayUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -117,19 +130,20 @@
                         code: code
                     })
                 })
-                .then(response => response.json())
-                .then(data => {
-                    console.log('Success:', data);
-                    alert('Sign-up successful!');
-                })
-                .catch((error) => {
-                    console.error('Error:', error);
-                    alert('Sign-up failed.');
-                });
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Success:', data);
+                        alert('Sign-up successful!');
+                    })
+                    .catch((error) => {
+                        console.error('Error:', error);
+                        alert('Sign-up failed.');
+                    });
             } else {
                 alert('Please complete the form to sign up.');
             }
         }
     </script>
 </body>
+
 </html>
