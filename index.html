@@ -98,27 +98,42 @@
             document.getElementById('signupForm').style.display = 'flex';
             this.style.display = 'none';
         });
-
+    
         document.getElementById('signupForm').addEventListener('submit', function (event) {
             event.preventDefault();
-
+    
+            const email = document.getElementById('email').value;
+            const preferences = document.getElementById('preferences').value;
+    
+            localStorage.setItem('email', email);
+            localStorage.setItem('preferences', preferences);
+    
             const clientId = 95101;
             const redirectUri = 'https://voynow.github.io/strava/';
             const scope = 'read_all,profile:read_all,activity:read_all';
             const stravaAuthUrl = `https://www.strava.com/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&approval_prompt=auto&scope=${scope}`;
-
+    
+            console.log('Redirecting to Strava OAuth:', stravaAuthUrl);
             window.location.href = stravaAuthUrl;
         });
-
+    
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
-
+    
+        console.log('URL parameters:', urlParams.toString());
+        console.log('OAuth code:', code);
+    
         if (code) {
-            const email = document.getElementById('email').value;
-            const preferences = document.getElementById('preferences').value;
+            const email = localStorage.getItem('email');
+            const preferences = localStorage.getItem('preferences');
+    
             const apiGatewayUrl = 'https://lwg77yq7dd.execute-api.us-east-1.amazonaws.com/prod/signup';
-
+    
+            console.log('Email:', email);
+            console.log('Preferences:', preferences);
+    
             if (email && preferences) {
+                console.log('Sending POST request to API Gateway:', apiGatewayUrl);
                 fetch(apiGatewayUrl, {
                     method: 'POST',
                     headers: {
@@ -130,10 +145,16 @@
                         code: code
                     })
                 })
-                    .then(response => response.json())
+                    .then(response => {
+                        console.log('API Gateway response:', response);
+                        return response.json();
+                    })
                     .then(data => {
                         console.log('Success:', data);
                         alert('Sign-up successful!');
+
+                        localStorage.removeItem('email');
+                        localStorage.removeItem('preferences');
                     })
                     .catch((error) => {
                         console.error('Error:', error);
@@ -144,6 +165,8 @@
             }
         }
     </script>
+    
+
 </body>
 
 </html>
