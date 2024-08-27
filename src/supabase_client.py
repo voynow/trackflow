@@ -236,6 +236,8 @@ def mock_upsert_training_week_update(
         ],
     }
     print(json.dumps(row_data, indent=4))
+    print(f"{mid_week_analysis.miles_ran=}")
+    print(f"{training_week_update_with_planning.total_weekly_mileage=}")
     return APIResponse(data=[row_data], count=1)
 
 

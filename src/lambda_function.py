@@ -24,7 +24,7 @@ from src.supabase_client import (
     upsert_training_week_with_coaching,
     upsert_user,
 )
-from src.training_week import generate_training_week
+from src.new_training_week import generate_training_week_with_coaching
 from src.training_week_update import get_updated_training_week
 from src.types.mid_week_analysis import MidWeekAnalysis
 from src.types.training_week import TrainingWeekWithPlanning
@@ -67,7 +67,7 @@ def run_weekly_update_process(
     activities_df = get_activities_df(strava_client)
     day_of_week_summaries = get_day_of_week_summaries(activities_df)
     weekly_summaries = get_weekly_summaries(activities_df)
-    training_week_with_coaching = generate_training_week(
+    training_week_with_coaching = generate_training_week_with_coaching(
         sysmsg_base=sysmsg_base,
         weekly_summaries=weekly_summaries,
         day_of_week_summaries=day_of_week_summaries,

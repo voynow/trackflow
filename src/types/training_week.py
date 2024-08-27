@@ -42,6 +42,10 @@ class TrainingWeekWithPlanning(BaseModel):
         description="Unordered collection of REMAINING training sessions for the week"
     )
 
+    @property
+    def total_weekly_mileage(self) -> float:
+        return sum(session.distance for session in self.training_week)
+
 
 class TrainingWeekWithCoaching(BaseModel):
     typical_week_training_review: str
