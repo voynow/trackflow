@@ -88,6 +88,14 @@
             background-color: #9422ff;
         }
 
+        #loadingMessage {
+            display: none;
+            font-size: 1.5rem;
+            color: #434343;
+            text-align: center;
+            margin-top: 20px;
+        }
+
         @media (max-width: 600px) {
             h1 {
                 font-size: 1.5rem;
@@ -117,6 +125,8 @@
         <button type="submit">Sign Up</button>
     </form>
 
+    <div id="loadingMessage">Please wait while we complete your sign-up...</div>
+
     <script>
         document.getElementById('getStartedBtn').addEventListener('click', function () {
             document.getElementById('signupForm').style.display = 'flex';
@@ -144,10 +154,9 @@
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
 
-        console.log('URL parameters:', urlParams.toString());
-        console.log('OAuth code:', code);
-
         if (code) {
+            document.getElementById('loadingMessage').style.display = 'block';
+
             const email = localStorage.getItem('email');
             const preferences = localStorage.getItem('preferences');
 
@@ -183,14 +192,15 @@
                     .catch((error) => {
                         console.error('Error:', error);
                         alert('Sign-up failed. ❌');
+                    })
+                    .finally(() => {
+                        document.getElementById('loadingMessage').style.display = 'none';
                     });
             } else {
                 alert('Please complete the form to sign up.');
+                document.getElementById('loadingMessage').style.display = 'none';
             }
         }
     </script>
-
-
 </body>
-
 </html>
