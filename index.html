@@ -202,22 +202,33 @@
                     })
                     .then(data => {
                         console.log('Success:', data);
-                        alert('Sign-up successful! ✅');
+                        showStatusMessage('Sign-up successful! ✅', 'success');
 
                         localStorage.removeItem('email');
                         localStorage.removeItem('preferences');
                     })
                     .catch((error) => {
                         console.error('Error:', error);
-                        alert('Sign-up failed. ❌');
+                        showStatusMessage('Sign-up failed. ❌', 'error');
                     })
                     .finally(() => {
                         document.getElementById('loadingMessage').style.display = 'none';
                     });
             } else {
-                alert('Please complete the form to sign up.');
+                showStatusMessage('Please complete the form to sign up.', 'error');
                 document.getElementById('loadingMessage').style.display = 'none';
             }
+        }
+
+        function showStatusMessage(message, type) {
+            const statusMessage = document.getElementById('statusMessage');
+            statusMessage.textContent = message;
+            statusMessage.className = `status-message ${type}`;
+            statusMessage.style.display = 'block';
+
+            setTimeout(() => {
+                statusMessage.style.display = 'none';
+            }, 5000);
         }
     </script>
 </body>
