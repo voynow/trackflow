@@ -96,6 +96,21 @@
             margin-top: 20px;
         }
 
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid rgb(110, 72, 213);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         @media (max-width: 600px) {
             h1 {
                 font-size: 1.5rem;
@@ -125,7 +140,10 @@
         <button type="submit">Sign Up</button>
     </form>
 
-    <div id="loadingMessage">Please wait while we complete your sign-up...</div>
+    <div id="loadingMessage">
+        <div class="loader"></div>
+        <p>Please wait while we complete your sign-up...</p>
+    </div>
 
     <script>
         document.getElementById('getStartedBtn').addEventListener('click', function () {
