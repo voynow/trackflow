@@ -145,7 +145,9 @@ def daily_executor(user: UserRow) -> None:
 
 def lambda_handler(event, context):
     """Main entry point for production workload"""
-
+    logging.info(f"Event: {event}")
+    logging.info(f"Context: {context}")
+    
     if event and event.get("email") and event.get("preferences") and event.get("code"):
         response = signup(
             email=event["email"],
