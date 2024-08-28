@@ -88,6 +88,29 @@
             background-color: #9422ff;
         }
 
+        #loadingMessage {
+            display: none;
+            font-size: 1.5rem;
+            color: #434343;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid rgb(110, 72, 213);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         @media (max-width: 600px) {
             h1 {
                 font-size: 1.5rem;
@@ -101,6 +124,16 @@
                 width: 100%;
                 max-width: 100%;
             }
+        }
+
+        .status-message {
+            display: none;
+            padding: 15px 20px;
+            border-radius: 8px;
+            font-size: 1rem;
+            margin-top: 30px;
+            text-align: center;
+            animation: fadeIn 0.3s ease-in-out;
         }
     </style>
 </head>
@@ -116,6 +149,13 @@
             runs on Saturdays.</div>
         <button type="submit">Sign Up</button>
     </form>
+
+    <div id="loadingMessage">
+        <div class="loader"></div>
+        <p>Please wait while we complete your sign-up...</p>
+    </div>
+
+    <div id="statusMessage" class="status-message"></div>
 
     <script>
         document.getElementById('getStartedBtn').addEventListener('click', function () {
@@ -144,10 +184,9 @@
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
 
-        console.log('URL parameters:', urlParams.toString());
-        console.log('OAuth code:', code);
-
         if (code) {
+            document.getElementById('loadingMessage').style.display = 'block';
+
             const email = localStorage.getItem('email');
             const preferences = localStorage.getItem('preferences');
 
@@ -175,22 +214,34 @@
                     })
                     .then(data => {
                         console.log('Success:', data);
-                        alert('Sign-up successful! ✅');
+                        showStatusMessage('Sign-up successful! ✅', 'success');
 
                         localStorage.removeItem('email');
                         localStorage.removeItem('preferences');
                     })
                     .catch((error) => {
                         console.error('Error:', error);
-                        alert('Sign-up failed. ❌');
+                        showStatusMessage('Sign-up failed. ❌', 'error');
+                    })
+                    .finally(() => {
+                        document.getElementById('loadingMessage').style.display = 'none';
                     });
             } else {
-                alert('Please complete the form to sign up.');
+                showStatusMessage('Please complete the form to sign up.', 'error');
+                document.getElementById('loadingMessage').style.display = 'none';
             }
         }
+
+        function showStatusMessage(message, type) {
+            const statusMessage = document.getElementById('statusMessage');
+            statusMessage.textContent = message;
+            statusMessage.className = `status-message ${type}`;
+            statusMessage.style.display = 'block';
+
+            setTimeout(() => {
+                statusMessage.style.display = 'none';
+            }, 5000);
+        }
     </script>
-
-
 </body>
-
 </html>
