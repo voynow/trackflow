@@ -381,8 +381,4 @@ def mock_send_email(
     },
 ) -> sib_api_v3_sdk.CreateSmtpEmail:
     """Mock version of send_email for testing"""
-    print(f"Subject: {subject}")
-    print(f"To: {to}")
-    print(f"Sender: {sender}")
-    print(f"HTML Content: {html_content[:100] + '...'}")
     return sib_api_v3_sdk.CreateSmtpEmail(message_id="12345")

@@ -1,10 +1,12 @@
 import json
 from typing import Dict, List, Optional, Type
 
+from dotenv import load_dotenv
 from openai import OpenAI
 from openai.types.chat.chat_completion_message import ChatCompletionMessage
 from pydantic import BaseModel
 
+load_dotenv()
 client = OpenAI()
 
 

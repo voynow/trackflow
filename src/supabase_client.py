@@ -88,6 +88,22 @@ def upsert_user(user_row: UserRow) -> APIResponse:
     return response
 
 
+def get_user(athlete_id: int) -> UserRow:
+    """
+    Get a user by athlete_id
+
+    :param athlete_id: int
+    :return: UserRow
+    """
+    table = client.table("user")
+    response = table.select("*").eq("athlete_id", athlete_id).execute()
+
+    if not response.data:
+        raise ValueError(f"Could not find user with {athlete_id=}")
+
+    return UserRow(**response.data[0])
+
+
 def list_users() -> list[UserRow]:
     """
     List all users in the user_auth table
@@ -113,7 +129,7 @@ def upsert_training_week_with_coaching(
     """
     row_data = {
         "athlete_id": athlete_id,
-        "training_week_planning": training_week_with_coaching.training_week_planning,
+        "planning": training_week_with_coaching.planning,
         "training_week": json.dumps(
             [session.dict() for session in training_week_with_coaching.training_week]
         ),
@@ -140,7 +156,7 @@ def mock_upsert_training_week_with_coaching(
     """
     row_data = {
         "athlete_id": athlete_id,
-        "training_week_planning": training_week_with_coaching.training_week_planning,
+        "planning": training_week_with_coaching.planning,
         "training_week": [
             session.dict() for session in training_week_with_coaching.training_week
         ],
@@ -148,8 +164,6 @@ def mock_upsert_training_week_with_coaching(
         "weekly_mileage_target": training_week_with_coaching.weekly_mileage_target,
     }
 
-    print(json.dumps(row_data, indent=4))
-    print(f"{training_week_with_coaching.total_weekly_mileage=}")
     return APIResponse(data=[row_data], count=1)
 
 
@@ -235,9 +249,6 @@ def mock_upsert_training_week_update(
             for session in training_week_update_with_planning.training_week
         ],
     }
-    print(json.dumps(row_data, indent=4))
-    print(f"{mid_week_analysis.miles_ran=}")
-    print(f"{training_week_update_with_planning.total_weekly_mileage=}")
     return APIResponse(data=[row_data], count=1)
 
 
