@@ -57,7 +57,7 @@ def get_athlete_full_name(strava_client) -> str:
     return f"{athlete.firstname} {athlete.lastname}"
 
 
-def run_weekly_update_process(
+def run_new_training_week_process(
     user: UserRow,
     upsert_fn: Callable[[str, TrainingWeekWithPlanning], None],
     email_fn: Callable[[Dict[str, str], str, str], None],
@@ -130,7 +130,7 @@ def daily_executor(user: UserRow) -> None:
 
     # day 6 is Sunday
     if datetime_now_est.weekday() == 6:
-        run_weekly_update_process(
+        run_new_training_week_process(
             user=user,
             upsert_fn=upsert_training_week_with_coaching,
             email_fn=send_email,

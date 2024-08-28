@@ -45,6 +45,12 @@ class TrainingWeekWithPlanning(BaseModel):
     @property
     def total_weekly_mileage(self) -> float:
         return sum(session.distance for session in self.training_week)
+    
+    def __str__(self):
+        return f"TrainingWeekWithPlanning(planning={self.planning}, training_week={self.training_week})"
+    
+    def __repr__(self):
+        return self.__str__()
 
 
 class TrainingWeekWithCoaching(BaseModel):
@@ -65,7 +71,7 @@ class TrainingWeekWithCoaching(BaseModel):
         return sum(session.distance for session in self.training_week)
 
     def __str__(self):
-        return f"{self.typical_week_training_review=}\n{self.weekly_mileage_target=}\n{self.planning=}\n{self.training_week=}"
+        return f"TrainingWeekWithCoaching(typical_week_training_review={self.typical_week_training_review}, weekly_mileage_target={self.weekly_mileage_target}, planning={self.planning}, training_week={self.training_week})"
 
     def __repr__(self):
         return self.__str__()

@@ -164,8 +164,6 @@ def mock_upsert_training_week_with_coaching(
         "weekly_mileage_target": training_week_with_coaching.weekly_mileage_target,
     }
 
-    print(json.dumps(row_data, indent=4))
-    print(f"{training_week_with_coaching.total_weekly_mileage=}")
     return APIResponse(data=[row_data], count=1)
 
 
@@ -251,9 +249,6 @@ def mock_upsert_training_week_update(
             for session in training_week_update_with_planning.training_week
         ],
     }
-    print(json.dumps(row_data, indent=4))
-    print(f"{mid_week_analysis.miles_ran=}")
-    print(f"{training_week_update_with_planning.total_weekly_mileage=}")
     return APIResponse(data=[row_data], count=1)
 
 
