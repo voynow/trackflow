@@ -54,7 +54,7 @@ class TrainingWeekWithCoaching(BaseModel):
     weekly_mileage_target: str
     """Coach's prescribed weekly mileage target for the client"""
 
-    training_week_planning: str
+    planning: str
     """Internal planning for the client's training week"""
 
     training_week: List[TrainingSession]
@@ -65,7 +65,7 @@ class TrainingWeekWithCoaching(BaseModel):
         return sum(session.distance for session in self.training_week)
 
     def __str__(self):
-        return f"{self.typical_week_training_review=}\n{self.weekly_mileage_target=}\n{self.training_week_planning=}\n{self.training_week=}"
+        return f"{self.typical_week_training_review=}\n{self.weekly_mileage_target=}\n{self.planning=}\n{self.training_week=}"
 
     def __repr__(self):
         return self.__str__()

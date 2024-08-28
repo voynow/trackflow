@@ -99,7 +99,7 @@ def generate_training_week_with_coaching(
 
     training_week = standardize_training_week(training_week_with_planning.training_week)
     return TrainingWeekWithCoaching(
-        training_week_planning=training_week_with_planning.planning,
+        planning=training_week_with_planning.planning,
         training_week=training_week,
         typical_week_training_review=typical_week_training_review,
         weekly_mileage_target=weekly_mileage_target,

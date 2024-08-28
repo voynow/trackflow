@@ -1,4 +1,5 @@
 import logging
+import os
 from datetime import datetime, timedelta, timezone
 from typing import Callable, Dict
 
@@ -17,17 +18,18 @@ from src.email_manager import (
     training_week_to_html,
     training_week_update_to_html,
 )
+from src.new_training_week import generate_training_week_with_coaching
 from src.supabase_client import (
     get_training_week_with_coaching,
+    get_user,
     list_users,
     upsert_training_week_update,
     upsert_training_week_with_coaching,
     upsert_user,
 )
-from src.new_training_week import generate_training_week_with_coaching
 from src.training_week_update import get_updated_training_week
 from src.types.mid_week_analysis import MidWeekAnalysis
-from src.types.training_week import TrainingWeekWithPlanning
+from src.types.training_week import TrainingWeekWithCoaching, TrainingWeekWithPlanning
 from src.types.user_row import UserRow
 
 
@@ -59,7 +61,7 @@ def run_weekly_update_process(
     user: UserRow,
     upsert_fn: Callable[[str, TrainingWeekWithPlanning], None],
     email_fn: Callable[[Dict[str, str], str, str], None],
-) -> None:
+) -> TrainingWeekWithCoaching:
     """New training plan generation triggered weekly"""
     sysmsg_base = f"{COACH_ROLE}\nYour client has included the following preferences: {user.preferences}\n"
     strava_client = get_strava_client(user.athlete_id)
@@ -80,12 +82,14 @@ def run_weekly_update_process(
         html_content=training_week_to_html(training_week_with_coaching),
     )
 
+    return training_week_with_coaching
+
 
 def run_mid_week_update_process(
     user: UserRow,
     upsert_fn: Callable[[str, MidWeekAnalysis, TrainingWeekWithPlanning], None],
     email_fn: Callable[[Dict[str, str], str, str], None],
-) -> None:
+) -> TrainingWeekWithPlanning:
     """Mid-week training plan update triggered daily"""
     sysmsg_base = f"{COACH_ROLE}\nYour client has included the following preferences: {user.preferences}\n"
     strava_client = get_strava_client(user.athlete_id)
@@ -111,6 +115,8 @@ def run_mid_week_update_process(
             training_week_update_with_planning=training_week_update_with_planning,
         ),
     )
+
+    return training_week_update_with_planning
 
 
 def daily_executor(user: UserRow) -> None:
@@ -139,6 +145,7 @@ def daily_executor(user: UserRow) -> None:
 
 def lambda_handler(event, context):
     """Main entry point for production workload"""
+
     if event and event.get("email") and event.get("preferences") and event.get("code"):
         response = signup(
             email=event["email"],
@@ -146,5 +153,10 @@ def lambda_handler(event, context):
             code=event["code"],
         )
         logging.info(response)
+
+    elif event.get("end_to_end_test"):
+        user = get_user(os.environ["JAMIES_ATHLETE_ID"])
+        daily_executor(user)
+
     else:
         [daily_executor(user) for user in list_users()]
