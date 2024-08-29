@@ -34,10 +34,29 @@ class TrainingSession(BaseModel):
         return f"TrainingSession(session_type={self.session_type}, distance={self.distance}, weekly_mileage_cumulative={self.weekly_mileage_cumulative}, notes={self.notes})"
 
 
-class TrainingWeekWithPlanning(BaseModel):
-    planning: str = Field(
-        description="Draft a plan (used internally) to aid in training week generation. You must adhere to the weekly mileage target and long run range. Do required math (step by step out loud) to plan the week successfully. Distribute volume and intensity evenly throughout the week. If you end up exceeding the weekly mileage target, adjust one of the easy runs to be shorter."
+class Planning(BaseModel):
+    weekly_mileage_target: str = Field(
+        description="String representation of the weekly mileage target"
     )
+    long_run_distance: float = Field(
+        description="The distance and day of the long run for the week"
+    )
+    remaining_weekly_mileage: str = Field(
+        description="Write out the math (target - long run distance) to calculate the remaining weekly mileage"
+    )
+    remaining_weekly_mileage_planning: str = Field(
+        description="Walk through, step by step, a practical distribution of the remaining weekly mileage across the week. Be very detailed, using math to ensure correctness on every step."
+    )
+
+    def __str__(self):
+        return f"Planning(weekly_mileage_target={self.weekly_mileage_target}, long_run_distance={self.long_run_distance}, remaining_weekly_mileage={self.remaining_weekly_mileage}, remaining_weekly_mileage_planning={self.remaining_weekly_mileage_planning})"
+
+    def __repr__(self):
+        return self.__str__()
+
+
+class TrainingWeekWithPlanning(BaseModel):
+    planning: Planning
     training_week: List[TrainingSession] = Field(
         description="Unordered collection of REMAINING training sessions for the week"
     )
@@ -45,10 +64,10 @@ class TrainingWeekWithPlanning(BaseModel):
     @property
     def total_weekly_mileage(self) -> float:
         return sum(session.distance for session in self.training_week)
-    
+
     def __str__(self):
         return f"TrainingWeekWithPlanning(planning={self.planning}, training_week={self.training_week})"
-    
+
     def __repr__(self):
         return self.__str__()
 

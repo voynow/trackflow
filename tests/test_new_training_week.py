@@ -40,6 +40,7 @@ class NewTrainingWeekError(BaseModel):
     error: float
     """The absolute error between the recommended and actual weekly mileage"""
 
+
 def get_twwc_accuracy(training_week_with_coaching: TrainingWeekWithCoaching):
 
     msg = f"""Given the following coaching recommendation: {training_week_with_coaching.weekly_mileage_target}
@@ -77,7 +78,8 @@ def assess_accuracy(sample_size: int = 10):
     """
     sampled_users = random.choices(list_users(), k=sample_size)
     results = []
-    for user in sampled_users:
+    for i, user in enumerate(sampled_users):
+        print(f"({i+1} of {sample_size}) {user.email}")
         twwc = run_new_training_week_process_wrapped(user)
         response = get_twwc_accuracy(twwc)
         results.append(
@@ -100,4 +102,4 @@ def assess_accuracy(sample_size: int = 10):
     print(f"Stdev: {statistics.stdev(errors):.2f}")
 
 
-assess_accuracy(sample_size=10)
+assess_accuracy(sample_size=20)

@@ -1,4 +1,5 @@
 import json
+import time
 from typing import Dict, List, Optional, Type
 
 from dotenv import load_dotenv
@@ -25,8 +26,19 @@ def get_completion_json(
     message: str,
     response_model: Type[BaseModel],
     model: str = "gpt-4o-2024-08-06",
+    max_retries: int = 3,
+    retry_delay: float = 1.0,
 ) -> BaseModel:
+    """
+    Get a JSON completion from the LLM and parse it into a Pydantic model.
 
+    :param message: The message to send to the LLM.
+    :param response_model: The Pydantic model to parse the response into.
+    :param model: The model to use for the completion.
+    :param max_retries: The maximum number of retries to attempt.
+    :param retry_delay: The delay between retries in seconds.
+    :return: parsed Pydantic model
+    """
     response_model_content = (
         f"Your json response must follow the following: {response_model.schema()=}"
     )
@@ -34,21 +46,27 @@ def get_completion_json(
     messages = [
         {
             "role": "system",
-            "content": "You are a helpful assistant designed to output JSON."
-            + response_model_content,
+            "content": f"You are a helpful assistant designed to output JSON. {response_model_content}",
         },
         {"role": "user", "content": message},
     ]
 
-    response = json.loads(
-        get_completion(
-            model=model,
-            messages=messages,
-            response_format={"type": "json_object"},
-        )
-    )
+    for attempt in range(max_retries):
+        try:
+            response_str = get_completion(
+                model=model,
+                messages=messages,
+                response_format={"type": "json_object"},
+            )
+            response = json.loads(response_str)
+            return response_model(**response)
+        except json.JSONDecodeError as e:
+            if attempt == max_retries - 1:
+                raise Exception(
+                    f"Failed to parse JSON after {max_retries} attempts: {e}"
+                )
+            time.sleep(retry_delay)
+        except Exception as e:
+            raise Exception(f"Failed to get a valid response: {response_str=}, {e=}")
 
-    try:
-        return response_model(**response)
-    except Exception as e:
-        raise Exception(f"Failed to get a valid response: {response=}, {e=}")
+    raise Exception(f"Failed to get a valid response after {max_retries} attempts")

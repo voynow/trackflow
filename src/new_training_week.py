@@ -37,7 +37,7 @@ As the coach, prescribe your client a target weekly mileage and long run range f
     )
 
 
-def get_training_week(
+def get_training_week_with_planning(
     sysmsg_base: str,
     typical_week_training_review: str,
     weekly_mileage_target: str,
@@ -91,7 +91,7 @@ def generate_training_week_with_coaching(
     weekly_mileage_target = get_weekly_mileage_target(
         sysmsg_base=sysmsg_base, weekly_summaries=weekly_summaries
     )
-    training_week_with_planning = get_training_week(
+    training_week_with_planning = get_training_week_with_planning(
         sysmsg_base=sysmsg_base,
         typical_week_training_review=typical_week_training_review,
         weekly_mileage_target=weekly_mileage_target,
@@ -99,7 +99,7 @@ def generate_training_week_with_coaching(
 
     training_week = standardize_training_week(training_week_with_planning.training_week)
     return TrainingWeekWithCoaching(
-        planning=training_week_with_planning.planning,
+        planning=str(training_week_with_planning.planning),
         training_week=training_week,
         typical_week_training_review=typical_week_training_review,
         weekly_mileage_target=weekly_mileage_target,

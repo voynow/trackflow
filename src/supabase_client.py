@@ -215,7 +215,7 @@ def upsert_training_week_update(
         "training_week": json.dumps(
             [session.dict() for session in mid_week_analysis.training_week]
         ),
-        "planning": training_week_update_with_planning.planning,
+        "planning": str(training_week_update_with_planning.planning),
         "training_week_update": json.dumps(
             [
                 session.dict()
@@ -243,7 +243,7 @@ def mock_upsert_training_week_update(
         "training_week": [
             session.dict() for session in mid_week_analysis.training_week
         ],
-        "planning": training_week_update_with_planning.planning,
+        "planning": str(training_week_update_with_planning.planning),
         "training_week_update": [
             session.dict()
             for session in training_week_update_with_planning.training_week
