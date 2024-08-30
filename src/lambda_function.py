@@ -15,9 +15,9 @@ from src.activities import (
 from src.auth_manager import authenticate_with_code, get_strava_client
 from src.constants import COACH_ROLE
 from src.email_manager import (
+    new_training_week_to_html,
     send_alert_email,
     send_email,
-    training_week_to_html,
     training_week_update_to_html,
 )
 from src.new_training_week import generate_training_week_with_coaching
@@ -85,7 +85,7 @@ def run_new_training_week_process(
     email_fn(
         to={"email": user.email, "name": get_athlete_full_name(strava_client)},
         subject="Training Schedule Just Dropped 🏃‍♂️🎯",
-        html_content=training_week_to_html(training_week_with_coaching),
+        html_content=new_training_week_to_html(training_week_with_coaching),
     )
 
     return training_week_with_coaching

@@ -5,7 +5,7 @@ from typing import Dict, List, Optional, Type
 from dotenv import load_dotenv
 from openai import OpenAI
 from openai.types.chat.chat_completion_message import ChatCompletionMessage
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 load_dotenv()
 client = OpenAI()
@@ -60,7 +60,7 @@ def get_completion_json(
             )
             response = json.loads(response_str)
             return response_model(**response)
-        except json.JSONDecodeError as e:
+        except (json.JSONDecodeError, ValidationError) as e:
             if attempt == max_retries - 1:
                 raise Exception(
                     f"Failed to parse JSON after {max_retries} attempts: {e}"
