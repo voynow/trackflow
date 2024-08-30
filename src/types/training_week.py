@@ -45,7 +45,7 @@ class Planning(BaseModel):
         description="Write out the math (target - long run distance) to calculate the remaining weekly mileage"
     )
     remaining_weekly_mileage_planning: str = Field(
-        description="Walk through, step by step, a practical distribution of the remaining weekly mileage across the week. Be very detailed, using math to ensure correctness on every step."
+        description="Walk through, step by step (with math), a practical distribution of the remaining weekly mileage across the week. Ex: Given 42 miles total - 17 mile long run = 25 miles remaining, lets distribute 25 miles over the remaining 6 days: One session of 10 miles (25 - 10 = 15 miles remaining). Two sessions of 6 miles (15 - 12 = 3 miles remaining). One sessions of 3 miles (3 - 3 = 0 miles remaining). Plus 2 rest days."
     )
 
     def __str__(self):
