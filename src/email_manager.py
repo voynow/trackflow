@@ -249,12 +249,13 @@ def new_training_week_to_html(
         )
         for session in training_week_with_coaching.training_week
     ]
+    total_weekly_mileage = round(training_week_with_coaching.total_weekly_mileage)
     content = f"<ul>{generate_session_list(upcoming_sessions)}</ul>"
     summary = f"""
     <h2>Coach's Recommendation</h2>
     <p>{training_week_with_coaching.weekly_mileage_target}</p>
     <div class='total-miles-planned'>
-        <span class='miles-label'>Total Miles Planned: {training_week_with_coaching.total_weekly_mileage}</span>
+        <span class='miles-label'>Total Miles Planned: {total_weekly_mileage}</span>
     </div>
     """
 
