@@ -1,5 +1,6 @@
 import logging
 import os
+import traceback
 from datetime import datetime, timedelta, timezone
 from typing import Callable, Dict
 
@@ -14,9 +15,9 @@ from src.activities import (
 from src.auth_manager import authenticate_with_code, get_strava_client
 from src.constants import COACH_ROLE
 from src.email_manager import (
+    new_training_week_to_html,
     send_alert_email,
     send_email,
-    training_week_to_html,
     training_week_update_to_html,
 )
 from src.new_training_week import generate_training_week_with_coaching
@@ -45,7 +46,7 @@ def signup(email: str, preferences: str, code: str) -> APIResponse:
     """
     send_alert_email(
         subject="TrackFlow Alert: New Signup Attempt",
-        text_content=f"You have a new client {email} attempting to signup with the following preferences {preferences}",
+        text_content=f"You have a new client {email=} attempting to signup with {preferences=}",
     )
     user_auth = authenticate_with_code(code)
     return upsert_user(
@@ -84,7 +85,7 @@ def run_new_training_week_process(
     email_fn(
         to={"email": user.email, "name": get_athlete_full_name(strava_client)},
         subject="Training Schedule Just Dropped 🏃‍♂️🎯",
-        html_content=training_week_to_html(training_week_with_coaching),
+        html_content=new_training_week_to_html(training_week_with_coaching),
     )
 
     return training_week_with_coaching
@@ -129,29 +130,35 @@ def daily_executor(user: UserRow) -> None:
     On sundays, generate a new training week, otherwise update the current
     training week
     """
-    # get current time in EST
-    est = timezone(timedelta(hours=-5))
-    datetime_now_est = datetime.now(tz=timezone.utc).astimezone(est)
+    try:
+        # get current time in EST
+        est = timezone(timedelta(hours=-5))
+        datetime_now_est = datetime.now(tz=timezone.utc).astimezone(est)
 
-    # day 6 is Sunday
-    if datetime_now_est.weekday() == 6:
-        run_new_training_week_process(
-            user=user,
-            upsert_fn=upsert_training_week_with_coaching,
-            email_fn=send_email,
-        )
-    else:
-        run_mid_week_update_process(
-            user=user,
-            upsert_fn=upsert_training_week_update,
-            email_fn=send_email,
+        # day 6 is Sunday
+        if datetime_now_est.weekday() == 6:
+            run_new_training_week_process(
+                user=user,
+                upsert_fn=upsert_training_week_with_coaching,
+                email_fn=send_email,
+            )
+        else:
+            run_mid_week_update_process(
+                user=user,
+                upsert_fn=upsert_training_week_update,
+                email_fn=send_email,
+            )
+    except Exception as e:
+        logging.error(f"Error processing user {user.athlete_id}: {e}")
+        logging.error(traceback.format_exc())
+        send_alert_email(
+            subject="TrackFlow Alert: Error in Lambda Function",
+            text_content=f"Error for {user.email=} {e} with traceback: {traceback.format_exc()}",
         )
 
 
 def lambda_handler(event, context):
     """Main entry point for production workload"""
-    logging.info(f"Event: {event}")
-    logging.info(f"Context: {context}")
     print(f"Event: {event}")
     print(f"Context: {context}")
 
