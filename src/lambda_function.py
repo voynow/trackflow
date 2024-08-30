@@ -14,6 +14,7 @@ from src.activities import (
 from src.auth_manager import authenticate_with_code, get_strava_client
 from src.constants import COACH_ROLE
 from src.email_manager import (
+    send_alert_email,
     send_email,
     training_week_to_html,
     training_week_update_to_html,
@@ -42,6 +43,10 @@ def signup(email: str, preferences: str, code: str) -> APIResponse:
     :param code: strava code
     :return: APIResponse from DB upsert
     """
+    send_alert_email(
+        subject="TrackFlow Alert: New Signup Attempt",
+        text_content=f"You have a new client {email} attempting to signup with the following preferences {preferences}",
+    )
     user_auth = authenticate_with_code(code)
     return upsert_user(
         UserRow(
@@ -78,7 +83,7 @@ def run_new_training_week_process(
     upsert_fn(user.athlete_id, training_week_with_coaching)
     email_fn(
         to={"email": user.email, "name": get_athlete_full_name(strava_client)},
-        subject="Training Schedule Just Dropped 🏃",
+        subject="Training Schedule Just Dropped 🏃‍♂️🎯",
         html_content=training_week_to_html(training_week_with_coaching),
     )
 
@@ -109,7 +114,7 @@ def run_mid_week_update_process(
     upsert_fn(user.athlete_id, mid_week_analysis, training_week_update_with_planning)
     email_fn(
         to={"email": user.email, "name": get_athlete_full_name(strava_client)},
-        subject="Training Schedule Update 🏃",
+        subject="Training Schedule Update 🏃‍♂️🎯",
         html_content=training_week_update_to_html(
             mid_week_analysis=mid_week_analysis,
             training_week_update_with_planning=training_week_update_with_planning,
