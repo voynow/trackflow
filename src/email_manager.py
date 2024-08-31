@@ -39,30 +39,47 @@ def get_email_style() -> str:
     return """
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            color: #333;
             margin: 0;
             padding: 0;
+        }
+
+        .title {
+            text-align: center;
+            font-size: 36px;
+            color: #333;
         }
 
         .container {
             width: 100%;
             max-width: 600px;
             margin: 20px auto;
-            background-color: #ffffff;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             overflow: hidden;
         }
 
-        .header {
+        .feedback {
+            text-align: center;
+            font-size: 12px;
+            color: #3c7aec;
+        }
+
+        .coach-thoughts {
+            color: #555;
+            background-color: #f9f9f9;
+            padding: 20px;
+            margin: 20px;
+            box-shadow: 0 4px 4px rgba(96, 75, 75, 0.1);
+        }
+
+        .week-header {
             background-color: #5A86D5;
             color: #ffffff;
             text-align: center;
             padding: 20px;
         }
 
-        .header h1 {
+        .week-header h1 {
             margin: 0;
             font-size: 24px;
         }
@@ -75,6 +92,7 @@ def get_email_style() -> str:
             list-style-type: none;
             padding-left: 20px;
             padding-right: 20px;
+            color: #555;
         }
 
         .content li {
@@ -82,45 +100,31 @@ def get_email_style() -> str:
             padding: 15px;
             border-left: 5px solid #5A86D5;
             border-radius: 5px;
-            color: #333;
             margin-bottom: 5px;
         }
 
         .content li.completed {
             border-left-color: #28a745;
-            color: #333;
         }
 
-        .miles-summary {
+        .total-miles-container {
             background-color: #5A86D5;
             padding: 20px 30px;
             margin-top: 20px;
-            border-radius: 10px;
             text-align: center;
             color: #ffffff;
             margin-bottom: 20px;
         }
-        .total-miles-planned {
-            background-color: #4671c1;
-            padding: 20px 30px;
-            margin-top: 20px;
-            border-radius: 10px;
-            text-align: center;
-            color: #ffffff;
-            margin-bottom: 20px;
-        }
-        
+
         .miles-label {
             font-weight: bold;
             font-size: 24px;
-            color: #ffffff;
         }
 
         .progress-bar {
             width: 100%;
             height: 20px;
             background-color: rgba(255, 255, 255, 0.3);
-            border-radius: 15px;
             overflow: hidden;
             margin-top: 10px;
         }
@@ -128,22 +132,28 @@ def get_email_style() -> str:
         .progress {
             height: 100%;
             background-color: #4CAF50;
-            color: #ffffff;
             font-weight: bold;
+            text-align: center;
+            border-top-right-radius: 10px;
+            border-bottom-right-radius: 10px;
         }
 
         .footer {
-            background-color: #f1f1f1;
             text-align: center;
             padding: 10px;
-            font-size: 9px;
-            color: #777;
+            font-size: 12px;
+            color: #555;
+        }
+
+        .footer h1 {
+            color: #555;
+            font-size: 14px;
         }
         """
 
 
 def generate_html_template(
-    content: str, header: str, summary: Optional[str] = None
+    opening: str, week_header: str, content: str, miles_planned: Optional[str] = None
 ) -> str:
     """Generates the base HTML template with provided content."""
     template_str = """
@@ -151,11 +161,16 @@ def generate_html_template(
     <head><style>{{ style }}</style></head>
     <body>
         <div class="container">
-            <div class="header"><h1>{{ header }}</h1></div>
+            <h1 class="title">TrackFlow 🏃‍♂️🎯</h1>
+            <div class="feedback">
+                <p><a href="https://forms.gle/bTgC9XM1kgLSzxTw6" target="_blank">Got feedback? Click here to share 💭</a></p>
+            </div>
+            {{ opening | safe }}
+            <div class="week-header"><h1>{{ week_header }}</h1></div>
             <div class="content">{{ content | safe }}</div>
-            {% if summary %}<div class="miles-summary">{{ summary | safe }}</div>{% endif %}
+            {{ miles_planned | safe }}
             <div class="footer">
-                <p style="font-size: 15px; color: #777">TrackFlow🏃‍♂️🎯 powered by the Strava API and OpenAI</p>
+                <h1>TrackFlow🏃‍♂️🎯 powered by the Strava API and OpenAI</h1>
                 <p>{{ uid }}</p>
             </div>
         </div>
@@ -165,9 +180,10 @@ def generate_html_template(
     template = Template(template_str)
     return template.render(
         style=get_email_style(),
+        opening=opening,
+        week_header=week_header,
         content=content,
-        header=header,
-        summary=summary,
+        miles_planned=miles_planned,
         uid=str(uuid4()),
     )
 
@@ -222,17 +238,20 @@ def training_week_update_to_html(
     miles_ran = round(mid_week_analysis.miles_ran)
     miles_target = round(mid_week_analysis.miles_target)
     progress = round(progress_percentage)
-    summary = f"""
-    <span class="miles-label">Completed {miles_ran} out of {miles_target} miles</span>
-    <div class="progress-bar">
-        <div class="progress" style="width: {progress_percentage}%;">{progress}%</div>
+    miles_planned = f"""
+    <div class="total-miles-container">
+        <span class="miles-label">Completed {miles_ran} of {miles_target} miles</span>
+        <div class="progress-bar">
+            <div class="progress" style="width: {progress_percentage}%;">{progress}%</div>
+        </div>
     </div>
     """
 
     return generate_html_template(
+        opening="",
+        week_header="Updated Training Schedule",
         content=content,
-        header="Updated Training Schedule",
-        summary=summary,
+        miles_planned=miles_planned,
     )
 
 
@@ -240,6 +259,12 @@ def new_training_week_to_html(
     training_week_with_coaching: TrainingWeekWithCoaching,
 ) -> str:
     """Generates HTML for training week."""
+    opening = f"""
+    <div class="coach-thoughts">
+        <h2>Coach's thoughts for your week</h2>
+        <p>{training_week_with_coaching.weekly_mileage_target}</p>
+    </div>
+    """
     upcoming_sessions = [
         EmailSession(
             day=session.day.capitalize(),
@@ -249,20 +274,19 @@ def new_training_week_to_html(
         )
         for session in training_week_with_coaching.training_week
     ]
-    total_weekly_mileage = round(training_week_with_coaching.total_weekly_mileage)
     content = f"<ul>{generate_session_list(upcoming_sessions)}</ul>"
-    summary = f"""
-    <h2>Coach's Recommendation</h2>
-    <p>{training_week_with_coaching.weekly_mileage_target}</p>
-    <div class='total-miles-planned'>
+    total_weekly_mileage = round(training_week_with_coaching.total_weekly_mileage)
+    miles_planned = f"""
+    <div class="total-miles-container">
         <span class='miles-label'>Total Miles Planned: {total_weekly_mileage}</span>
     </div>
     """
 
     return generate_html_template(
+        opening=opening,
+        week_header="Your Training Schedule",
         content=content,
-        header="Your Training Schedule",
-        summary=summary,
+        miles_planned=miles_planned,
     )
 
 
