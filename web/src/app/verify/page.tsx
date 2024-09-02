@@ -54,7 +54,7 @@ function VerifyContent() {
                             setTimeout(() => {
                                 console.log('Redirecting to home page');
                                 push('/');
-                            }, 2000);
+                            }, 5000);
                         } else {
                             console.log('Verification failed');
                             setStatus('error');
