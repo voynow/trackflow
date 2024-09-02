@@ -11,8 +11,9 @@ export default function Verify(): JSX.Element {
     );
 }
 
-function VerifyContent() {
+function VerifyContent(): JSX.Element {
     const [status, setStatus] = useState<'verifying' | 'success' | 'error'>('verifying');
+    const [countdown, setCountdown] = useState<number>(5);
     const router = useRouter();
     const { push } = router;
     const searchParams = useSearchParams();
@@ -73,10 +74,21 @@ function VerifyContent() {
 
     return (
         <div className="flex items-center justify-center min-h-screen bg-gray-100">
-            <div className="bg-white p-8 rounded-lg shadow-md">
-                {status === 'verifying' && <p>Verifying your account...</p>}
-                {status === 'success' && <p>Verification successful! Redirecting...</p>}
-                {status === 'error' && <p>An error occurred. Please try again.</p>}
+            <div className="bg-white p-8 rounded-lg shadow-md text-center">
+                {status === 'verifying' && (
+                    <p className="text-lg">Verifying...</p>
+                )}
+                {status === 'success' && (
+                    <>
+                        <p className="text-lg mb-2">Verified successfully! ✅</p>
+                        <p className="text-sm text-gray-500">
+                            Redirecting in {countdown}
+                        </p>
+                    </>
+                )}
+                {status === 'error' && (
+                    <p className="text-lg">Verification failed</p>
+                )}
             </div>
         </div>
     );
