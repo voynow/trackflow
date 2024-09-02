@@ -1,44 +1,67 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
-export default function Verify() {
+export default function Verify(): JSX.Element {
     const [status, setStatus] = useState<'verifying' | 'success' | 'error'>('verifying');
     const router = useRouter();
+    const { push } = router;
     const searchParams = useSearchParams();
+    const code = searchParams.get('code');
+    const isInitialMount = useRef(true);
 
     useEffect(() => {
-        const code = searchParams.get('code');
-        const email = localStorage.getItem('email');
-        const preferences = localStorage.getItem('preferences');
+        if (isInitialMount.current) {
+            isInitialMount.current = false; // Prevent re-triggering after the first render
 
-        if (code && email && preferences) {
-            fetch('https://your-api-endpoint.com/signup', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ code, email, preferences }),
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        setStatus('success');
-                        localStorage.removeItem('email');
-                        localStorage.removeItem('preferences');
-                        setTimeout(() => router.push('/'), 2000);
-                    } else {
-                        setStatus('error');
-                    }
+            const email = localStorage.getItem('email');
+            const preferences = localStorage.getItem('preferences');
+
+            console.log('useEffect triggered');
+            console.log('Retrieved email:', email);
+            console.log('Retrieved preferences:', preferences);
+            console.log('Retrieved code:', code);
+
+            if (code && email && preferences) {
+                console.log('All required data is present. Proceeding with fetch request.');
+                fetch('https://lwg77yq7dd.execute-api.us-east-1.amazonaws.com/prod/signup', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, preferences, code })
                 })
-                .catch(() => {
-                    setStatus('error');
-                });
-        } else {
-            setStatus('error');
+                    .then(response => {
+                        console.log('Fetch response received:', response);
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('Parsed response data:', data);
+                        if (data.success) {
+                            console.log('Verification successful');
+                            setStatus('success');
+                            localStorage.removeItem('email');
+                            localStorage.removeItem('preferences');
+                            setTimeout(() => {
+                                console.log('Redirecting to home page');
+                                push('/');
+                            }, 2000);
+                        } else {
+                            console.log('Verification failed');
+                            setStatus('error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Fetch error:', error);
+                        setStatus('error');
+                    });
+            } else {
+                console.log('Missing required data. Setting status to error.');
+                setStatus('error');
+            }
         }
-    }, [searchParams, router]);
+    }, [code, push]); // depend on `code` to ensure updates on URL changes
 
     return (
         <div className="flex items-center justify-center min-h-screen bg-gray-100">

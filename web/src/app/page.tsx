@@ -1,10 +1,23 @@
 'use client';
 
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 import Footer from './components/Footer';
 import Navbar from './components/Navbar';
 
 export default function Home(): JSX.Element {
+  const router = useRouter();
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+
+    if (code) {
+      router.push(`/verify?code=${code}`);
+    }
+  }, [router]);
+
   return (
     <>
       <Navbar />
