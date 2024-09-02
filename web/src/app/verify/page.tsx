@@ -1,9 +1,17 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 
 export default function Verify(): JSX.Element {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <VerifyContent />
+        </Suspense>
+    );
+}
+
+function VerifyContent() {
     const [status, setStatus] = useState<'verifying' | 'success' | 'error'>('verifying');
     const router = useRouter();
     const { push } = router;
