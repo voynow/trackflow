@@ -187,7 +187,7 @@ def get_day_of_week_summaries(activities_df: pl.DataFrame) -> List[DayOfWeekSumm
             day_of_week=row["day_of_week"],
             number_of_runs=row["number_of_runs"],
             avg_miles=round(row["avg_miles"], 2),
-            avg_pace=round(row["avg_pace"], 2),
+            avg_pace=round(row["avg_pace"], 2) if row["avg_pace"] is not None else 0,
         )
         for row in df.to_dicts()
     ]
