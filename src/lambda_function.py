@@ -169,6 +169,7 @@ def lambda_handler(event, context):
             code=event["code"],
         )
         logging.info(response)
+        return {"success": True}
 
     elif event.get("end_to_end_test"):
         user = get_user(os.environ["JAMIES_ATHLETE_ID"])
