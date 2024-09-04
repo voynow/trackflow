@@ -11,7 +11,7 @@ export default function Verify(): JSX.Element {
     );
 }
 
-export function VerifyContent(): JSX.Element {
+function VerifyContent(): JSX.Element {
     const [status, setStatus] = useState<'verifying' | 'success' | 'error'>('verifying');
     const router = useRouter();
     const searchParams = useSearchParams();
