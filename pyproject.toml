@@ -21,6 +21,7 @@ sib-api-v3-sdk = "^7.6.0"
 pydantic = "1.10.16"
 postgrest = "^0.16.8"
 jinja2 = "^3.1.4"
+PyJWT = "^2.9.0"
 
 [tool.poetry.group.dev.dependencies]
 ipykernel = "^6.29.4"
