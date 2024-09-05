@@ -13,81 +13,76 @@ export default function Verify(): JSX.Element {
 
 function VerifyContent(): JSX.Element {
     const [status, setStatus] = useState<'verifying' | 'success' | 'error'>('verifying');
-    const [countdown, setCountdown] = useState<number>(5);
     const router = useRouter();
-    const { push } = router;
     const searchParams = useSearchParams();
     const code = searchParams.get('code');
-    const isInitialMount = useRef(true);
+    const hasRun = useRef(false);
 
     useEffect(() => {
-        if (isInitialMount.current) {
-            isInitialMount.current = false; // Prevent re-triggering after the first render
+        if (hasRun.current) return;
+        hasRun.current = true;
 
-            const email = localStorage.getItem('email');
-            const preferences = localStorage.getItem('preferences');
+        const email = localStorage.getItem('email');
+        const preferences = localStorage.getItem('preferences');
 
-            console.log('useEffect triggered');
-            console.log('Retrieved email:', email);
-            console.log('Retrieved preferences:', preferences);
-            console.log('Retrieved code:', code);
-
-            if (code && email && preferences) {
-                console.log('All required data is present. Proceeding with fetch request.');
-                fetch('https://lwg77yq7dd.execute-api.us-east-1.amazonaws.com/prod/signup', {
+        const verifyAccount = async (payload: Record<string, string>) => {
+            try {
+                const response = await fetch('https://lwg77yq7dd.execute-api.us-east-1.amazonaws.com/prod/signup', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ email, preferences, code })
-                })
-                    .then(response => {
-                        console.log('Fetch response received:', response);
-                        return response.json();
-                    })
-                    .then(data => {
-                        console.log('Parsed response data:', data);
-                        if (data.success) {
-                            console.log('Verification successful');
-                            setStatus('success');
-                            localStorage.removeItem('email');
-                            localStorage.removeItem('preferences');
-                            setTimeout(() => {
-                                console.log('Redirecting to home page');
-                                push('/');
-                            }, 5000);
-                        } else {
-                            console.log('Verification failed');
-                            setStatus('error');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Fetch error:', error);
-                        setStatus('error');
-                    });
-            } else {
-                console.log('Missing required data. Setting status to error.');
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await response.json();
+                if (data.success) {
+                    setStatus('success');
+                    localStorage.removeItem('email');
+                    localStorage.removeItem('preferences');
+                    setTimeout(() => router.push('/dashboard'), 1500);
+                } else {
+                    throw new Error('Verification failed');
+                }
+            } catch {
                 setStatus('error');
+                setTimeout(() => router.push('/'), 1500);
             }
+        };
+
+        if (code) {
+            if (email && preferences) {
+                verifyAccount({ email, preferences, code });
+            } else {
+                verifyAccount({ code });
+            }
+        } else {
+            setStatus('error');
+            setTimeout(() => router.push('/'), 1500);
         }
-    }, [code, push]); // depend on `code` to ensure updates on URL changes
+    }, [code, router]);
 
     return (
         <div className="flex items-center justify-center min-h-screen bg-gray-100">
-            <div className="bg-white p-8 rounded-lg shadow-md text-center">
+            <div className="bg-white p-8 rounded-lg shadow-md text-center max-w-md w-full">
                 {status === 'verifying' && (
-                    <p className="text-lg">Verifying...</p>
+                    <>
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
+                        <p className="text-lg font-semibold">Verifying your account...</p>
+                    </>
                 )}
                 {status === 'success' && (
                     <>
-                        <p className="text-lg mb-2">Verified successfully! ✅</p>
-                        <p className="text-sm text-gray-500">
-                            Redirecting in {countdown}
-                        </p>
+                        <svg className="h-16 w-16 text-green-500 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        <p className="text-lg font-semibold">Verification successful!</p>
                     </>
                 )}
                 {status === 'error' && (
-                    <p className="text-lg">Verification failed</p>
+                    <>
+                        <svg className="h-16 w-16 text-red-500 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        <p className="text-lg font-semibold">Verification failed. Redirecting...</p>
+                    </>
                 )}
             </div>
         </div>

@@ -1,7 +1,6 @@
 import logging
 import os
 import traceback
-from datetime import datetime, timedelta, timezone
 from typing import Callable, Dict
 
 from postgrest.base_request_builder import APIResponse
@@ -33,29 +32,31 @@ from src.training_week_update import get_updated_training_week
 from src.types.mid_week_analysis import MidWeekAnalysis
 from src.types.training_week import TrainingWeekWithCoaching, TrainingWeekWithPlanning
 from src.types.user_row import UserRow
+from src.utils import datetime_now_est
 
 
-def signup(email: str, preferences: str, code: str) -> APIResponse:
+def signup(email: str, preferences: str, code: str) -> str:
     """
     Get authenticated user, upsert user with email and preferences
 
     :param email: user email
     :param preferences: user preferences
     :param code: strava code
-    :return: APIResponse from DB upsert
+    :return: jwt_token
     """
     send_alert_email(
         subject="TrackFlow Alert: New Signup Attempt",
         text_content=f"You have a new client {email=} attempting to signup with {preferences=}",
     )
     user_auth = authenticate_with_code(code)
-    return upsert_user(
+    upsert_user(
         UserRow(
             athlete_id=user_auth.athlete_id,
             email=email,
             preferences=preferences,
         )
     )
+    return user_auth.jwt_token
 
 
 def get_athlete_full_name(strava_client) -> str:
@@ -131,12 +132,8 @@ def daily_executor(user: UserRow) -> None:
     training week
     """
     try:
-        # get current time in EST
-        est = timezone(timedelta(hours=-5))
-        datetime_now_est = datetime.now(tz=timezone.utc).astimezone(est)
-
         # day 6 is Sunday
-        if datetime_now_est.weekday() == 6:
+        if datetime_now_est().weekday() == 6:
             run_new_training_week_process(
                 user=user,
                 upsert_fn=upsert_training_week_with_coaching,
@@ -158,22 +155,45 @@ def daily_executor(user: UserRow) -> None:
 
 
 def lambda_handler(event, context):
-    """Main entry point for production workload"""
+    """
+    Main entry point for production workload. For simplicity, I've designed this
+    lambda to act like an API of sorts, using if/else logic to route events to
+    the correct function.
+
+    :param event: lambda event
+    :param context: lambda context
+    :return: dict with {"success": bool}
+    """
     print(f"Event: {event}")
     print(f"Context: {context}")
 
-    if event and event.get("email") and event.get("preferences") and event.get("code"):
+    # Will fail on bad authenticate_with_code
+    if event.get("email") and event.get("preferences") and event.get("code"):
         response = signup(
             email=event["email"],
             preferences=event["preferences"],
             code=event["code"],
         )
-        logging.info(response)
+        return {"success": True, "jwt_token": response}
+
+    # This will only run if triggered by NIGHTLY_EMAIL_TRIGGER_ARN
+    elif (
+        event.get("resources")
+        and event.get("resources")[0] == os.environ["NIGHTLY_EMAIL_TRIGGER_ARN"]
+    ):
+        [daily_executor(user) for user in list_users()]
         return {"success": True}
 
+    # Will email me only
     elif event.get("end_to_end_test"):
         user = get_user(os.environ["JAMIES_ATHLETE_ID"])
         daily_executor(user)
+        return {"success": True}
 
+    # Catch any error routing or funny business
     else:
-        [daily_executor(user) for user in list_users()]
+        send_alert_email(
+            subject="TrackFlow Alert: Unknown Lambda Invocation",
+            text_content=f"Unknown invocation of lambda with {event=} and {context=}",
+        )
+        return {"success": False}

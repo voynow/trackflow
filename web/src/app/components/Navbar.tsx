@@ -1,10 +1,15 @@
-import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 import SignUp from './SignUp';
 
 export default function Navbar(): JSX.Element {
-    const [showSignup, setShowSignup] = useState(false);
+    const [showSignup, setShowSignup] = useState<boolean>(false);
+
+    const handleSignIn = (): void => {
+        const redirectUri = 'https://trackflowai.vercel.app/verify';
+        const stravaAuthUrl = `https://www.strava.com/oauth/authorize?client_id=95101&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&approval_prompt=auto&scope=read_all,profile:read_all,activity:read_all`;
+        window.location.href = stravaAuthUrl;
+    };
 
     return (
         <>
@@ -12,22 +17,27 @@ export default function Navbar(): JSX.Element {
                 <div className="px-6">
                     <div className="flex justify-between h-16">
                         <div className="flex-shrink-0 flex items-center">
-                            <Link href="/" className="text-2xl font-bold hover:text-gray-500 transition duration-300 ease-in-out">
+                            <Link href="/" className="text-4xl font-bold hover:text-gray-500 transition duration-300 ease-in-out">
                                 TrackFlow
                             </Link>
                         </div>
-                        <div className="flex items-center">
-                            <button className="text-xl px-6 py-2 rounded-lg hover:bg-white transition duration-300 ease-in-out"
+                        <div className="flex items-center space-x-4">
+                            <button className="bg-gray-800 text-gray-200 text-xl px-6 py-2 rounded-lg hover:bg-gray-700 transition duration-300 ease-in-out"
                                 onClick={() => setShowSignup(true)}>
                                 <div className="flex items-center">
-                                    <Image
-                                        src="/strava-icon.png"
-                                        alt="Strava Logo"
-                                        width={20}
-                                        height={20}
-                                        className="mr-2"
-                                    />
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                        <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z" />
+                                    </svg>
                                     Sign Up
+                                </div>
+                            </button>
+                            <button className="bg-gray-800 text-gray-200 text-xl px-6 py-2 rounded-lg hover:bg-gray-700 transition duration-300 ease-in-out"
+                                onClick={handleSignIn}>
+                                <div className="flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                                    </svg>
+                                    Sign In
                                 </div>
                             </button>
                         </div>
