@@ -33,16 +33,29 @@ function VerifyContent(): JSX.Element {
                     body: JSON.stringify(payload)
                 });
                 const data = await response.json();
+                console.log('Response data:', data);
+
                 if (data.success) {
+                    console.log('Verification successful');
                     setStatus('success');
                     localStorage.removeItem('email');
                     localStorage.removeItem('preferences');
                     localStorage.setItem('jwt_token', data.jwt_token);
-                    setTimeout(() => router.push('/dashboard'), 1500);
+                    const dashboardUrl = process.env.APP_ENV === 'development'
+                        ? 'http://localhost:3000/dashboard'
+                        : 'https://trackflowai.vercel.app/dashboard';
+                    console.log('Redirecting to:', dashboardUrl);
+                    console.log('APP_ENV:', process.env.APP_ENV);
+                    setTimeout(() => {
+                        console.log('Attempting redirect...');
+                        router.push(dashboardUrl);
+                    }, 3500);
                 } else {
+                    console.error('Verification failed:', data);
                     throw new Error('Verification failed');
                 }
-            } catch {
+            } catch (error) {
+                console.error('Error during verification:', error);
                 setStatus('error');
                 setTimeout(() => router.push('/'), 1500);
             }
