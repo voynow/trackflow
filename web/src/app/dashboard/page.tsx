@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-
+import DashboardNavbar from '../components/DashboardNavbar';
 
 export default function Dashboard(): JSX.Element {
     const router = useRouter();
@@ -18,9 +18,12 @@ export default function Dashboard(): JSX.Element {
     }, [router]);
 
     return (
-        <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center">
-            <h1 className="text-3xl font-bold">Dashboard</h1>
-            <p className="text-sm text-gray-500 mt-4">In development...</p>
-        </div>
+        <>
+            <DashboardNavbar />
+            <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center">
+                <h1 className="text-3xl font-bold">Dashboard</h1>
+                <p className="text-sm text-gray-500 mt-4">In development...</p>
+            </div>
+        </>
     );
 }
