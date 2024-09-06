@@ -1,14 +1,29 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect } from 'react';
+import { Suspense, useEffect, useRef } from 'react';
 import DashboardNavbar from '../components/DashboardNavbar';
 
 export default function Dashboard(): JSX.Element {
+    return (
+        <>
+            <DashboardNavbar />
+            <Suspense fallback={<div>Loading...</div>}>
+                <DashboardContent />
+            </Suspense>
+        </>
+    );
+}
+
+function DashboardContent(): JSX.Element {
     const router = useRouter();
     const searchParams = useSearchParams();
+    const hasRun = useRef(false);
 
     useEffect(() => {
+        if (hasRun.current) return;
+        hasRun.current = true;
+
         const token = searchParams.get('token');
         if (token) {
             localStorage.setItem('jwt_token', token);
@@ -25,12 +40,9 @@ export default function Dashboard(): JSX.Element {
     }, [router, searchParams]);
 
     return (
-        <>
-            <DashboardNavbar />
-            <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center">
-                <h1 className="text-3xl font-bold">Dashboard</h1>
-                <p className="text-sm text-gray-500 mt-4">In development...</p>
-            </div>
-        </>
+        <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center">
+            <h1 className="text-3xl font-bold">Dashboard</h1>
+            <p className="text-sm text-gray-500 mt-4">In development...</p>
+        </div>
     );
 }
