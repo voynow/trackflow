@@ -2,14 +2,12 @@
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 
+
 export default function DashboardNavbar(): JSX.Element {
     const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        /**
-         * Close the dropdown when clicking outside of it
-         */
         function handleClickOutside(event: MouseEvent): void {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
                 setIsDropdownOpen(false);
