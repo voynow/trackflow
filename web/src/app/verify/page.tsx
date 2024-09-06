@@ -41,11 +41,12 @@ function VerifyContent(): JSX.Element {
                     localStorage.removeItem('email');
                     localStorage.removeItem('preferences');
                     localStorage.setItem('jwt_token', data.jwt_token);
-                    const dashboardUrl = process.env.APP_ENV === 'development'
+                    const isDevelopment = searchParams.get('env') === 'dev';
+                    const dashboardUrl = isDevelopment
                         ? 'http://localhost:3000/dashboard'
                         : 'https://trackflowai.vercel.app/dashboard';
                     console.log('Redirecting to:', dashboardUrl);
-                    console.log('APP_ENV:', process.env.APP_ENV);
+                    console.log('isDevelopment:', isDevelopment);
                     setTimeout(() => {
                         console.log('Attempting redirect...');
                         router.push(dashboardUrl);
