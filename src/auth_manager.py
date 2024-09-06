@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 import jwt
 from dotenv import load_dotenv
 from stravalib.client import Client
+from stravalib.model import Athlete
 
 from src.supabase_client import get_user_auth, upsert_user_auth
 from src.types.user_auth_row import UserAuthRow
@@ -24,6 +25,18 @@ def generate_jwt(athlete_id: int, expires_at: int) -> str:
     payload = {"athlete_id": athlete_id, "exp": expires_at}
     token = jwt.encode(payload, os.environ["JWT_SECRET"], algorithm="HS256")
     return token
+
+
+def decode_jwt(jwt_token: str) -> int | None:
+    """
+    Decode JWT token and return athlete_id
+
+    :param jwt_token: JWT token
+    :return: int if successful, None if decoding fails
+    :raises: jwt.DecodeError if token is invalid
+    """
+    payload = jwt.decode(jwt_token, os.environ["JWT_SECRET"], algorithms=["HS256"])
+    return payload["athlete_id"]
 
 
 def authenticate_with_code(code: str) -> UserAuthRow:

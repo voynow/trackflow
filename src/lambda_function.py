@@ -3,7 +3,7 @@ import os
 import traceback
 from typing import Callable, Dict
 
-from postgrest.base_request_builder import APIResponse
+import jwt
 
 from src.activities import (
     get_activities_df,
@@ -11,7 +11,7 @@ from src.activities import (
     get_day_of_week_summaries,
     get_weekly_summaries,
 )
-from src.auth_manager import authenticate_with_code, get_strava_client
+from src.auth_manager import authenticate_with_code, decode_jwt, get_strava_client
 from src.constants import COACH_ROLE
 from src.email_manager import (
     new_training_week_to_html,
@@ -57,6 +57,17 @@ def signup(email: str, preferences: str, code: str) -> str:
         )
     )
     return user_auth.jwt_token
+
+
+def handle_frontend_request(jwt_token: str):
+    """
+    Validate JWT, then TBD
+    """
+    try:
+        athlete_id = decode_jwt(jwt_token)
+        return {"success": True, "athlete_id": athlete_id}
+    except jwt.DecodeError:
+        return {"success": False, "error": "Invalid JWT token"}
 
 
 def get_athlete_full_name(strava_client) -> str:
@@ -177,9 +188,12 @@ def lambda_handler(event, context):
         return {"success": True, "jwt_token": response}
 
     # Will fail on bad authenticate_with_code
-    if event.get("code"):
+    elif event.get("code"):
         user_auth = authenticate_with_code(event["code"])
         return {"success": True, "jwt_token": user_auth.jwt_token}
+
+    elif event.get("jwt_token"):
+        return handle_frontend_request(event["jwt_token"])
 
     # This will only run if triggered by NIGHTLY_EMAIL_TRIGGER_ARN
     elif (
