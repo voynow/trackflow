@@ -37,6 +37,7 @@ function VerifyContent(): JSX.Element {
                     setStatus('success');
                     localStorage.removeItem('email');
                     localStorage.removeItem('preferences');
+                    localStorage.setItem('jwt_token', data.jwt_token);
                     setTimeout(() => router.push('/dashboard'), 1500);
                 } else {
                     throw new Error('Verification failed');
