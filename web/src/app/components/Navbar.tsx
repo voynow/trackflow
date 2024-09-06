@@ -19,7 +19,7 @@ export default function Navbar(): JSX.Element {
                 <div className="px-4 sm:px-6">
                     <div className="flex justify-between h-16">
                         <div className="flex-shrink-0 flex items-center">
-                            <Link href="/" className="text-2xl sm:text-4xl font-bold hover:text-gray-500 transition duration-300 ease-in-out">
+                            <Link href="/" className="sm:text-2xl font-bold hover:text-gray-500 transition duration-300 ease-in-out">
                                 TrackFlow
                             </Link>
                         </div>

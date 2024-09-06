@@ -1,21 +1,28 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect } from 'react';
 import DashboardNavbar from '../components/DashboardNavbar';
 
 export default function Dashboard(): JSX.Element {
     const router = useRouter();
+    const searchParams = useSearchParams();
 
     useEffect(() => {
-        const token = localStorage.getItem('jwt_token');
-        if (!token) {
-            console.log('User session not found. Redirecting to login page.');
-            router.push('/');
+        const token = searchParams.get('token');
+        if (token) {
+            localStorage.setItem('jwt_token', token);
+            router.replace('/dashboard'); // Remove the token from the URL
         } else {
-            console.log('User authenticated. Displaying dashboard.');
+            const storedToken = localStorage.getItem('jwt_token');
+            if (!storedToken) {
+                console.log('User session not found. Redirecting to login page.');
+                router.push('/');
+            } else {
+                console.log('User authenticated. Displaying dashboard.');
+            }
         }
-    }, [router]);
+    }, [router, searchParams]);
 
     return (
         <>

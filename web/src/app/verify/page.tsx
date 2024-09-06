@@ -41,7 +41,7 @@ function VerifyContent(): JSX.Element {
                     localStorage.setItem('jwt_token', data.jwt_token);
                     const isDevelopment = searchParams.get('env') === 'dev';
                     const dashboardUrl = isDevelopment
-                        ? 'http://localhost:3000/dashboard'
+                        ? `http://localhost:3000/dashboard?token=${encodeURIComponent(data.jwt_token)}`
                         : 'https://trackflowai.vercel.app/dashboard';
                     setTimeout(() => {
                         router.push(dashboardUrl);
