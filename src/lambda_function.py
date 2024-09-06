@@ -176,6 +176,11 @@ def lambda_handler(event, context):
         )
         return {"success": True, "jwt_token": response}
 
+    # Will fail on bad authenticate_with_code
+    if event.get("code"):
+        user_auth = authenticate_with_code(event["code"])
+        return {"success": True, "jwt_token": user_auth.jwt_token}
+
     # This will only run if triggered by NIGHTLY_EMAIL_TRIGGER_ARN
     elif (
         event.get("resources")
