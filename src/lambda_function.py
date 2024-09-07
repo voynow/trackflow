@@ -70,7 +70,7 @@ def handle_frontend_request(jwt_token: str):
         training_week_with_coaching = get_training_week_with_coaching(athlete_id)
         return {
             "success": True,
-            "training_week_with_coaching": training_week_with_coaching,
+            "training_week_with_coaching": training_week_with_coaching.json(),
         }
     except jwt.DecodeError:
         return {"success": False, "error": "Invalid JWT token"}
