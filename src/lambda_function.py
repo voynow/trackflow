@@ -61,11 +61,17 @@ def signup(email: str, preferences: str, code: str) -> str:
 
 def handle_frontend_request(jwt_token: str):
     """
-    Validate JWT, then TBD
+    To be extended for other requests eventually
+
+    Validate JWT, then return training week with coaching
     """
     try:
         athlete_id = decode_jwt(jwt_token)
-        return {"success": True, "athlete_id": athlete_id}
+        training_week_with_coaching = get_training_week_with_coaching(athlete_id)
+        return {
+            "success": True,
+            "training_week_with_coaching": training_week_with_coaching,
+        }
     except jwt.DecodeError:
         return {"success": False, "error": "Invalid JWT token"}
 
