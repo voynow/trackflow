@@ -89,3 +89,10 @@ class TrainingWeekWithPlanning(BaseModel):
 
     def __repr__(self):
         return self.__str__()
+
+
+class TrainingWeekGeneration(BaseModel):
+    """Specifically used for structured LLM generation"""
+
+    weekly_mileage_target: float
+    training_week: TrainingWeek
