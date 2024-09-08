@@ -1,12 +1,11 @@
 from typing import List
 
 from src.llm import get_completion, get_completion_json
+from src.training_week import standardize_training_week
 from src.types.day_of_week_summary import DayOfWeekSummary
 from src.types.training_week import (
-    Day,
-    SessionType,
     TrainingSession,
-    TrainingWeekWithCoaching,
+    TrainingWeek,
     TrainingWeekWithPlanning,
 )
 from src.types.week_summary import WeekSummary
@@ -55,36 +54,31 @@ Build out their next week of training. Distribute volume and intensity evenly th
     )
 
 
-def standardize_training_week(
-    training_week: List[TrainingSession],
-) -> List[TrainingSession]:
+def ensure_completed_set_to_false(
+    training_week: TrainingWeek,
+) -> TrainingWeek:
     """
-    Sort the training week by day of the week and add missing days as rest days
+    Ensure that the completed field is set to False for all sessions
     """
-    day_order = list(Day)
-    existing_days = set(session.day for session in training_week)
-
-    # Add missing days as rest days
-    for day in day_order:
-        if day not in existing_days:
-            training_week.append(
-                TrainingSession(
-                    day=day,
-                    session_type=SessionType.REST,
-                    distance=0.0,
-                    notes="Rest day, take it easy!",
-                )
+    return TrainingWeek(
+        sessions=[
+            TrainingSession(
+                day=session.day,
+                session_type=session.session_type,
+                distance=session.distance,
+                notes=session.notes,
+                completed=False,
             )
+            for session in training_week.sessions
+        ]
+    )
 
-    # Sort the completed training week
-    return sorted(training_week, key=lambda x: day_order.index(x.day))
 
-
-def generate_training_week_with_coaching(
+def generate_new_training_week(
     sysmsg_base: str,
     day_of_week_summaries: List[DayOfWeekSummary],
     weekly_summaries: List[WeekSummary],
-) -> TrainingWeekWithCoaching:
+) -> TrainingWeek:
     typical_week_training_review = get_typical_week_training_review(
         sysmsg_base=sysmsg_base, day_of_week_summaries=day_of_week_summaries
     )
@@ -97,10 +91,7 @@ def generate_training_week_with_coaching(
         weekly_mileage_target=weekly_mileage_target,
     )
 
-    training_week = standardize_training_week(training_week_with_planning.training_week)
-    return TrainingWeekWithCoaching(
-        planning=str(training_week_with_planning.planning),
-        training_week=training_week,
-        typical_week_training_review=typical_week_training_review,
-        weekly_mileage_target=weekly_mileage_target,
+    standardized_training_week = standardize_training_week(
+        training_week_with_planning.training_week
     )
+    return ensure_completed_set_to_false(standardized_training_week)

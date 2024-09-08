@@ -1,7 +1,4 @@
 import os
-import uuid
-from dataclasses import dataclass
-from datetime import datetime
 from typing import Dict, List, Optional
 from uuid import uuid4
 
@@ -11,11 +8,7 @@ from jinja2 import Template
 from pydantic import BaseModel
 from urllib3.exceptions import ProtocolError
 
-from src.types.mid_week_analysis import MidWeekAnalysis
-from src.types.training_week import (
-    TrainingWeekWithCoaching,
-    TrainingWeekWithPlanning,
-)
+from src.types.training_week import TrainingWeek
 
 load_dotenv()
 
@@ -153,7 +146,7 @@ def get_email_style() -> str:
 
 
 def generate_html_template(
-    opening: str, week_header: str, content: str, miles_planned: Optional[str] = None
+    week_header: str, content: str, miles_planned: Optional[str] = None
 ) -> str:
     """Generates the base HTML template with provided content."""
     template_str = """
@@ -165,7 +158,6 @@ def generate_html_template(
             <div class="feedback">
                 <p><a href="https://forms.gle/bTgC9XM1kgLSzxTw6" target="_blank">Got feedback? Click here to share 💭</a></p>
             </div>
-            {{ opening | safe }}
             <div class="week-header"><h1>{{ week_header }}</h1></div>
             <div class="content">{{ content | safe }}</div>
             {{ miles_planned | safe }}
@@ -180,7 +172,6 @@ def generate_html_template(
     template = Template(template_str)
     return template.render(
         style=get_email_style(),
-        opening=opening,
         week_header=week_header,
         content=content,
         miles_planned=miles_planned,
@@ -188,11 +179,11 @@ def generate_html_template(
     )
 
 
-def generate_session_list(sessions: List[EmailSession], session_type: str = "") -> str:
+def generate_session_list(sessions: List[EmailSession]) -> str:
     """Generates an HTML list of sessions."""
     return "".join(
         f"""
-    <li class="{session_type}">
+    <li class="{session.session_type}">
         <strong>{session.day}</strong> <span>{session.distance} miles</span><br>
         <span>{session.notes}</span>
     </li>
@@ -201,91 +192,35 @@ def generate_session_list(sessions: List[EmailSession], session_type: str = "") 
     )
 
 
-def training_week_update_to_html(
-    mid_week_analysis: MidWeekAnalysis,
-    training_week_update_with_planning: TrainingWeekWithPlanning,
+def training_week_to_html(
+    training_week: TrainingWeek,
 ) -> str:
     """Generates HTML for training week update."""
-    completed_sessions = [
-        EmailSession(
-            day=datetime.strptime(activity.date, "%A, %B %d, %Y")
-            .strftime("%a")
-            .capitalize(),
-            session_type="completed",
-            distance=activity.distance_in_miles,
-            notes=f"Pace: {activity.pace_minutes_per_mile} min/mile, Elevation: {activity.elevation_gain_in_feet} feet",
-        )
-        for activity in mid_week_analysis.activities
-    ]
-
-    upcoming_sessions = [
+    sessions = [
         EmailSession(
             day=session.day.capitalize(),
-            session_type=session.session_type.value,
+            session_type="completed" if session.completed else "upcoming",
             distance=session.distance,
             notes=session.notes,
         )
-        for session in training_week_update_with_planning.training_week
+        for session in training_week.sessions
     ]
 
-    content = f"<ul>{generate_session_list(completed_sessions, 'completed')}{generate_session_list(upcoming_sessions, 'upcoming')}</ul>"
-
-    progress_percentage = (
-        (mid_week_analysis.miles_ran / mid_week_analysis.miles_target) * 100
-        if mid_week_analysis.miles_target > 0
-        else 0
-    )
-    miles_ran = round(mid_week_analysis.miles_ran)
-    miles_target = round(mid_week_analysis.miles_target)
-    progress = round(progress_percentage)
+    miles_ran = round(training_week.completed_sessions.total_mileage)
+    miles_target = round(training_week.total_mileage)
+    progress = round(training_week.progress)
     miles_planned = f"""
     <div class="total-miles-container">
         <span class="miles-label">Completed {miles_ran} of {miles_target} miles</span>
         <div class="progress-bar">
-            <div class="progress" style="width: {progress_percentage}%;">{progress}%</div>
+            <div class="progress" style="width: {progress}%;">{progress}%</div>
         </div>
     </div>
     """
 
     return generate_html_template(
-        opening="",
         week_header="Updated Training Schedule",
-        content=content,
-        miles_planned=miles_planned,
-    )
-
-
-def new_training_week_to_html(
-    training_week_with_coaching: TrainingWeekWithCoaching,
-) -> str:
-    """Generates HTML for training week."""
-    opening = f"""
-    <div class="coach-thoughts">
-        <h2>Coach's thoughts for your week</h2>
-        <p>{training_week_with_coaching.weekly_mileage_target}</p>
-    </div>
-    """
-    upcoming_sessions = [
-        EmailSession(
-            day=session.day.capitalize(),
-            session_type=session.session_type.value,
-            distance=session.distance,
-            notes=session.notes,
-        )
-        for session in training_week_with_coaching.training_week
-    ]
-    content = f"<ul>{generate_session_list(upcoming_sessions)}</ul>"
-    total_weekly_mileage = round(training_week_with_coaching.total_weekly_mileage)
-    miles_planned = f"""
-    <div class="total-miles-container">
-        <span class='miles-label'>Total Miles Planned: {total_weekly_mileage}</span>
-    </div>
-    """
-
-    return generate_html_template(
-        opening=opening,
-        week_header="Your Training Schedule",
-        content=content,
+        content=f"<ul>{generate_session_list(sessions)}</ul>",
         miles_planned=miles_planned,
     )
 
@@ -338,16 +273,3 @@ def send_alert_email(
         return api_instance.send_transac_email(send_smtp_email)
     except ProtocolError:
         return api_instance.send_transac_email(send_smtp_email)
-
-
-def mock_send_email(
-    subject: str,
-    html_content: str,
-    to: Dict[str, str],
-    sender: Dict[str, str] = {
-        "name": "Jamie Voynow",
-        "email": "voynowtestaddress@gmail.com",
-    },
-) -> sib_api_v3_sdk.CreateSmtpEmail:
-    """Mock version of send_email for testing"""
-    return sib_api_v3_sdk.CreateSmtpEmail(message_id="12345")
