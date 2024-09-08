@@ -21,30 +21,36 @@ from src.activities import (
 )
 from src.auth_manager import get_strava_client
 from src.constants import COACH_ROLE
-from src.daily_pipeline import new_training_week_pipeline
-from src.llm import get_completion_json
 from src.new_training_week import (
     ensure_completed_set_to_false,
-    get_training_week_with_planning,
+    generate_week,
     get_typical_week_training_review,
     get_weekly_mileage_target,
 )
 from src.supabase_client import list_users
 from src.training_week import standardize_training_week
 from src.types.training_week import (
-    Planning,
     TrainingWeek,
+    TrainingWeekGeneration,
 )
 from src.types.user_row import UserRow
+from src.types.week_summary import WeekSummary
+
+
+class ExposedDataResponse(BaseModel):
+    training_week: TrainingWeek
+    training_week_generation: TrainingWeekGeneration
+    weekly_summaries: list[WeekSummary]
+    coaches_target: str
 
 
 def expose_training_week_gen(
     user: UserRow,
     date_str: str,
-) -> Tuple[TrainingWeek, Planning]:
+) -> ExposedDataResponse:
 
     @freeze_time(f"{date_str} 20:30:00")
-    def wrapped(user: UserRow, strava_client: Client) -> Tuple[TrainingWeek, Planning]:
+    def wrapped(user: UserRow, strava_client: Client) -> ExposedDataResponse:
         sysmsg_base = f"{COACH_ROLE}\nYour client has included the following preferences: {user.preferences}\n"
         activities_df = get_activities_df(strava_client)
         day_of_week_summaries = get_day_of_week_summaries(activities_df)
@@ -52,21 +58,24 @@ def expose_training_week_gen(
         typical_week_training_review = get_typical_week_training_review(
             sysmsg_base=sysmsg_base, day_of_week_summaries=day_of_week_summaries
         )
-        weekly_mileage_target = get_weekly_mileage_target(
+        coaches_target = get_weekly_mileage_target(
             sysmsg_base=sysmsg_base, weekly_summaries=weekly_summaries
         )
-        training_week_with_planning = get_training_week_with_planning(
+        training_week_generation = generate_week(
             sysmsg_base=sysmsg_base,
             typical_week_training_review=typical_week_training_review,
-            weekly_mileage_target=weekly_mileage_target,
+            coaches_target=coaches_target,
         )
 
         standardized_training_week = standardize_training_week(
-            training_week_with_planning.training_week
+            training_week_generation.training_week
         )
-        return (
-            ensure_completed_set_to_false(standardized_training_week),
-            training_week_with_planning.planning,
+
+        return ExposedDataResponse(
+            training_week=ensure_completed_set_to_false(standardized_training_week),
+            training_week_generation=training_week_generation,
+            weekly_summaries=weekly_summaries,
+            coaches_target=coaches_target,
         )
 
     strava_client = get_strava_client(user.athlete_id)
@@ -85,27 +94,18 @@ class WeeklyMileageAccuracy(BaseModel):
 class NewTrainingWeekError(BaseModel):
     user: UserRow
     """The user that was sampled"""
-    recommended_weekly_mileage: str
-    """The recommended weekly mileage from the coach"""
-    planning: Planning
-    """The planning from the coach"""
     training_week: TrainingWeek
     """The training week from the coach"""
+    weekly_summaries: list[WeekSummary]
+    """Weekly progress"""
+    coaches_target: str
+    """The target weekly mileage from the coach"""
+    recommended_weekly_mileage: float
+    """The recommended weekly mileage from the coach"""
     generated_weekly_mileage: float
     """The actual weekly mileage from the training_week"""
     error: float
     """The absolute error between the recommended and actual weekly mileage"""
-
-
-def evaluate(training_week: TrainingWeek, planning: Planning):
-
-    msg = f"""Given the following coaching recommendation: {planning.weekly_mileage_target}
-    How far off is the following week's mileage: {training_week.total_mileage}"""
-
-    return get_completion_json(
-        message=msg,
-        response_model=WeeklyMileageAccuracy,
-    )
 
 
 def write_results_to_artifacts(results: list) -> None:
@@ -136,19 +136,22 @@ def assess_accuracy(sample_size: int = 10):
     results = []
     for i, user in enumerate(sampled_users):
         print(f"({i+1} of {sample_size}) {user.email}")
-        training_week, planning = expose_training_week_gen(
+        response = expose_training_week_gen(
             user=user,
             date_str="2024-09-08",
         )
-        response = evaluate(training_week, planning)
         results.append(
             NewTrainingWeekError(
                 user=user,
-                recommended_weekly_mileage=response.recommended_weekly_mileage,
-                planning=planning,
-                training_week=training_week,
-                generated_weekly_mileage=training_week.total_mileage,
-                error=response.error,
+                recommended_weekly_mileage=response.training_week_generation.weekly_mileage_target,
+                generated_weekly_mileage=response.training_week.total_mileage,
+                training_week=response.training_week,
+                error=abs(
+                    response.training_week_generation.weekly_mileage_target
+                    - response.training_week.total_mileage
+                ),
+                coaches_target=response.coaches_target,
+                weekly_summaries=response.weekly_summaries,
             )
         )
 
