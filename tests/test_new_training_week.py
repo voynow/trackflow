@@ -1,21 +1,76 @@
+import sys
+
+sys.path.append("./")
+
 import json
 import os
 import random
 import statistics
 import sys
 from datetime import datetime
+from typing import Tuple
 
+from freezegun import freeze_time
 from pydantic import BaseModel, Field
+from stravalib.client import Client
 
-sys.path.append("./")
-
+from src.activities import (
+    get_activities_df,
+    get_day_of_week_summaries,
+    get_weekly_summaries,
+)
+from src.auth_manager import get_strava_client
+from src.constants import COACH_ROLE
+from src.daily_pipeline import new_training_week_pipeline
 from src.llm import get_completion_json
+from src.new_training_week import (
+    ensure_completed_set_to_false,
+    get_training_week_with_planning,
+    get_typical_week_training_review,
+    get_weekly_mileage_target,
+)
 from src.supabase_client import list_users
+from src.training_week import standardize_training_week
 from src.types.training_week import (
+    Planning,
     TrainingWeek,
 )
 from src.types.user_row import UserRow
-from tests.common import run_new_training_week_process_wrapped
+
+
+def expose_training_week_gen(
+    user: UserRow,
+    date_str: str,
+) -> Tuple[TrainingWeek, Planning]:
+
+    @freeze_time(f"{date_str} 20:30:00")
+    def wrapped(user: UserRow, strava_client: Client) -> Tuple[TrainingWeek, Planning]:
+        sysmsg_base = f"{COACH_ROLE}\nYour client has included the following preferences: {user.preferences}\n"
+        activities_df = get_activities_df(strava_client)
+        day_of_week_summaries = get_day_of_week_summaries(activities_df)
+        weekly_summaries = get_weekly_summaries(activities_df)
+        typical_week_training_review = get_typical_week_training_review(
+            sysmsg_base=sysmsg_base, day_of_week_summaries=day_of_week_summaries
+        )
+        weekly_mileage_target = get_weekly_mileage_target(
+            sysmsg_base=sysmsg_base, weekly_summaries=weekly_summaries
+        )
+        training_week_with_planning = get_training_week_with_planning(
+            sysmsg_base=sysmsg_base,
+            typical_week_training_review=typical_week_training_review,
+            weekly_mileage_target=weekly_mileage_target,
+        )
+
+        standardized_training_week = standardize_training_week(
+            training_week_with_planning.training_week
+        )
+        return (
+            ensure_completed_set_to_false(standardized_training_week),
+            training_week_with_planning.planning,
+        )
+
+    strava_client = get_strava_client(user.athlete_id)
+    return wrapped(user=user, strava_client=strava_client)
 
 
 class WeeklyMileageAccuracy(BaseModel):
@@ -32,7 +87,7 @@ class NewTrainingWeekError(BaseModel):
     """The user that was sampled"""
     recommended_weekly_mileage: str
     """The recommended weekly mileage from the coach"""
-    planning: str
+    planning: Planning
     """The planning from the coach"""
     training_week: TrainingWeek
     """The training week from the coach"""
@@ -42,10 +97,10 @@ class NewTrainingWeekError(BaseModel):
     """The absolute error between the recommended and actual weekly mileage"""
 
 
-def get_twwc_accuracy(training_week_with_coaching: TrainingWeekWithCoaching):
+def evaluate(training_week: TrainingWeek, planning: Planning):
 
-    msg = f"""Given the following coaching recommendation: {training_week_with_coaching.weekly_mileage_target}
-    How far off is the following week's mileage: {training_week_with_coaching.total_mileage}"""
+    msg = f"""Given the following coaching recommendation: {planning.weekly_mileage_target}
+    How far off is the following week's mileage: {training_week.total_mileage}"""
 
     return get_completion_json(
         message=msg,
@@ -53,11 +108,11 @@ def get_twwc_accuracy(training_week_with_coaching: TrainingWeekWithCoaching):
     )
 
 
-def write_results_to_artifacts(results: list[NewTrainingWeekError]) -> None:
+def write_results_to_artifacts(results: list) -> None:
     """
     Store output artifacts locally
 
-    :param results: List of NewTrainingWeekError objects to be written
+    :param results: List
     """
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     directory = "tests/artifacts/new_training_week_errors"
@@ -81,15 +136,18 @@ def assess_accuracy(sample_size: int = 10):
     results = []
     for i, user in enumerate(sampled_users):
         print(f"({i+1} of {sample_size}) {user.email}")
-        twwc = run_new_training_week_process_wrapped(user)
-        response = get_twwc_accuracy(twwc)
+        training_week, planning = expose_training_week_gen(
+            user=user,
+            date_str="2024-09-08",
+        )
+        response = evaluate(training_week, planning)
         results.append(
             NewTrainingWeekError(
                 user=user,
                 recommended_weekly_mileage=response.recommended_weekly_mileage,
-                planning=twwc.planning,
-                training_week=twwc.training_week,
-                generated_weekly_mileage=twwc.total_mileage,
+                planning=planning,
+                training_week=training_week,
+                generated_weekly_mileage=training_week.total_mileage,
                 error=response.error,
             )
         )
