@@ -1,33 +1,20 @@
 import logging
 import os
 import traceback
-from typing import Callable, Optional
+from typing import Optional
 
-from stravalib.client import Client
-
-from src.activities import (
-    get_activities_df,
-    get_activity_summaries,
-    get_day_of_week_summaries,
-    get_weekly_summaries,
+from src.auth_manager import authenticate_with_code
+from src.daily_pipeline import (
+    daily_generic_pipeline,
+    mid_week_update_pipeline,
+    new_training_week_pipeline,
 )
-from src.auth_manager import authenticate_with_code, get_strava_client
-from src.constants import COACH_ROLE
-from src.email_manager import (
-    send_alert_email,
-    send_email,
-    training_week_to_html,
-)
-from src.mid_week_update import generate_mid_week_update
-from src.new_training_week import generate_new_training_week
+from src.email_manager import send_alert_email
 from src.supabase_client import (
-    get_training_week,
     get_user,
     list_users,
-    upsert_training_week,
     upsert_user,
 )
-from src.types.mid_week_analysis import MidWeekAnalysis
 from src.types.training_week import TrainingWeek
 from src.types.user_row import UserRow
 from src.utils import datetime_now_est
@@ -55,54 +42,6 @@ def signup(email: str, preferences: str, code: str) -> str:
         )
     )
     return user_auth.jwt_token
-
-
-def new_training_week_pipeline(
-    user: UserRow,
-    strava_client: Client,
-) -> TrainingWeek:
-    sysmsg_base = f"{COACH_ROLE}\nYour client has included the following preferences: {user.preferences}\n"
-    activities_df = get_activities_df(strava_client)
-    day_of_week_summaries = get_day_of_week_summaries(activities_df)
-    weekly_summaries = get_weekly_summaries(activities_df)
-    return generate_new_training_week(
-        sysmsg_base=sysmsg_base,
-        weekly_summaries=weekly_summaries,
-        day_of_week_summaries=day_of_week_summaries,
-    )
-
-
-def mid_week_update_pipeline(
-    user: UserRow,
-    strava_client: Client,
-) -> TrainingWeek:
-    sysmsg_base = f"{COACH_ROLE}\nYour client has included the following preferences: {user.preferences}\n"
-    training_week = get_training_week(user.athlete_id)
-    completed_activities = get_activity_summaries(strava_client, num_weeks=1)
-    return generate_mid_week_update(
-        sysmsg_base=sysmsg_base,
-        training_week=training_week,
-        completed_activities=completed_activities,
-    )
-
-
-def daily_generic_pipeline(
-    user: UserRow,
-    pipeline_function: Callable[[UserRow, Client], TrainingWeek],
-    email_subject: str,
-) -> TrainingWeek:
-    """General processing for training week updates."""
-    strava_client = get_strava_client(user.athlete_id)
-    athlete = strava_client.get_athlete()
-    training_week = pipeline_function(user=user, strava_client=strava_client)
-
-    upsert_training_week(user.athlete_id, training_week)
-    send_email(
-        to={"email": user.email, "name": f"{athlete.firstname} {athlete.lastname}"},
-        subject=email_subject,
-        html_content=training_week_to_html(training_week),
-    )
-    return training_week
 
 
 def daily_executor(user: UserRow) -> Optional[TrainingWeek]:
@@ -163,12 +102,6 @@ def lambda_handler(event, context):
         and event.get("resources")[0] == os.environ["NIGHTLY_EMAIL_TRIGGER_ARN"]
     ):
         [daily_executor(user) for user in list_users()]
-        return {"success": True}
-
-    # Will email me only
-    elif event.get("end_to_end_test"):
-        user = get_user(os.environ["JAMIES_ATHLETE_ID"])
-        daily_executor(user)
         return {"success": True}
 
     # Catch any error routing or funny business

@@ -1,9 +1,10 @@
 from typing import List
 
 from src.llm import get_completion, get_completion_json
-from src.training_week import ensure_completed_set_to_false, standardize_training_week
+from src.training_week import standardize_training_week
 from src.types.day_of_week_summary import DayOfWeekSummary
 from src.types.training_week import (
+    TrainingSession,
     TrainingWeek,
     TrainingWeekWithPlanning,
 )
@@ -50,6 +51,26 @@ Build out their next week of training. Distribute volume and intensity evenly th
     return get_completion_json(
         message=message,
         response_model=TrainingWeekWithPlanning,
+    )
+
+
+def ensure_completed_set_to_false(
+    training_week: TrainingWeek,
+) -> TrainingWeek:
+    """
+    Ensure that the completed field is set to False for all sessions
+    """
+    return TrainingWeek(
+        sessions=[
+            TrainingSession(
+                day=session.day,
+                session_type=session.session_type,
+                distance=session.distance,
+                notes=session.notes,
+                completed=False,
+            )
+            for session in training_week.sessions
+        ]
     )
 
 
