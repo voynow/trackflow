@@ -1,9 +1,9 @@
 import logging
 import os
 import traceback
-from typing import Callable, Dict
+from typing import Callable, Optional
 
-from postgrest.base_request_builder import APIResponse
+from stravalib.client import Client
 
 from src.activities import (
     get_activities_df,
@@ -14,23 +14,21 @@ from src.activities import (
 from src.auth_manager import authenticate_with_code, get_strava_client
 from src.constants import COACH_ROLE
 from src.email_manager import (
-    new_training_week_to_html,
     send_alert_email,
     send_email,
-    training_week_update_to_html,
+    training_week_to_html,
 )
-from src.new_training_week import generate_training_week_with_coaching
+from src.mid_week_update import generate_mid_week_update
+from src.new_training_week import generate_new_training_week
 from src.supabase_client import (
-    get_training_week_with_coaching,
+    get_training_week,
     get_user,
     list_users,
-    upsert_training_week_update,
-    upsert_training_week_with_coaching,
+    upsert_training_week,
     upsert_user,
 )
-from src.training_week_update import get_updated_training_week
 from src.types.mid_week_analysis import MidWeekAnalysis
-from src.types.training_week import TrainingWeekWithCoaching, TrainingWeekWithPlanning
+from src.types.training_week import TrainingWeek
 from src.types.user_row import UserRow
 from src.utils import datetime_now_est
 
@@ -59,99 +57,77 @@ def signup(email: str, preferences: str, code: str) -> str:
     return user_auth.jwt_token
 
 
-def get_athlete_full_name(strava_client) -> str:
-    athlete = strava_client.get_athlete()
-    return f"{athlete.firstname} {athlete.lastname}"
-
-
-def run_new_training_week_process(
+def new_training_week_pipeline(
     user: UserRow,
-    upsert_fn: Callable[[str, TrainingWeekWithPlanning], None],
-    email_fn: Callable[[Dict[str, str], str, str], None],
-) -> TrainingWeekWithCoaching:
-    """New training plan generation triggered weekly"""
+    strava_client: Client,
+) -> TrainingWeek:
     sysmsg_base = f"{COACH_ROLE}\nYour client has included the following preferences: {user.preferences}\n"
-    strava_client = get_strava_client(user.athlete_id)
-
     activities_df = get_activities_df(strava_client)
     day_of_week_summaries = get_day_of_week_summaries(activities_df)
     weekly_summaries = get_weekly_summaries(activities_df)
-    training_week_with_coaching = generate_training_week_with_coaching(
+    return generate_new_training_week(
         sysmsg_base=sysmsg_base,
         weekly_summaries=weekly_summaries,
         day_of_week_summaries=day_of_week_summaries,
     )
 
-    upsert_fn(user.athlete_id, training_week_with_coaching)
-    email_fn(
-        to={"email": user.email, "name": get_athlete_full_name(strava_client)},
-        subject="Training Schedule Just Dropped 🏃‍♂️🎯",
-        html_content=new_training_week_to_html(training_week_with_coaching),
-    )
 
-    return training_week_with_coaching
-
-
-def run_mid_week_update_process(
+def mid_week_update_pipeline(
     user: UserRow,
-    upsert_fn: Callable[[str, MidWeekAnalysis, TrainingWeekWithPlanning], None],
-    email_fn: Callable[[Dict[str, str], str, str], None],
-) -> TrainingWeekWithPlanning:
-    """Mid-week training plan update triggered daily"""
+    strava_client: Client,
+) -> TrainingWeek:
     sysmsg_base = f"{COACH_ROLE}\nYour client has included the following preferences: {user.preferences}\n"
+    training_week = get_training_week(user.athlete_id)
+    completed_activities = get_activity_summaries(strava_client, num_weeks=1)
+    return generate_mid_week_update(
+        sysmsg_base=sysmsg_base,
+        training_week=training_week,
+        completed_activities=completed_activities,
+    )
+
+
+def daily_generic_pipeline(
+    user: UserRow,
+    pipeline_function: Callable[[UserRow, Client], TrainingWeek],
+    email_subject: str,
+) -> TrainingWeek:
+    """General processing for training week updates."""
     strava_client = get_strava_client(user.athlete_id)
+    athlete = strava_client.get_athlete()
+    training_week = pipeline_function(user=user, strava_client=strava_client)
 
-    training_week_with_coaching = get_training_week_with_coaching(user.athlete_id)
-    current_weeks_activity_summaries = get_activity_summaries(
-        strava_client, num_weeks=1
+    upsert_training_week(user.athlete_id, training_week)
+    send_email(
+        to={"email": user.email, "name": f"{athlete.firstname} {athlete.lastname}"},
+        subject=email_subject,
+        html_content=training_week_to_html(training_week),
     )
-    mid_week_analysis = MidWeekAnalysis(
-        activities=current_weeks_activity_summaries,
-        training_week=training_week_with_coaching.training_week,
-    )
-    training_week_update_with_planning = get_updated_training_week(
-        sysmsg_base=sysmsg_base, mid_week_analysis=mid_week_analysis
-    )
-
-    upsert_fn(user.athlete_id, mid_week_analysis, training_week_update_with_planning)
-    email_fn(
-        to={"email": user.email, "name": get_athlete_full_name(strava_client)},
-        subject="Training Schedule Update 🏃‍♂️🎯",
-        html_content=training_week_update_to_html(
-            mid_week_analysis=mid_week_analysis,
-            training_week_update_with_planning=training_week_update_with_planning,
-        ),
-    )
-
-    return training_week_update_with_planning
+    return training_week
 
 
-def daily_executor(user: UserRow) -> None:
-    """
-    On sundays, generate a new training week, otherwise update the current
-    training week
-    """
+def daily_executor(user: UserRow) -> Optional[TrainingWeek]:
+    """Decides between generating a new week or updating based on the day."""
     try:
-        # day 6 is Sunday
+        # Sunday is day 6
         if datetime_now_est().weekday() == 6:
-            run_new_training_week_process(
+            return daily_generic_pipeline(
                 user=user,
-                upsert_fn=upsert_training_week_with_coaching,
-                email_fn=send_email,
+                pipeline_function=new_training_week_pipeline,
+                email_subject="Training Schedule Just Dropped 🏃‍♂️🎯",
             )
         else:
-            run_mid_week_update_process(
+            return daily_generic_pipeline(
                 user=user,
-                upsert_fn=upsert_training_week_update,
-                email_fn=send_email,
+                pipeline_function=mid_week_update_pipeline,
+                email_subject="Training Schedule Update 🏃‍♂️🎯",
             )
     except Exception as e:
         logging.error(f"Error processing user {user.athlete_id}: {e}")
-        logging.error(traceback.format_exc())
         send_alert_email(
             subject="TrackFlow Alert: Error in Lambda Function",
             text_content=f"Error for {user.email=} {e} with traceback: {traceback.format_exc()}",
         )
+        return None
 
 
 def lambda_handler(event, context):

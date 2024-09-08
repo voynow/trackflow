@@ -20,7 +20,6 @@ from src.types.training_week import (
     Planning,
     SessionType,
     TrainingSession,
-    TrainingWeekWithCoaching,
     TrainingWeekWithPlanning,
 )
 

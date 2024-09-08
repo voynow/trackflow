@@ -4,7 +4,6 @@ import random
 import statistics
 import sys
 from datetime import datetime
-from typing import List
 
 from pydantic import BaseModel, Field
 
@@ -12,7 +11,9 @@ sys.path.append("./")
 
 from src.llm import get_completion_json
 from src.supabase_client import list_users
-from src.types.training_week import TrainingSession, TrainingWeekWithCoaching
+from src.types.training_week import (
+    TrainingWeek,
+)
 from src.types.user_row import UserRow
 from tests.common import run_new_training_week_process_wrapped
 
@@ -33,7 +34,7 @@ class NewTrainingWeekError(BaseModel):
     """The recommended weekly mileage from the coach"""
     planning: str
     """The planning from the coach"""
-    training_week: List[TrainingSession]
+    training_week: TrainingWeek
     """The training week from the coach"""
     generated_weekly_mileage: float
     """The actual weekly mileage from the training_week"""
@@ -44,7 +45,7 @@ class NewTrainingWeekError(BaseModel):
 def get_twwc_accuracy(training_week_with_coaching: TrainingWeekWithCoaching):
 
     msg = f"""Given the following coaching recommendation: {training_week_with_coaching.weekly_mileage_target}
-    How far off is the following week's mileage: {training_week_with_coaching.total_weekly_mileage}"""
+    How far off is the following week's mileage: {training_week_with_coaching.total_mileage}"""
 
     return get_completion_json(
         message=msg,
@@ -88,7 +89,7 @@ def assess_accuracy(sample_size: int = 10):
                 recommended_weekly_mileage=response.recommended_weekly_mileage,
                 planning=twwc.planning,
                 training_week=twwc.training_week,
-                generated_weekly_mileage=twwc.total_weekly_mileage,
+                generated_weekly_mileage=twwc.total_mileage,
                 error=response.error,
             )
         )
