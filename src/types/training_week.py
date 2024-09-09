@@ -33,9 +33,6 @@ class TrainingSession(BaseModel):
     )
     completed: bool = Field(description="Whether the session has been completed")
 
-    def __str__(self):
-        return f"TrainingSession(session_type={self.session_type}, distance={self.distance}, weekly_mileage_cumulative={self.weekly_mileage_cumulative}, notes={self.notes})"
-
 
 class Planning(BaseModel):
     weekly_mileage_target: str = Field(

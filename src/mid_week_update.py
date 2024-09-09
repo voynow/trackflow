@@ -77,7 +77,7 @@ Here is the plan for the remainder of the week:
 
 What changes need to be made so that your client runs {mid_week_analysis.miles_remaining} more miles this week?
 
-Rule: Keep the long run constant. This is non-negotiable."""
+Rule: 1. Keep the long run constant. This is non-negotiable. 2. There should be no duplicate days in the TrainingWeek sessions."""
     )
 
     rest_of_week_with_planning = get_completion_json(
