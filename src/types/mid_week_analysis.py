@@ -1,27 +1,28 @@
-from typing import List
-
 from pydantic import BaseModel
 
-from src.types.activity_summary import ActivitySummary
-from src.types.training_week import TrainingSession
+from src.types.training_week import TrainingWeek
 from src.utils import datetime_now_est
 
 
 class MidWeekAnalysis(BaseModel):
-    activities: list[ActivitySummary]
-    training_week: List[TrainingSession]
+    completed_training_week: TrainingWeek
+    original_training_week: TrainingWeek
 
     @property
     def training_week_future(self):
-        return self.training_week[datetime_now_est().weekday() + 1 :]
+        return TrainingWeek(
+            sessions=self.original_training_week.sessions[
+                datetime_now_est().weekday() + 1 :
+            ]
+        )
 
     @property
     def miles_ran(self):
-        return sum(activity.distance_in_miles for activity in self.activities)
+        return self.completed_training_week.total_mileage
 
     @property
     def miles_target(self):
-        return sum(session.distance for session in self.training_week)
+        return self.original_training_week.total_mileage
 
     @property
     def miles_remaining(self):
@@ -29,4 +30,4 @@ class MidWeekAnalysis(BaseModel):
 
     @property
     def future_miles_planned(self):
-        return sum(session.distance for session in self.training_week_future)
+        return self.training_week_future.total_mileage

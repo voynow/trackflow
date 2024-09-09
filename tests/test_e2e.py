@@ -1,29 +1,35 @@
 import sys
 
+
 sys.path.append("./")
 
-
+import os
 import datetime
 
 from freezegun import freeze_time
 
-from src import lambda_function
+from src.types.user_row import UserRow
+from src.lambda_function import daily_executor
+from src.supabase_client import get_user
+from src.auth_manager import get_strava_client
 
 
-def lambda_handler_freeze_wrapper(date_str: str):
+def daily_executor_wrapper(date_str: str):
 
     day = datetime.datetime.strptime(date_str, "%Y-%m-%d").strftime("%A")
     print(f"E2E execution at {date_str} ({day})")
 
-    @freeze_time(f"{date_str} 20:00:00")
-    def test_lambda_handler():
-        lambda_function.lambda_handler({"end_to_end_test": True}, None)
+    @freeze_time(f"{date_str} 23:59:59")
+    def test_daily_executor(user: UserRow):
+        daily_executor(user)
 
-    return test_lambda_handler()
+    user = get_user(os.environ["JAMIES_ATHLETE_ID"])
+    get_strava_client(user.athlete_id)
+    return test_daily_executor(user)
 
 
 # New training week
-lambda_handler_freeze_wrapper("2024-08-25")
-
+daily_executor_wrapper("2024-09-08")
+ 
 # Update training week
-lambda_handler_freeze_wrapper("2024-08-27")
+daily_executor_wrapper("2024-09-09")
