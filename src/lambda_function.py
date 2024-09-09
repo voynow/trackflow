@@ -3,7 +3,9 @@ import os
 import traceback
 from typing import Optional
 
-from src.auth_manager import authenticate_with_code
+import jwt
+
+from src.auth_manager import authenticate_with_code, decode_jwt
 from src.daily_pipeline import (
     daily_generic_pipeline,
     mid_week_update_pipeline,
@@ -11,7 +13,7 @@ from src.daily_pipeline import (
 )
 from src.email_manager import send_alert_email
 from src.supabase_client import (
-    get_user,
+    get_training_week,
     list_users,
     upsert_user,
 )
@@ -42,6 +44,23 @@ def signup(email: str, preferences: str, code: str) -> str:
         )
     )
     return user_auth.jwt_token
+
+
+def handle_frontend_request(jwt_token: str):
+    """
+    To be extended for other requests eventually
+
+    Validate JWT, then return training week with coaching
+    """
+    try:
+        athlete_id = decode_jwt(jwt_token)
+        training_week = get_training_week(athlete_id)
+        return {
+            "success": True,
+            "training_week": training_week.json(),
+        }
+    except jwt.DecodeError:
+        return {"success": False, "error": "Invalid JWT token"}
 
 
 def daily_executor(user: UserRow) -> Optional[TrainingWeek]:
@@ -92,9 +111,12 @@ def lambda_handler(event, context):
         return {"success": True, "jwt_token": response}
 
     # Will fail on bad authenticate_with_code
-    if event.get("code"):
+    elif event.get("code"):
         user_auth = authenticate_with_code(event["code"])
         return {"success": True, "jwt_token": user_auth.jwt_token}
+
+    elif event.get("jwt_token"):
+        return handle_frontend_request(event["jwt_token"])
 
     # This will only run if triggered by NIGHTLY_EMAIL_TRIGGER_ARN
     elif (
