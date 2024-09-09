@@ -5,16 +5,7 @@ from typing import Optional
 
 import jwt
 
-from src.activities import (
-    get_activities_df,
-    get_activity_summaries,
-    get_day_of_week_summaries,
-    get_weekly_summaries,
-)
 from src.auth_manager import authenticate_with_code, decode_jwt
-from src.constants import COACH_ROLE
-from src.email_manager import send_alert_email
-from src.auth_manager import authenticate_with_code
 from src.daily_pipeline import (
     daily_generic_pipeline,
     mid_week_update_pipeline,
