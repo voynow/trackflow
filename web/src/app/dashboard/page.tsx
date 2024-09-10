@@ -3,7 +3,7 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useRef, useState } from 'react';
 import DashboardNavbar from '../components/DashboardNavbar';
-import TrainingWeekUpdate from '../components/TrainingWeekUpdate';
+import TrainingWeek, { TrainingWeekProps } from '../components/TrainingWeek';
 
 export default function Dashboard(): JSX.Element {
     return (
@@ -20,7 +20,7 @@ function DashboardContent(): JSX.Element {
     const router = useRouter();
     const searchParams = useSearchParams();
     const hasRun = useRef(false);
-    const [trainingData, setTrainingData] = useState<any>(null);
+    const [trainingWeekData, setTrainingWeekData] = useState<TrainingWeekProps['data'] | null>(null);
 
     useEffect(() => {
         if (hasRun.current) return;
@@ -46,8 +46,10 @@ function DashboardContent(): JSX.Element {
                             body: JSON.stringify({ jwt_token: storedToken })
                         });
                         const data = await response.json();
+                        console.log('data:', data);
                         if (response.ok && data.success) {
-                            setTrainingData(data);
+                            data.training_week = JSON.parse(data.training_week);
+                            setTrainingWeekData(data);
                         } else if (!response.ok) {
                             console.error('Failed to fetch training data');
                         } else if (!data.success) {
@@ -66,10 +68,15 @@ function DashboardContent(): JSX.Element {
     return (
         <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center">
             <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
-            {trainingData ? (
-                <TrainingWeekUpdate data={trainingData} />
+            {trainingWeekData ? (
+                <TrainingWeek data={trainingWeekData} />
             ) : (
-                <p className="text-sm text-gray-500">Loading training data...</p>
+                <div className="flex items-center justify-center space-x-2">
+                    <div className="w-4 h-4 bg-blue-500 rounded-full animate-pulse"></div>
+                    <div className="w-4 h-4 bg-blue-500 rounded-full animate-pulse delay-75"></div>
+                    <div className="w-4 h-4 bg-blue-500 rounded-full animate-pulse delay-150"></div>
+                    <span className="text-sm text-gray-500 ml-2">Loading...</span>
+                </div>
             )}
         </div>
     );
