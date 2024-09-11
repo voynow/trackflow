@@ -26,6 +26,7 @@ const TrainingWeek: React.FC<TrainingWeekProps> = ({ data }) => {
     const { sessions } = data.training_week;
     const totalMileage = sessions.reduce((total, session) => total + session.distance, 0);
     const completedMileage = sessions.reduce((total, session) => session.completed ? total + session.distance : total, 0);
+    const roundedCompletedMileage = Number(completedMileage.toFixed(1));
     const progressPercentage = totalMileage > 0 ? Math.round((completedMileage / totalMileage) * 100) : 0;
 
     const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -42,7 +43,7 @@ const TrainingWeek: React.FC<TrainingWeekProps> = ({ data }) => {
                         <h2 className="text-2xl font-light mb-8">Weekly Progress</h2>
                         <div className="flex items-center justify-between mb-4">
                             <div className="text-6xl font-bold">{progressPercentage}%</div>
-                            <div className="text-gray-400">{completedMileage} of {totalMileage} miles completed</div>
+                            <div className="text-gray-400">{roundedCompletedMileage} of {totalMileage} miles completed</div>
                         </div>
                         <div className="w-full bg-gray-700 rounded-full h-3">
                             <div

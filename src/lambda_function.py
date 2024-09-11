@@ -123,7 +123,10 @@ def lambda_handler(event, context):
         event.get("resources")
         and event.get("resources")[0] == os.environ["NIGHTLY_EMAIL_TRIGGER_ARN"]
     ):
-        [daily_executor(user) for user in list_users()]
+        # [daily_executor(user) for user in list_users()]
+        for user in list_users():
+            if user.is_active:
+                daily_executor(user)
         return {"success": True}
 
     # Catch any error routing or funny business

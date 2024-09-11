@@ -184,7 +184,7 @@ def generate_session_list(sessions: List[EmailSession]) -> str:
     return "".join(
         f"""
     <li class="{session.session_type}">
-        <strong>{session.day}</strong> <span>{session.distance} miles</span><br>
+        <strong>{session.day}</strong> <span>{round(session.distance, 1)} miles</span><br>
         <span>{session.notes}</span>
     </li>
     """

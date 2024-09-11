@@ -1,17 +1,16 @@
 import sys
 
-
 sys.path.append("./")
 
-import os
 import datetime
+import os
 
 from freezegun import freeze_time
 
-from src.types.user_row import UserRow
+from src.auth_manager import get_strava_client
 from src.lambda_function import daily_executor
 from src.supabase_client import get_user
-from src.auth_manager import get_strava_client
+from src.types.user_row import UserRow
 
 
 def daily_executor_wrapper(date_str: str):
@@ -30,6 +29,6 @@ def daily_executor_wrapper(date_str: str):
 
 # New training week
 daily_executor_wrapper("2024-09-08")
- 
+
 # Update training week
 daily_executor_wrapper("2024-09-09")
