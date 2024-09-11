@@ -15,16 +15,16 @@ export default function Navbar(): JSX.Element {
 
     return (
         <>
-            <nav className="fixed top-0 w-full bg-gray-100 bg-opacity-75 text-gray-700 z-10">
-                <div className="px-4 sm:px-6">
+            <nav className="fixed top-0 w-full bg-white shadow-sm text-gray-800 z-10">
+                <div className="px-4">
                     <div className="flex justify-between h-16">
                         <div className="flex-shrink-0 flex items-center">
-                            <Link href="/" className="sm:text-2xl font-bold hover:text-gray-500 transition duration-300 ease-in-out">
+                            <Link href="/" className="text-2xl font-bold hover:text-gray-500 transition duration-300 ease-in-out">
                                 TrackFlow
                             </Link>
                         </div>
                         <div className="hidden sm:flex items-center space-x-4">
-                            <button className="bg-gray-100 text-xl px-2 py-2 rounded-lg hover:bg-gray-50 transition duration-300 ease-in-out"
+                            <button className="bg-gray-900 text-white text-xl px-3 py-2 rounded-lg hover:bg-gray-700 transition duration-300 ease-in-out"
                                 onClick={() => setShowSignup(true)}>
                                 <div className="flex items-center">
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
@@ -33,7 +33,7 @@ export default function Navbar(): JSX.Element {
                                     Sign Up
                                 </div>
                             </button>
-                            <button className="bg-gray-100 text-xl px-2 py-2 rounded-lg hover:bg-gray-50 transition duration-300 ease-in-out"
+                            <button className="bg-gray-900 text-white text-xl px-3 py-2 rounded-lg hover:bg-gray-700 transition duration-300 ease-in-out"
                                 onClick={handleSignIn}>
                                 <div className="flex items-center">
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
