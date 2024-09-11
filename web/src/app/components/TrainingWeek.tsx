@@ -34,28 +34,28 @@ const TrainingWeek: React.FC<TrainingWeekProps> = ({ data }) => {
     );
 
     return (
-        <div className="w-full lg:w-3/4 xl:w-1/2 p-8">
+        <div className="w-full lg:w-3/4 xl:w-1/2 p-4">
             <div className="bg-white rounded-3xl">
                 <div className="p-4">
 
-                    <div className="bg-gray-900 text-white rounded-2xl p-6">
-                        <h2 className="text-2xl font-light mb-4">Weekly Progress</h2>
+                    <div className="bg-gray-900 text-white rounded-2xl p-4">
+                        <h2 className="text-2xl font-light mb-8">Weekly Progress</h2>
                         <div className="flex items-center justify-between mb-4">
                             <div className="text-6xl font-bold">{progressPercentage}%</div>
                             <div className="text-gray-400">{completedMileage} of {totalMileage} miles completed</div>
                         </div>
                         <div className="w-full bg-gray-700 rounded-full h-3">
                             <div
-                                className="bg-gradient-to-r from-blue-400 to-blue-600 h-3 rounded-full transition-all duration-500 ease-out"
+                                className="bg-gradient-to-r from-blue-300 to-blue-600 h-3 rounded-full transition-all duration-500 ease-out"
                                 style={{ width: `${progressPercentage}%` }}
                             ></div>
                         </div>
                     </div>
                 </div>
-                <div className="grid grid-cols-1 gap-2 p-8">
-                    <div className="grid grid-cols-1 gap-4 mb-8">
+                <div className="grid grid-cols-1 gap-2 p-4">
+                    <div className="grid grid-cols-1 gap-4">
                         {daysOfWeek.map((day, index) => (
-                            <div key={day} className="bg-gray-50 rounded-xl p-4 shadow-md transition-all duration-300 hover:shadow-lg flex items-start min-h-[120px]">
+                            <div key={day} className="bg-gray-50 rounded-xl p-6 shadow-md transition-all duration-300 hover:shadow-lg flex items-start min-h-[120px]">
                                 <div className="w-20 text-lg font-medium text-gray-500">{day}</div>
                                 {sessionsByDay[index] ? (
                                     <div className="flex-grow flex flex-col justify-between h-full">
