@@ -30,7 +30,7 @@ export default function DashboardNavbar(): JSX.Element {
             <div className="mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center h-16">
                     <Link href="/dashboard" className="text-2xl font-semibold hover:text-gray-600 transition duration-300">
-                        TrackFlow
+                        Track<span className="text-blue-400">Flow</span>
                     </Link>
                     <div className="flex items-center space-x-4">
                         <div className="relative" ref={dropdownRef}>

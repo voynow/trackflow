@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import Footer from './components/Footer';
 import Navbar from './components/Navbar';
+import SignUp from './components/SignUp';
 
 const images = [
   { src: '/preview1.png', alt: 'TrackFlow Feature 1' },
@@ -12,7 +13,8 @@ const images = [
 ];
 
 export default function Home(): JSX.Element {
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
+  const [showSignup, setShowSignup] = useState<boolean>(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -33,7 +35,10 @@ export default function Home(): JSX.Element {
           <p className="text-xl sm:text-2xl text-gray-400 mb-8">
             AI-Powered Training Plans, Tailored Just for You
           </p>
-          <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-full text-lg transition duration-300 ease-in-out">
+          <button 
+            className="bg-red-600 hover:bg-red-500 text-white font-bold py-3 px-6 rounded-full text-lg transition duration-300 ease-in-out"
+            onClick={() => setShowSignup(true)}
+          >
             Get Started
           </button>
         </div>
@@ -85,6 +90,7 @@ export default function Home(): JSX.Element {
         </div>
       </main>
       <Footer />
+      {showSignup && <SignUp onClose={() => setShowSignup(false)} />}
     </div>
   );
 }
