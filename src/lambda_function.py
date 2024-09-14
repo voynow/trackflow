@@ -151,11 +151,13 @@ def lambda_handler(event, context):
         event.get("resources")
         and event.get("resources")[0] == os.environ["NIGHTLY_EMAIL_TRIGGER_ARN"]
     ):
-        # [daily_executor(user) for user in list_users()]
         for user in list_users():
             if user.is_active:
                 daily_executor(user)
         return {"success": True}
+
+    elif event.get("trigger_test_key") == os.environ["TRIGGER_TEST_KEY"]:
+        daily_executor(os.environ["JAMIES_ATHLETE_ID"])
 
     # Catch any error routing or funny business
     else:
