@@ -27,7 +27,7 @@ export default function ImageCarousel(): JSX.Element {
                 >
                     {images.map((image, index) => (
                         <div key={index} className="w-full flex-shrink-0">
-                            <div className="relative aspect-[17/10]">
+                            <div className="relative aspect-[10/10]">
                                 <Image
                                     src={image.src}
                                     alt={image.alt}

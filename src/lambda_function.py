@@ -5,7 +5,7 @@ from typing import Optional
 
 import jwt
 
-from src.auth_manager import authenticate_with_code, decode_jwt
+from src.auth_manager import authenticate_with_code, decode_jwt, get_strava_client
 from src.daily_pipeline import (
     daily_generic_pipeline,
     mid_week_update_pipeline,
@@ -14,6 +14,7 @@ from src.daily_pipeline import (
 from src.email_manager import send_alert_email
 from src.supabase_client import (
     get_training_week,
+    get_user,
     list_users,
     upsert_user,
 )
@@ -46,21 +47,46 @@ def signup(email: str, preferences: str, code: str) -> str:
     return user_auth.jwt_token
 
 
-def handle_frontend_request(jwt_token: str):
+def handle_frontend_request(jwt_token: str, method: str) -> dict:
     """
     To be extended for other requests eventually
 
     Validate JWT, then return training week with coaching
+
+    :param jwt_token: jwt_token
+    :param method: method
+    :return: dict with {"success": bool}
     """
     try:
         athlete_id = decode_jwt(jwt_token)
-        training_week = get_training_week(athlete_id)
-        return {
-            "success": True,
-            "training_week": training_week.json(),
-        }
     except jwt.DecodeError:
         return {"success": False, "error": "Invalid JWT token"}
+
+    try:
+        if method == "get_training_week":
+            training_week = get_training_week(athlete_id)
+            return {
+                "success": True,
+                "training_week": training_week.json(),
+            }
+        elif method == "get_profile":
+            user = get_user(athlete_id)
+            athelete = get_strava_client(athlete_id).get_athlete()
+            return {
+                "success": True,
+                "profile": {
+                    "firstname": athelete.firstname,
+                    "lastname": athelete.lastname,
+                    "profile": athelete.profile,
+                    "email": user.email,
+                    "preferences": user.preferences,
+                    "is_active": user.is_active,
+                },
+            }
+        else:
+            return {"success": False, "error": "Invalid method"}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
 
 
 def daily_executor(user: UserRow) -> Optional[TrainingWeek]:
@@ -115,8 +141,10 @@ def lambda_handler(event, context):
         user_auth = authenticate_with_code(event["code"])
         return {"success": True, "jwt_token": user_auth.jwt_token}
 
-    elif event.get("jwt_token"):
-        return handle_frontend_request(event["jwt_token"])
+    elif event.get("jwt_token") and event.get("method"):
+        return handle_frontend_request(
+            jwt_token=event["jwt_token"], method=event["method"]
+        )
 
     # This will only run if triggered by NIGHTLY_EMAIL_TRIGGER_ARN
     elif (
