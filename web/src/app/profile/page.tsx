@@ -1,14 +1,173 @@
-import React from 'react';
+'use client';
 
-export default function ProfilePage(): React.ReactElement {
+import Image from 'next/image';
+import { useCallback, useEffect, useState } from 'react';
+import { FiCheck, FiEdit2, FiInfo, FiX } from 'react-icons/fi';
+import DashboardNavbar from '../components/DashboardNavbar';
+
+interface ProfileData {
+    firstname: string;
+    lastname: string;
+    email: string;
+    preferences: string;
+    profile: string;
+    is_active: boolean;
+}
+
+export default function ProfilePage(): JSX.Element {
+    const [profileData, setProfileData] = useState<ProfileData | null>(null);
+    const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [isEditing, setIsEditing] = useState<boolean>(false);
+    const [editedPreferences, setEditedPreferences] = useState<string>('');
+
+    const fetchProfileData = useCallback(async (token: string): Promise<void> => {
+        try {
+            const response = await fetch('https://lwg77yq7dd.execute-api.us-east-1.amazonaws.com/prod/signup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ jwt_token: token, method: 'get_profile' })
+            });
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                setProfileData(data.profile);
+            } else {
+                throw new Error('Failed to fetch profile data');
+            }
+        } catch (error) {
+            console.error('Error fetching profile data:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        const storedToken = localStorage.getItem('jwt_token');
+
+        if (!storedToken) {
+            // Redirect to login page if no token is found
+            window.location.href = '/';
+        } else {
+            fetchProfileData(storedToken);
+        }
+    }, [fetchProfileData]);
+
+    const handlePreferencesEdit = () => {
+        setIsEditing(true);
+        setEditedPreferences(profileData?.preferences || '');
+    };
+
+    const handlePreferencesSave = () => {
+        if (profileData) {
+            setProfileData({ ...profileData, preferences: editedPreferences });
+            setIsEditing(false);
+            // TODO: Implement API call to save preferences
+        }
+    };
+
+    const handlePreferencesCancel = () => {
+        setIsEditing(false);
+    };
+
+    const handleActiveToggle = async () => {
+        if (!profileData) return;
+        // Implement API call to update active status
+        setProfileData({ ...profileData, is_active: !profileData.is_active });
+    };
+
+    if (isLoading) {
+        return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+    }
+
+    if (!profileData) {
+        return <div className="flex items-center justify-center min-h-screen">Failed to load profile data</div>;
+    }
+
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-r from-purple-400 to-pink-500 text-white p-4">
-            <h1 className="text-4xl font-bold mb-4">
-                404: Profile Not Found
-            </h1>
-            <p className="text-xl mb-8">
-                Oops! This page is under construction.
-            </p>
+        <div className="min-h-screen bg-gray-100">
+            <DashboardNavbar />
+            <div className="container mx-auto px-4 py-16 mt-8">
+                <div className="bg-white shadow-xl rounded-lg overflow-hidden">
+                    <div className="bg-gradient-to-l from-indigo-600 to-blue-300 h-48"></div>
+                    <div className="relative px-6 py-10">
+                        <div className="absolute -top-16 left-6">
+                            <Image
+                                src={profileData.profile}
+                                alt={`${profileData.firstname} ${profileData.lastname}`}
+                                width={128}
+                                height={128}
+                                className="rounded-full border-4 border-white shadow-lg"
+                            />
+                        </div>
+                        <div className="mt-16">
+                            <h1 className="text-3xl font-bold text-gray-800">
+                                {profileData.firstname} {profileData.lastname}
+                            </h1>
+                            <p className="text-gray-600 mt-2">{profileData.email}</p>
+                            <div className="mt-6 relative">
+                                <h2 className="text-xl font-semibold text-gray-700 flex items-center">
+                                    Preferences
+                                    <div className="group relative ml-2">
+                                        <FiInfo className="text-gray-400 cursor-help" />
+                                        <span className="absolute ml-2 w-48 p-2 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                            Update your preferences to personalize your TrackFlow experience. Detail is encouraged to maximize your experience.
+                                        </span>
+                                    </div>
+                                    {!isEditing && (
+                                        <FiEdit2
+                                            className="ml-2 text-blue-400 cursor-pointer hover:text-blue-500"
+                                            onClick={handlePreferencesEdit}
+                                        />
+                                    )}
+                                </h2>
+                                {isEditing ? (
+                                    <div className="relative">
+                                        <textarea
+                                            className="w-full mt-2 p-2 pr-16 border rounded resize-none"
+                                            value={editedPreferences}
+                                            onChange={(e) => setEditedPreferences(e.target.value)}
+                                            rows={4}
+                                        />
+                                        <div className="absolute top-4 right-2 flex">
+                                            <button
+                                                className="mr-1 p-1 bg-green-400 text-white rounded hover:bg-green-500 transition-colors"
+                                                onClick={handlePreferencesSave}
+                                            >
+                                                <FiCheck />
+                                            </button>
+                                            <button
+                                                className="p-1 bg-red-400 text-white rounded hover:bg-red-500 transition-colors"
+                                                onClick={handlePreferencesCancel}
+                                            >
+                                                <FiX />
+                                            </button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <p className="text-gray-600 mt-2">{profileData.preferences}</p>
+                                )}
+                            </div>
+                            <div className="mt-6 relative">
+                                <h2 className="text-xl font-semibold text-gray-700 flex items-center">
+                                    Account Status
+                                    <div className="group relative ml-2">
+                                        <FiInfo className="text-gray-400 cursor-help" />
+                                        <span className="absolute ml-2 w-48 p-2 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                            Everyone needs a training break from time to time. Go inactive to turn off TrackFlow recommendations.
+                                        </span>
+                                    </div>
+                                </h2>
+                                <div className="mt-2 flex items-center">
+                                    <span className={`inline-block w-3 h-3 rounded-full mr-2 ${profileData.is_active ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                                    <span className="text-gray-700 w-16">
+                                        {profileData.is_active ? 'Active' : 'Inactive'}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }

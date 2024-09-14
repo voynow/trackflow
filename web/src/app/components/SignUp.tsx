@@ -15,7 +15,7 @@ export default function SignUp({ onClose }: SignUpProps): JSX.Element {
         localStorage.setItem('email', email);
         localStorage.setItem('preferences', preferences);
         const isDevelopment = process.env.NODE_ENV === 'development';
-        const redirectUri = `https://trackflowai.vercel.app/verify${isDevelopment ? '?env=dev' : ''}`;
+        const redirectUri = `https://www.trackflow.xyz/verify${isDevelopment ? '?env=dev' : ''}`;
         const stravaAuthUrl = `https://www.strava.com/oauth/authorize?client_id=95101&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&approval_prompt=auto&scope=read_all,profile:read_all,activity:read_all`;
         window.location.href = stravaAuthUrl;
     };

@@ -45,8 +45,8 @@ export default function DashboardNavbar(): JSX.Element {
                             </button>
                             {isDropdownOpen && (
                                 <div className="absolute right-0 w-48 text-lg bg-gray-100 rounded-md outline outline-gray-200 shadow-lg py-2">
+                                    <Link href="/dashboard" className="block px-4 py-2 hover:bg-white transition duration-300 rounded-md text-center">Dashboard</Link>
                                     <Link href="/profile" className="block px-4 py-2 hover:bg-white transition duration-300 rounded-md text-center">Profile</Link>
-                                    <Link href="/settings" className="block px-4 py-2 hover:bg-white transition duration-300 rounded-md text-center">Settings</Link>
                                     <button onClick={handleLogout} className="block w-full px-4 py-2 hover:bg-white transition duration-300 rounded-md text-center">Logout</button>
                                 </div>
                             )}
