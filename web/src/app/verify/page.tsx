@@ -47,21 +47,27 @@ function VerifyContent(): JSX.Element {
                         router.push(dashboardUrl);
                     }, 1000);
                 } else {
-                    throw new Error('Verification failed');
+                    console.error('Verification failed:', data);
+                    throw new Error(`Verification failed: ${JSON.stringify(data)}`);
                 }
             } catch (error) {
+                console.error('Error during verification:', error);
                 setStatus('error');
                 setTimeout(() => router.push('/'), 1500);
             }
         };
 
         if (code) {
+            console.log('Verifying with code:', code);
             if (email && preferences) {
+                console.log('Email and preferences found in localStorage');
                 verifyAccount({ email, preferences, code });
             } else {
+                console.log('Email or preferences missing from localStorage');
                 verifyAccount({ code });
             }
         } else {
+            console.error('No verification code found in URL');
             setStatus('error');
             setTimeout(() => router.push('/'), 1500);
         }

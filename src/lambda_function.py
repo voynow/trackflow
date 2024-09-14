@@ -157,7 +157,8 @@ def lambda_handler(event, context):
         return {"success": True}
 
     elif event.get("trigger_test_key") == os.environ["TRIGGER_TEST_KEY"]:
-        return daily_executor(get_user(os.environ["JAMIES_ATHLETE_ID"]))
+        daily_executor(get_user(os.environ["JAMIES_ATHLETE_ID"]))
+        return {"success": True}
 
     # Catch any error routing or funny business
     else:
