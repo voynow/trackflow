@@ -70,12 +70,30 @@ function DashboardContent(): JSX.Element {
 }
 
 function LoadingSpinner(): JSX.Element {
+    const [showWaitMessage, setShowWaitMessage] = useState<boolean>(false);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setShowWaitMessage(true);
+        }, 10000); // 10 seconds
+
+        return () => clearTimeout(timer);
+    }, []);
+
     return (
-        <div className="flex items-center justify-center space-x-2">
-            <div className="w-4 h-4 bg-blue-500 rounded-full animate-pulse"></div>
-            <div className="w-4 h-4 bg-blue-500 rounded-full animate-pulse delay-75"></div>
-            <div className="w-4 h-4 bg-blue-500 rounded-full animate-pulse delay-150"></div>
-            <span className="text-sm text-gray-500 ml-2">Loading...</span>
+        <div className="flex flex-col items-center justify-center space-y-4">
+            <div className="flex items-center justify-center space-x-2">
+                <div className="w-4 h-4 bg-blue-500 rounded-full animate-pulse"></div>
+                <div className="w-4 h-4 bg-blue-500 rounded-full animate-pulse delay-75"></div>
+                <div className="w-4 h-4 bg-blue-500 rounded-full animate-pulse delay-150"></div>
+                <span className="text-sm text-gray-500 ml-2">Loading...</span>
+            </div>
+            {showWaitMessage && (
+                <p className="text-sm text-gray-600 text-center max-w-md">
+                    If loading persists, your training schedule may not be available yet.
+                    Please check back after 8:30 PM EST when schedules are typically released.
+                </p>
+            )}
         </div>
     );
 }
