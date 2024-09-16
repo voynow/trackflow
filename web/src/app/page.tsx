@@ -1,14 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import FeaturesList from './components/FeaturesList';
 import Footer from './components/Footer';
 import ImageCarousel from './components/ImageCarousel';
 import Navbar from './components/Navbar';
-import SignUp from './components/SignUp';
 
 export default function Home(): JSX.Element {
-  const [showSignup, setShowSignup] = useState<boolean>(false);
+  const router = useRouter();
 
   return (
     <div className="bg-gray-100 text-gray-800 min-h-screen">
@@ -23,7 +22,7 @@ export default function Home(): JSX.Element {
           </p>
           <button
             className="bg-red-600 hover:bg-red-500 text-white font-bold py-3 px-6 rounded-full text-lg transition duration-300 ease-in-out"
-            onClick={() => setShowSignup(true)}
+            onClick={() => router.push('/signup')}
           >
             Get Started
           </button>
@@ -33,7 +32,6 @@ export default function Home(): JSX.Element {
         <FeaturesList />
       </main>
       <Footer />
-      {showSignup && <SignUp onClose={() => setShowSignup(false)} />}
     </div>
   );
 }
