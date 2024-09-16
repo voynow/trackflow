@@ -11,7 +11,6 @@
 		80777D172C973F01007565FC /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80777D162C973F01007565FC /* ContentView.swift */; };
 		80777D192C973F02007565FC /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 80777D182C973F02007565FC /* Assets.xcassets */; };
 		80777D1C2C973F02007565FC /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 80777D1B2C973F02007565FC /* Preview Assets.xcassets */; };
-		80BDAAA52C97BFED0066B800 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80BDAAA42C97BFED0066B800 /* AppDelegate.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -39,7 +38,6 @@
 		80777D1B2C973F02007565FC /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		80777D212C973F02007565FC /* mobileTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = mobileTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		80777D2B2C973F02007565FC /* mobileUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = mobileUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		80BDAAA42C97BFED0066B800 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -88,7 +86,6 @@
 		80777D132C973F01007565FC /* mobile */ = {
 			isa = PBXGroup;
 			children = (
-				80BDAAA42C97BFED0066B800 /* AppDelegate.swift */,
 				80777D142C973F01007565FC /* mobileApp.swift */,
 				80777D162C973F01007565FC /* ContentView.swift */,
 				80777D182C973F02007565FC /* Assets.xcassets */,
@@ -235,7 +232,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				80BDAAA52C97BFED0066B800 /* AppDelegate.swift in Sources */,
 				80777D172C973F01007565FC /* ContentView.swift in Sources */,
 				80777D152C973F01007565FC /* mobileApp.swift in Sources */,
 			);
