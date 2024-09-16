@@ -162,4 +162,19 @@ cython_debug/
 #.idea/
 
 
+# Xcode
+.DS_Store
+*.xcuserdata
+*.xcuserstate
+*.swp
+
+# Xcode build artifacts
+DerivedData/
+build/
+
+# Swift Package Manager
+.swiftpm/xcode/package.resolved
+Packages/
+
+
 tests/artifacts
