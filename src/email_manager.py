@@ -53,7 +53,7 @@ def get_email_style() -> str:
 
         .feedback {
             text-align: center;
-            font-size: 12px;
+            font-size: 15px;
             color: #3c7aec;
         }
 
@@ -156,7 +156,7 @@ def generate_html_template(
         <div class="container">
             <h1 class="title">TrackFlow 🏃‍♂️🎯</h1>
             <div class="feedback">
-                <p><a href="https://forms.gle/bTgC9XM1kgLSzxTw6" target="_blank">Got feedback? Click here to share 💭</a></p>
+                <p><a href="https://www.trackflow.xyz" target="_blank">Check out the TrackFlow website at www.trackflow.xyz</a></p>
             </div>
             <div class="week-header"><h1>{{ week_header }}</h1></div>
             <div class="content">{{ content | safe }}</div>

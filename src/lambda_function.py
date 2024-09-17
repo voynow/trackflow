@@ -103,7 +103,7 @@ def daily_executor(user: UserRow) -> Optional[TrainingWeek]:
             return daily_generic_pipeline(
                 user=user,
                 pipeline_function=mid_week_update_pipeline,
-                email_subject="Training Schedule Update 🏃‍♂️🎯",
+                email_subject="www.trackflow.xyz is live! 🏃‍♂️🎯",
             )
     except Exception as e:
         logging.error(f"Error processing user {user.athlete_id}: {e}")
