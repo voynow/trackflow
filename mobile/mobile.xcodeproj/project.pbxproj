@@ -7,55 +7,41 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		8021CCC62C9AFAA400CB9B8D /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8021CCC52C9AFAA400CB9B8D /* AppDelegate.swift */; };
+		8021CCC82C9B337900CB9B8D /* StravaAuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8021CCC72C9B337900CB9B8D /* StravaAuthManager.swift */; };
+		8021CCCA2C9B367100CB9B8D /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8021CCC92C9B367100CB9B8D /* AppState.swift */; };
+		8021CCCC2C9B4EBD00CB9B8D /* LandingPageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8021CCCB2C9B4EBD00CB9B8D /* LandingPageView.swift */; };
+		8021CCCE2C9B67F100CB9B8D /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8021CCCD2C9B67F100CB9B8D /* DashboardView.swift */; };
+		8021CCD02C9B6B9A00CB9B8D /* DashboardNavbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8021CCCF2C9B6B9A00CB9B8D /* DashboardNavbar.swift */; };
+		8021CCD22C9B6BAB00CB9B8D /* TrainingWeek.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8021CCD12C9B6BAB00CB9B8D /* TrainingWeek.swift */; };
+		8021CCD62C9B6DF900CB9B8D /* ColorTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8021CCD52C9B6DF900CB9B8D /* ColorTheme.swift */; };
+		8021CCD82C9B9A1700CB9B8D /* LoadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8021CCD72C9B9A1700CB9B8D /* LoadingView.swift */; };
 		80777D152C973F01007565FC /* mobileApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80777D142C973F01007565FC /* mobileApp.swift */; };
 		80777D172C973F01007565FC /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80777D162C973F01007565FC /* ContentView.swift */; };
 		80777D192C973F02007565FC /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 80777D182C973F02007565FC /* Assets.xcassets */; };
 		80777D1C2C973F02007565FC /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 80777D1B2C973F02007565FC /* Preview Assets.xcassets */; };
 /* End PBXBuildFile section */
 
-/* Begin PBXContainerItemProxy section */
-		80777D222C973F02007565FC /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 80777D092C973F01007565FC /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 80777D102C973F01007565FC;
-			remoteInfo = mobile;
-		};
-		80777D2C2C973F02007565FC /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 80777D092C973F01007565FC /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 80777D102C973F01007565FC;
-			remoteInfo = mobile;
-		};
-/* End PBXContainerItemProxy section */
-
 /* Begin PBXFileReference section */
+		8021CCC52C9AFAA400CB9B8D /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		8021CCC72C9B337900CB9B8D /* StravaAuthManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StravaAuthManager.swift; sourceTree = "<group>"; };
+		8021CCC92C9B367100CB9B8D /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
+		8021CCCB2C9B4EBD00CB9B8D /* LandingPageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LandingPageView.swift; sourceTree = "<group>"; };
+		8021CCCD2C9B67F100CB9B8D /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
+		8021CCCF2C9B6B9A00CB9B8D /* DashboardNavbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardNavbar.swift; sourceTree = "<group>"; };
+		8021CCD12C9B6BAB00CB9B8D /* TrainingWeek.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrainingWeek.swift; sourceTree = "<group>"; };
+		8021CCD52C9B6DF900CB9B8D /* ColorTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorTheme.swift; sourceTree = "<group>"; };
+		8021CCD72C9B9A1700CB9B8D /* LoadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingView.swift; sourceTree = "<group>"; };
 		80777D112C973F01007565FC /* mobile.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = mobile.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		80777D142C973F01007565FC /* mobileApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = mobileApp.swift; sourceTree = "<group>"; };
 		80777D162C973F01007565FC /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		80777D182C973F02007565FC /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		80777D1B2C973F02007565FC /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
-		80777D212C973F02007565FC /* mobileTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = mobileTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		80777D2B2C973F02007565FC /* mobileUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = mobileUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		80A6AD222C9A508D005145B3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		80777D0E2C973F01007565FC /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		80777D1E2C973F02007565FC /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		80777D282C973F02007565FC /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -77,8 +63,6 @@
 			isa = PBXGroup;
 			children = (
 				80777D112C973F01007565FC /* mobile.app */,
-				80777D212C973F02007565FC /* mobileTests.xctest */,
-				80777D2B2C973F02007565FC /* mobileUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -86,10 +70,20 @@
 		80777D132C973F01007565FC /* mobile */ = {
 			isa = PBXGroup;
 			children = (
+				8021CCC52C9AFAA400CB9B8D /* AppDelegate.swift */,
+				80A6AD222C9A508D005145B3 /* Info.plist */,
 				80777D142C973F01007565FC /* mobileApp.swift */,
 				80777D162C973F01007565FC /* ContentView.swift */,
 				80777D182C973F02007565FC /* Assets.xcassets */,
 				80777D1A2C973F02007565FC /* Preview Content */,
+				8021CCC72C9B337900CB9B8D /* StravaAuthManager.swift */,
+				8021CCC92C9B367100CB9B8D /* AppState.swift */,
+				8021CCCB2C9B4EBD00CB9B8D /* LandingPageView.swift */,
+				8021CCCD2C9B67F100CB9B8D /* DashboardView.swift */,
+				8021CCCF2C9B6B9A00CB9B8D /* DashboardNavbar.swift */,
+				8021CCD12C9B6BAB00CB9B8D /* TrainingWeek.swift */,
+				8021CCD52C9B6DF900CB9B8D /* ColorTheme.swift */,
+				8021CCD72C9B9A1700CB9B8D /* LoadingView.swift */,
 			);
 			path = mobile;
 			sourceTree = "<group>";
@@ -122,42 +116,6 @@
 			productReference = 80777D112C973F01007565FC /* mobile.app */;
 			productType = "com.apple.product-type.application";
 		};
-		80777D202C973F02007565FC /* mobileTests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 80777D382C973F02007565FC /* Build configuration list for PBXNativeTarget "mobileTests" */;
-			buildPhases = (
-				80777D1D2C973F02007565FC /* Sources */,
-				80777D1E2C973F02007565FC /* Frameworks */,
-				80777D1F2C973F02007565FC /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				80777D232C973F02007565FC /* PBXTargetDependency */,
-			);
-			name = mobileTests;
-			productName = mobileTests;
-			productReference = 80777D212C973F02007565FC /* mobileTests.xctest */;
-			productType = "com.apple.product-type.bundle.unit-test";
-		};
-		80777D2A2C973F02007565FC /* mobileUITests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 80777D3B2C973F02007565FC /* Build configuration list for PBXNativeTarget "mobileUITests" */;
-			buildPhases = (
-				80777D272C973F02007565FC /* Sources */,
-				80777D282C973F02007565FC /* Frameworks */,
-				80777D292C973F02007565FC /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				80777D2D2C973F02007565FC /* PBXTargetDependency */,
-			);
-			name = mobileUITests;
-			productName = mobileUITests;
-			productReference = 80777D2B2C973F02007565FC /* mobileUITests.xctest */;
-			productType = "com.apple.product-type.bundle.ui-testing";
-		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -170,14 +128,6 @@
 				TargetAttributes = {
 					80777D102C973F01007565FC = {
 						CreatedOnToolsVersion = 15.4;
-					};
-					80777D202C973F02007565FC = {
-						CreatedOnToolsVersion = 15.4;
-						TestTargetID = 80777D102C973F01007565FC;
-					};
-					80777D2A2C973F02007565FC = {
-						CreatedOnToolsVersion = 15.4;
-						TestTargetID = 80777D102C973F01007565FC;
 					};
 				};
 			};
@@ -195,8 +145,6 @@
 			projectRoot = "";
 			targets = (
 				80777D102C973F01007565FC /* mobile */,
-				80777D202C973F02007565FC /* mobileTests */,
-				80777D2A2C973F02007565FC /* mobileUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -211,20 +159,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		80777D1F2C973F02007565FC /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		80777D292C973F02007565FC /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -232,39 +166,21 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8021CCC82C9B337900CB9B8D /* StravaAuthManager.swift in Sources */,
+				8021CCCC2C9B4EBD00CB9B8D /* LandingPageView.swift in Sources */,
+				8021CCD02C9B6B9A00CB9B8D /* DashboardNavbar.swift in Sources */,
+				8021CCD82C9B9A1700CB9B8D /* LoadingView.swift in Sources */,
+				8021CCCA2C9B367100CB9B8D /* AppState.swift in Sources */,
+				8021CCCE2C9B67F100CB9B8D /* DashboardView.swift in Sources */,
+				8021CCC62C9AFAA400CB9B8D /* AppDelegate.swift in Sources */,
 				80777D172C973F01007565FC /* ContentView.swift in Sources */,
 				80777D152C973F01007565FC /* mobileApp.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		80777D1D2C973F02007565FC /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		80777D272C973F02007565FC /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
+				8021CCD62C9B6DF900CB9B8D /* ColorTheme.swift in Sources */,
+				8021CCD22C9B6BAB00CB9B8D /* TrainingWeek.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
-
-/* Begin PBXTargetDependency section */
-		80777D232C973F02007565FC /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 80777D102C973F01007565FC /* mobile */;
-			targetProxy = 80777D222C973F02007565FC /* PBXContainerItemProxy */;
-		};
-		80777D2D2C973F02007565FC /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 80777D102C973F01007565FC /* mobile */;
-			targetProxy = 80777D2C2C973F02007565FC /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		80777D332C973F02007565FC /* Debug */ = {
@@ -319,6 +235,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.5;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
@@ -376,6 +293,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.5;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
@@ -397,6 +315,7 @@
 				DEVELOPMENT_TEAM = HUAAF6KX6P;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = mobile/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -425,6 +344,7 @@
 				DEVELOPMENT_ASSET_PATHS = "\"mobile/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = mobile/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -440,78 +360,6 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Release;
-		};
-		80777D392C973F02007565FC /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.5;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = voynow.mobileTests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/mobile.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/mobile";
-			};
-			name = Debug;
-		};
-		80777D3A2C973F02007565FC /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.5;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = voynow.mobileTests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/mobile.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/mobile";
-			};
-			name = Release;
-		};
-		80777D3C2C973F02007565FC /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = voynow.mobileUITests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = mobile;
-			};
-			name = Debug;
-		};
-		80777D3D2C973F02007565FC /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = voynow.mobileUITests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = mobile;
 			};
 			name = Release;
 		};
@@ -532,24 +380,6 @@
 			buildConfigurations = (
 				80777D362C973F02007565FC /* Debug */,
 				80777D372C973F02007565FC /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		80777D382C973F02007565FC /* Build configuration list for PBXNativeTarget "mobileTests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				80777D392C973F02007565FC /* Debug */,
-				80777D3A2C973F02007565FC /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		80777D3B2C973F02007565FC /* Build configuration list for PBXNativeTarget "mobileUITests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				80777D3C2C973F02007565FC /* Debug */,
-				80777D3D2C973F02007565FC /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

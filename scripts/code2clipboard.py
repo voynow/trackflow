@@ -56,6 +56,9 @@ def copy_code_to_clipboard() -> None:
         ".css",
         ".tsx",
         ".jsx",
+        ".swift",
+        ".plist",
+        ".xcbkptlist"
     ]
     directory = os.getcwd()
     code_files = get_code_files(directory, extensions)
