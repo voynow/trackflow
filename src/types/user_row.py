@@ -27,6 +27,6 @@ class UserRow(BaseModel):
     athlete_id: int
     email: str
     preferences: str
-    preferences_json: Preferences = {}
+    preferences_json: Optional[Preferences] = None
     is_active: bool = True
     created_at: datetime = datetime.now()
