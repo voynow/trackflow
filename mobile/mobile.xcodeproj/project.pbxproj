@@ -76,23 +76,23 @@
 		80777D132C973F01007565FC /* mobile */ = {
 			isa = PBXGroup;
 			children = (
-				8021CCC52C9AFAA400CB9B8D /* AppDelegate.swift */,
 				80A6AD222C9A508D005145B3 /* Info.plist */,
-				80777D142C973F01007565FC /* mobileApp.swift */,
+				8031CD782C9DC59C005CED34 /* APIManager.swift */,
+				8021CCC52C9AFAA400CB9B8D /* AppDelegate.swift */,
+				8021CCC92C9B367100CB9B8D /* AppState.swift */,
+				8021CCD52C9B6DF900CB9B8D /* ColorTheme.swift */,
 				80777D162C973F01007565FC /* ContentView.swift */,
+				8021CCCF2C9B6B9A00CB9B8D /* DashboardNavbar.swift */,
+				8021CCCD2C9B67F100CB9B8D /* DashboardView.swift */,
+				8021CCCB2C9B4EBD00CB9B8D /* LandingPageView.swift */,
+				8021CCD72C9B9A1700CB9B8D /* LoadingView.swift */,
+				80777D142C973F01007565FC /* mobileApp.swift */,
+				8031CD7A2C9DC602005CED34 /* Models.swift */,
+				808B3E012C9CFB9B005BC890 /* ProfileView.swift */,
+				8021CCC72C9B337900CB9B8D /* StravaAuthManager.swift */,
+				8021CCD12C9B6BAB00CB9B8D /* TrainingWeek.swift */,
 				80777D182C973F02007565FC /* Assets.xcassets */,
 				80777D1A2C973F02007565FC /* Preview Content */,
-				8021CCC72C9B337900CB9B8D /* StravaAuthManager.swift */,
-				8021CCC92C9B367100CB9B8D /* AppState.swift */,
-				8021CCCB2C9B4EBD00CB9B8D /* LandingPageView.swift */,
-				8021CCCD2C9B67F100CB9B8D /* DashboardView.swift */,
-				8021CCCF2C9B6B9A00CB9B8D /* DashboardNavbar.swift */,
-				8021CCD12C9B6BAB00CB9B8D /* TrainingWeek.swift */,
-				8021CCD52C9B6DF900CB9B8D /* ColorTheme.swift */,
-				8021CCD72C9B9A1700CB9B8D /* LoadingView.swift */,
-				808B3E012C9CFB9B005BC890 /* ProfileView.swift */,
-				8031CD782C9DC59C005CED34 /* APIManager.swift */,
-				8031CD7A2C9DC602005CED34 /* Models.swift */,
 			);
 			path = mobile;
 			sourceTree = "<group>";

@@ -36,12 +36,12 @@ struct WeeklyProgressView: View {
     VStack(alignment: .leading, spacing: 10) {
       Text("Weekly Progress")
         .font(.headline)
-        .foregroundColor(ColorTheme.inverseText)
+        .foregroundColor(ColorTheme.t0)
 
       HStack {
         Text("\(progressPercentage)%")
           .font(.system(size: 36, weight: .bold))
-          .foregroundColor(ColorTheme.inverseText)
+          .foregroundColor(ColorTheme.t0)
 
         Spacer()
 
@@ -49,7 +49,7 @@ struct WeeklyProgressView: View {
           "\(String(format: "%.1f", completedMileage)) of \(String(format: "%.1f", totalMileage)) miles completed"
         )
         .font(.caption)
-        .foregroundColor(ColorTheme.inverseText)
+        .foregroundColor(ColorTheme.t1)
       }
 
       GeometryReader { geometry in
@@ -72,8 +72,12 @@ struct WeeklyProgressView: View {
       .frame(height: 8)
     }
     .padding()
-    .background(ColorTheme.inverseBackground)
+    .background(ColorTheme.bg0)
     .cornerRadius(10)
+    .overlay(
+      RoundedRectangle(cornerRadius: 10)
+        .stroke(ColorTheme.inverseBackground, lineWidth: 0.5)
+    )
   }
 }
 

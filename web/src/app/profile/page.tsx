@@ -52,18 +52,6 @@ export default function ProfilePage(): JSX.Element {
         }
     }, [fetchProfileData]);
 
-    const handlePreferencesEdit = () => {
-        setIsEditing(true);
-        setEditedPreferences(profileData?.preferences || '');
-    };
-
-    const handlePreferencesSave = () => {
-        if (profileData) {
-            setProfileData({ ...profileData, preferences: editedPreferences });
-            setIsEditing(false);
-            // TODO: Implement API call to save preferences
-        }
-    };
 
     const handlePreferencesCancel = () => {
         setIsEditing(false);
@@ -104,49 +92,6 @@ export default function ProfilePage(): JSX.Element {
                                 {profileData.firstname} {profileData.lastname}
                             </h1>
                             <p className="text-gray-600 mt-2">{profileData.email}</p>
-                            <div className="mt-6 relative">
-                                <h2 className="text-xl font-semibold text-gray-700 flex items-center">
-                                    Preferences
-                                    <div className="group relative ml-2">
-                                        <FiInfo className="text-gray-400 cursor-help" />
-                                        <span className="absolute ml-2 w-48 p-2 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                            Update your preferences to personalize your TrackFlow experience. Detail is encouraged to maximize your experience.
-                                        </span>
-                                    </div>
-                                    {!isEditing && (
-                                        <FiEdit2
-                                            className="ml-2 text-blue-400 cursor-pointer hover:text-blue-500"
-                                            onClick={handlePreferencesEdit}
-                                        />
-                                    )}
-                                </h2>
-                                {isEditing ? (
-                                    <div className="relative">
-                                        <textarea
-                                            className="w-full mt-2 p-2 pr-16 border rounded resize-none"
-                                            value={editedPreferences}
-                                            onChange={(e) => setEditedPreferences(e.target.value)}
-                                            rows={4}
-                                        />
-                                        <div className="absolute top-4 right-2 flex">
-                                            <button
-                                                className="mr-1 p-1 bg-green-400 text-white rounded hover:bg-green-500 transition-colors"
-                                                onClick={handlePreferencesSave}
-                                            >
-                                                <FiCheck />
-                                            </button>
-                                            <button
-                                                className="p-1 bg-red-400 text-white rounded hover:bg-red-500 transition-colors"
-                                                onClick={handlePreferencesCancel}
-                                            >
-                                                <FiX />
-                                            </button>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <p className="text-gray-600 mt-2">{profileData.preferences}</p>
-                                )}
-                            </div>
                             <div className="mt-6 relative">
                                 <h2 className="text-xl font-semibold text-gray-700 flex items-center">
                                     Account Status

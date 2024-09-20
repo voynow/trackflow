@@ -10,12 +10,10 @@ import { useState } from 'react';
  */
 export default function SignUpPage(): JSX.Element {
     const [email, setEmail] = useState<string>('');
-    const [preferences, setPreferences] = useState<string>('');
 
     const handleSignUp = (event: React.FormEvent): void => {
         event.preventDefault();
         localStorage.setItem('email', email);
-        localStorage.setItem('preferences', preferences);
         const isDevelopment = process.env.NODE_ENV === 'development';
         const redirectUri = `https://www.trackflow.xyz/verify${isDevelopment ? '?env=dev' : ''}`;
         const stravaAuthUrl = `https://www.strava.com/oauth/authorize?client_id=95101&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&approval_prompt=auto&scope=read_all,profile:read_all,activity:read_all`;
@@ -43,13 +41,6 @@ export default function SignUpPage(): JSX.Element {
                         placeholder="Enter your email"
                         required
                         className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                    />
-                    <textarea
-                        value={preferences}
-                        onChange={(e) => setPreferences(e.target.value)}
-                        placeholder="Your running preferences (e.g., Training for a marathon, prefer workouts on wed and long runs on sat)"
-                        className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                        rows={3}
                     />
                     <button
                         type="submit"

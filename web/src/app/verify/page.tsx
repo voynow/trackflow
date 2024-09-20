@@ -23,7 +23,6 @@ function VerifyContent(): JSX.Element {
         hasRun.current = true;
 
         const email = localStorage.getItem('email');
-        const preferences = localStorage.getItem('preferences');
 
         const verifyAccount = async (payload: Record<string, string>) => {
             try {
@@ -37,7 +36,6 @@ function VerifyContent(): JSX.Element {
                 if (data.success) {
                     setStatus('success');
                     localStorage.removeItem('email');
-                    localStorage.removeItem('preferences');
                     localStorage.setItem('jwt_token', data.jwt_token);
                     const isDevelopment = searchParams.get('env') === 'dev';
                     const dashboardUrl = isDevelopment
@@ -59,11 +57,11 @@ function VerifyContent(): JSX.Element {
 
         if (code) {
             console.log('Verifying with code:', code);
-            if (email && preferences) {
-                console.log('Email and preferences found in localStorage');
-                verifyAccount({ email, preferences, code });
+            if (email) {
+                console.log('Email found in localStorage');
+                verifyAccount({ email, code });
             } else {
-                console.log('Email or preferences missing from localStorage');
+                console.log('Email missing from localStorage');
                 verifyAccount({ code });
             }
         } else {
