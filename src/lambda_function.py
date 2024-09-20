@@ -23,15 +23,17 @@ from src.types.user_row import UserRow
 from src.utils import datetime_now_est
 
 
-def signup(email: str, preferences: str, code: str) -> str:
+def signup(email: str, code: str) -> str:
     """
     Get authenticated user, upsert user with email and preferences
 
     :param email: user email
-    :param preferences: user preferences
     :param code: strava code
     :return: jwt_token
     """
+    preferences = (
+        "Looking for smart training recommendations to optimize my performance."
+    )
     send_alert_email(
         subject="TrackFlow Alert: New Signup Attempt",
         text_content=f"You have a new client {email=} attempting to signup with {preferences=}",
@@ -128,10 +130,9 @@ def lambda_handler(event, context):
     print(f"Context: {context}")
 
     # Will fail on bad authenticate_with_code
-    if event.get("email") and event.get("preferences") and event.get("code"):
+    if event.get("email") and event.get("code"):
         response = signup(
             email=event["email"],
-            preferences=event["preferences"],
             code=event["code"],
         )
         return {"success": True, "jwt_token": response}
