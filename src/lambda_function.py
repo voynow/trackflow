@@ -81,7 +81,7 @@ def handle_frontend_request(jwt_token: str, method: str) -> dict:
                     "lastname": athelete.lastname,
                     "profile": athelete.profile,
                     "email": user.email,
-                    "preferences": user.preferences,
+                    "preferences": user.preferences_json,
                     "is_active": user.is_active,
                 },
             }
