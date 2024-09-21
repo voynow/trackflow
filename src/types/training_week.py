@@ -7,13 +7,13 @@ from pydantic import BaseModel, Field
 
 
 class Day(StrEnum):
-    MON = "mon"
-    TUES = "tues"
-    WED = "wed"
-    THURS = "thurs"
-    FRI = "fri"
-    SAT = "sat"
-    SUN = "sun"
+    MON = "Mon"
+    TUES = "Tues"
+    WED = "Wed"
+    THURS = "Thurs"
+    FRI = "Fri"
+    SAT = "Sat"
+    SUN = "Sun"
 
 
 class SessionType(StrEnum):
