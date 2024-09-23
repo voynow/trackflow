@@ -29,13 +29,11 @@ def activities_to_df(activities: List[Activity]) -> pl.DataFrame:
         "total_elevation_gain": pl.Float64,
         "start_date_local": pl.Datetime,
     }
-    df_builder: Dict[str, List] = {}
+    df_builder: Dict[str, List] = {attribute: [] for attribute in df_schema}
 
     for activity in activities:
-        for attribute in df_schema:
-            if attribute not in df_builder:
-                df_builder[attribute] = []
-            if activity.sport_type == "Run":
+        if activity.sport_type == "Run":
+            for attribute in df_schema:
                 df_builder[attribute].append(getattr(activity, attribute))
 
     return pl.DataFrame(
