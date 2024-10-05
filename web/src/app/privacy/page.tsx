@@ -44,13 +44,13 @@ const PrivacyPolicy: React.FC = () => {
                         <h3 className="text-xl font-semibold mb-2">Strava Integration</h3>
                         <p>
                             TrackFlow integrates with Strava to provide you with personalized training recommendations.
-                            We only access the data necessary for this purpose and do so securely through Strava's API.
+                            We only access the data necessary for this purpose and do so securely through Strava&apos;s API.
                         </p>
                     </div>
 
                     <p>
                         By using TrackFlow, you agree to the terms outlined in this privacy policy. If you have any
-                        questions or concerns, please don't hesitate to contact us.
+                        questions or concerns, please don&apos;t hesitate to contact us.
                     </p>
                 </div>
 
