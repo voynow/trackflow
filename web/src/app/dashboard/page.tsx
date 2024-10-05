@@ -1,15 +1,18 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useCallback, useEffect, useState } from 'react';
+import React, { Suspense, useCallback, useEffect, useState } from 'react';
 import DashboardNavbar from '../components/DashboardNavbar';
+import { LoadingSpinner } from '../components/LoadingSpinner';
 import TrainingWeek, { TrainingWeekProps } from '../components/TrainingWeek';
+
+React
 
 export default function Dashboard(): JSX.Element {
     return (
         <>
             <DashboardNavbar />
-            <Suspense fallback={<LoadingSpinner />}>
+            <Suspense fallback={<LoadingSpinner error={null} />}>
                 <DashboardContent />
             </Suspense>
         </>
@@ -20,6 +23,7 @@ function DashboardContent(): JSX.Element {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [trainingWeekData, setTrainingWeekData] = useState<TrainingWeekProps['data'] | null>(null);
+    const [error, setError] = useState<string | null>(null);
 
     const fetchTrainingWeekData = useCallback(async (token: string): Promise<void> => {
         try {
@@ -33,9 +37,11 @@ function DashboardContent(): JSX.Element {
             if (response.ok && data.success) {
                 data.training_week = JSON.parse(data.training_week);
                 setTrainingWeekData(data);
+            } else {
+                setError(data.error || 'An error occurred while fetching training data.');
             }
         } catch (error) {
-            console.error('Error fetching training data:', error);
+            setError('An unexpected error occurred. Please try again later.');
         }
     }, []);
 
@@ -63,36 +69,7 @@ function DashboardContent(): JSX.Element {
             {trainingWeekData ? (
                 <TrainingWeek data={trainingWeekData} />
             ) : (
-                <LoadingSpinner />
-            )}
-        </div>
-    );
-}
-
-function LoadingSpinner(): JSX.Element {
-    const [showWaitMessage, setShowWaitMessage] = useState<boolean>(false);
-
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            setShowWaitMessage(true);
-        }, 10000); // 10 seconds
-
-        return () => clearTimeout(timer);
-    }, []);
-
-    return (
-        <div className="flex flex-col items-center justify-center space-y-4">
-            <div className="flex items-center justify-center space-x-2">
-                <div className="w-4 h-4 bg-blue-500 rounded-full animate-pulse"></div>
-                <div className="w-4 h-4 bg-blue-500 rounded-full animate-pulse delay-75"></div>
-                <div className="w-4 h-4 bg-blue-500 rounded-full animate-pulse delay-150"></div>
-                <span className="text-sm text-gray-500 ml-2">Loading...</span>
-            </div>
-            {showWaitMessage && (
-                <p className="text-sm text-gray-600 text-center max-w-md">
-                    If loading persists, your training schedule may not be available yet.
-                    Please check back after 8:30 PM EST when schedules are typically released.
-                </p>
+                <LoadingSpinner error={error} />
             )}
         </div>
     );

@@ -4,8 +4,7 @@ from typing import List, Optional
 
 from pydantic import BaseModel
 
-from src.types.training_week import Day
-
+from src.types.training_week import Day, SessionType
 
 class RaceDistance(StrEnum):
     FIVE_KILOMETER = "5k"
@@ -15,12 +14,14 @@ class RaceDistance(StrEnum):
     ULTRA = "ultra marathon"
 
 
+class TheoreticalTrainingSession(BaseModel):
+    day: Day
+    session_type: SessionType
+
+
 class Preferences(BaseModel):
     race_distance: Optional[RaceDistance] = None
-    long_run_day: Optional[Day] = None
-    speed_workout_day: Optional[Day] = None
-    n_days_per_week: Optional[int] = None
-    unavailable_days: Optional[List[Day]] = None
+    ideal_training_week: Optional[List[TheoreticalTrainingSession]] = None
 
 
 class UserRow(BaseModel):

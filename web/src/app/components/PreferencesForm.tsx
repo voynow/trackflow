@@ -1,120 +1,107 @@
 import React from 'react';
-import { Preferences } from '../types';
+import { Day, Preferences, SessionType } from '../types';
 
 type PreferencesFormProps = {
     preferences: Preferences;
     setPreferences: React.Dispatch<React.SetStateAction<Preferences>>;
     onSave: () => Promise<void>;
     onCancel: () => void;
+    isSaving: boolean;
 };
 
 export function PreferencesForm({
     preferences,
     setPreferences,
     onSave,
-    onCancel
+    onCancel,
+    isSaving
 }: PreferencesFormProps): JSX.Element {
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
         e.preventDefault();
         onSave();
     };
 
+    const updateIdealTrainingWeek = (day: Day, sessionType: SessionType | null): void => {
+        const updatedWeek = preferences.ideal_training_week?.filter(session => session.day !== day) || [];
+        if (sessionType) {
+            updatedWeek.push({ day, session_type: sessionType });
+        }
+        setPreferences({ ...preferences, ideal_training_week: updatedWeek });
+    };
+
+    const days: Day[] = ['Mon', 'Tues', 'Wed', 'Thurs', 'Fri', 'Sat', 'Sun'];
+    const sessionTypes: SessionType[] = ['easy run', 'long run', 'speed workout', 'rest day', 'moderate run'];
+
     return (
-        <form onSubmit={handleSubmit}>
-            {/* Race Distance */}
-            <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700">Race Distance</label>
+        <form onSubmit={handleSubmit} className="bg-gray-50 p-6 max-w-3xl mx-auto text-gray-800 rounded-3xl">
+
+            <div className="mb-8">
+                <label className="block text-sm font-medium mb-2 text-gray-600">Race Distance</label>
                 <select
                     value={preferences.race_distance || ''}
                     onChange={(e) => setPreferences({ ...preferences, race_distance: e.target.value as Preferences['race_distance'] })}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                    className="w-full bg-gray-50 rounded-xl py-3 px-4 text-gray-800 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300"
                 >
                     <option value="">Select distance</option>
-                    <option value="FIVE_KILOMETER">5K</option>
-                    <option value="TEN_KILOMETER">10K</option>
-                    <option value="HALF_MARATHON">Half Marathon</option>
-                    <option value="MARATHON">Marathon</option>
-                    <option value="ULTRA">Ultra Marathon</option>
+                    <option value="5k">5K</option>
+                    <option value="10k">10K</option>
+                    <option value="half marathon">Half Marathon</option>
+                    <option value="marathon">Marathon</option>
+                    <option value="ultra marathon">Ultra Marathon</option>
                 </select>
             </div>
 
-            {/* Long Run Day */}
-            <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700">Long Run Day</label>
-                <select
-                    value={preferences.long_run_day || ''}
-                    onChange={(e) => setPreferences({ ...preferences, long_run_day: e.target.value as Preferences['long_run_day'] })}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-                >
-                    <option value="">Select day</option>
-                    {['Mon', 'Tues', 'Wed', 'Thurs', 'Fri', 'Sat', 'Sun'].map((day) => (
-                        <option key={day} value={day}>{day}</option>
-                    ))}
-                </select>
+            <div className="mb-8">
+                <label className="block text-sm font-medium mb-4 text-gray-600">Ideal Training Week</label>
+                <div className="space-y-4">
+                    {days.map((day) => {
+                        const sessionType = preferences.ideal_training_week?.find(session => session.day === day)?.session_type;
+                        return (
+                            <div key={day} className="flex items-center space-x-4">
+                                <span className="w-16 text-gray-600 font-medium">{day}</span>
+                                <select
+                                    value={sessionType || ''}
+                                    onChange={(e) => updateIdealTrainingWeek(day, e.target.value as SessionType || null)}
+                                    className="flex-grow bg-gray-50 rounded-xl py-3 px-4 text-gray-800 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300"
+                                >
+                                    <option value="">No Preference</option>
+                                    {sessionTypes.map((type) => (
+                                        <option key={type} value={type}>{type}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        );
+                    })}
+                </div>
             </div>
 
-            {/* Speed Workout Day */}
-            <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700">Speed Workout Day</label>
-                <select
-                    value={preferences.speed_workout_day || ''}
-                    onChange={(e) => setPreferences({ ...preferences, speed_workout_day: e.target.value as Preferences['speed_workout_day'] })}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-                >
-                    <option value="">Select day</option>
-                    {['Mon', 'Tues', 'Wed', 'Thurs', 'Fri', 'Sat', 'Sun'].map((day) => (
-                        <option key={day} value={day}>{day}</option>
-                    ))}
-                </select>
-            </div>
-
-            {/* Number of Days per Week */}
-            <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700">Days per Week</label>
-                <input
-                    type="number"
-                    min="1"
-                    max="7"
-                    value={preferences.n_days_per_week || ''}
-                    onChange={(e) => setPreferences({ ...preferences, n_days_per_week: parseInt(e.target.value) })}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-                />
-            </div>
-
-            {/* Unavailable Days */}
-            <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700">Unavailable Days</label>
-                {(['Mon', 'Tues', 'Wed', 'Thurs', 'Fri', 'Sat', 'Sun'] as const).map((day) => (
-                    <label key={day} className="inline-flex items-center mt-1 mr-4">
-                        <input
-                            type="checkbox"
-                            checked={preferences.unavailable_days?.includes(day) ?? false}
-                            onChange={(e) => {
-                                const updatedDays = e.target.checked
-                                    ? [...(preferences.unavailable_days || []), day]
-                                    : (preferences.unavailable_days || []).filter(d => d !== day);
-                                setPreferences({ ...preferences, unavailable_days: updatedDays as Preferences['unavailable_days'] });
-                            }}
-                            className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-                        />
-                        <span className="ml-2 text-sm text-gray-700">{day}</span>
-                    </label>
-                ))}
-            </div>
-
-            <div className="flex justify-end space-x-2">
+            <div className="flex justify-end space-x-4">
                 <button
                     type="button"
                     onClick={onCancel}
-                    className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition"
+                    className="px-4 py-2 bg-gray-700 text-white rounded-xl hover:bg-gray-500 transition duration-300 ease-in-out"
+                    disabled={isSaving}
                 >
                     Cancel
                 </button>
                 <button
                     type="submit"
-                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+                    className="px-4 py-2 bg-blue-400 text-white rounded-xl hover:bg-blue-300 transition duration-300 ease-in-out relative"
+                    disabled={isSaving}
                 >
-                    Save
+                    {isSaving ? (
+                        <>
+                            <span className="opacity-0">Save</span>
+                            <span className="absolute inset-0 flex items-center justify-center">
+                                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                            </span>
+                        </>
+                    ) : (
+                        'Save'
+                    )}
                 </button>
             </div>
         </form>

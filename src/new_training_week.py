@@ -1,4 +1,5 @@
-from typing import List, Tuple
+import logging
+from typing import List
 
 from src.llm import get_completion, get_completion_json
 from src.training_week import standardize_training_week
@@ -10,6 +11,9 @@ from src.types.training_week import (
     TrainingWeekWithPlanning,
 )
 from src.types.week_summary import WeekSummary
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 
 def get_typical_week_training_review(
@@ -166,7 +170,7 @@ def generate_week(
         if is_within_target:
             return training_week_generation
 
-        print(
+        logger.info(
             f"Gen week attempt {attempt + 1}/{max_retries}: total_mileage={training_week_generation.training_week.total_mileage}, "
             f"weekly_mileage_target={training_week_generation.weekly_mileage_target}, difference={current_difference}"
         )

@@ -1,4 +1,3 @@
-// src/app/components/DashboardNavbar.tsx
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 

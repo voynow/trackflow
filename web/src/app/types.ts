@@ -7,10 +7,13 @@ export type ProfileData = {
     is_active: boolean;
 };
 
+export type Day = 'Mon' | 'Tues' | 'Wed' | 'Thurs' | 'Fri' | 'Sat' | 'Sun';
+export type SessionType = 'easy run' | 'long run' | 'speed workout' | 'rest day' | 'moderate run';
+
 export type Preferences = {
-    race_distance?: 'FIVE_KILOMETER' | 'TEN_KILOMETER' | 'HALF_MARATHON' | 'MARATHON' | 'ULTRA';
-    long_run_day?: 'Mon' | 'Tues' | 'Wed' | 'Thurs' | 'Fri' | 'Sat' | 'Sun';
-    speed_workout_day?: 'Mon' | 'Tues' | 'Wed' | 'Thurs' | 'Fri' | 'Sat' | 'Sun';
-    n_days_per_week?: number;
-    unavailable_days?: Array<'Mon' | 'Tues' | 'Wed' | 'Thurs' | 'Fri' | 'Sat' | 'Sun'>;
+    race_distance?: '5k' | '10k' | 'half marathon' | 'marathon' | 'ultra marathon';
+    ideal_training_week?: Array<{
+        day: Day;
+        session_type: SessionType;
+    }>;
 };
