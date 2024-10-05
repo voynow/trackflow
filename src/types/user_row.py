@@ -12,7 +12,7 @@ class RaceDistance(StrEnum):
     HALF_MARATHON = "half marathon"
     MARATHON = "marathon"
     ULTRA = "ultra marathon"
-
+    NONE = "none"
 
 class TheoreticalTrainingSession(BaseModel):
     day: Day

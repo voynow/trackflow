@@ -7,6 +7,7 @@ import { LoadingSpinner } from '../components/LoadingSpinner';
 import { PreferencesForm } from '../components/PreferencesForm';
 import { Preferences, ProfileData } from '../types';
 import { fetchProfileData, savePreferences } from './api';
+import { Day, SessionType } from '../types';
 
 export default function ProfilePage(): JSX.Element {
     const [profileData, setProfileData] = useState<ProfileData | null>(null);
@@ -51,6 +52,9 @@ export default function ProfilePage(): JSX.Element {
         setIsEditing(false);
     };
 
+    const days: Day[] = ['Mon', 'Tues', 'Wed', 'Thurs', 'Fri', 'Sat', 'Sun'];
+    const sessionTypes: SessionType[] = ['easy run', 'long run', 'speed workout', 'rest day', 'moderate run'];
+
     if (isLoading) {
         return (
             <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center">
@@ -68,33 +72,33 @@ export default function ProfilePage(): JSX.Element {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 text-gray-800">
+        <div className="min-h-screen bg-gray-100 text-gray-800">
             <DashboardNavbar />
-            <div className="max-w-4xl mx-auto mt-20 p-8 bg-white rounded-3xl shadow-lg">
-                <div className="flex items-center mb-8">
-                    <Image
-                        src={profileData.profile}
-                        alt={`${profileData.firstname} ${profileData.lastname}`}
-                        width={96}
-                        height={96}
-                        className="rounded-full mr-6 border-2 border-blue-500"
-                    />
-                    <div>
-                        <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-blue-400">
-                            {profileData.firstname} {profileData.lastname}
-                        </h1>
-                        <p className="text-gray-600">{profileData.email}</p>
+            <div className="max-w-4xl mx-auto mt-20 mb-10 p-8 bg-white rounded-3xl shadow-lg">
+                <div className="flex items-center mb-8 justify-between">
+                    <div className="flex items-center">
+                        <Image
+                            src={profileData.profile}
+                            alt={`${profileData.firstname} ${profileData.lastname}`}
+                            width={96}
+                            height={96}
+                            className="rounded-full mr-6 border-2 border-blue-500"
+                        />
+                        <div>
+                            <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-blue-400">
+                                {profileData.firstname} {profileData.lastname}
+                            </h1>
+                            <p className="text-gray-600">{profileData.email}</p>
+                        </div>
                     </div>
-                </div>
-                <div className="space-y-10">
                     <div>
-                        <h2 className="text-xl font-semibold mb-2">Status</h2>
                         <p className={`inline-block px-3 py-1 rounded-full text-white ${profileData.is_active ? 'bg-green-500' : 'bg-red-500'}`}>
                             {profileData.is_active ? 'Active' : 'Inactive'}
                         </p>
                     </div>
+                </div>
+                <div className="space-y-10">
                     <div>
-                        <h2 className="text-xl font-semibold mb-4">Training Preferences</h2>
                         {isEditing ? (
                             <PreferencesForm
                                 preferences={preferences}
@@ -104,16 +108,42 @@ export default function ProfilePage(): JSX.Element {
                                 isSaving={isSaving}
                             />
                         ) : (
-                            <div>
-                                <pre className="bg-gray-50 p-4 rounded-xl overflow-x-auto text-gray-800">
-                                    {JSON.stringify(preferences, null, 2)}
+                            <div className="bg-gray-50 p-6 max-w-3xl mx-auto text-gray-800 rounded-3xl">
+                                <div className="mb-8">
+                                    <label className="block text-sm font-medium mb-2 text-gray-600">Race Distance</label>
+                                    <div className="w-full bg-gray-50 rounded-xl py-3 px-4 text-gray-800 border border-gray-200">
+                                        {preferences.race_distance || 'Not set'}
+                                    </div>
+                                </div>
+
+                                <div className="mb-8">
+                                    <label className="block text-sm font-medium mb-4 text-gray-600">Ideal Training Week</label>
+                                    <div className="space-y-2">
+                                        {days.map((day) => {
+                                            const sessionType = preferences.ideal_training_week?.find(session => session.day === day)?.session_type;
+                                            const isPreferenceSet = !!sessionType;
+                                            return (
+                                                <div key={day} className="flex items-center border rounded-xl overflow-hidden border-gray-300">
+                                                    <span className={`w-20 font-medium px-4 py-3 bg-gray-50 ${isPreferenceSet ? 'text-gray-600' : 'text-gray-300'}`}>
+                                                        {day}
+                                                    </span>
+                                                    <span className={`flex-grow py-3 px-4 bg-gray-50 ${isPreferenceSet ? 'text-gray-800' : 'text-gray-300'}`}>
+                                                        {sessionType || 'No Preference'}
+                                                    </span>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                <div className="flex justify-end">
                                     <button
                                         onClick={() => setIsEditing(true)}
-                                        className="mt-4 px-4 py-2 bg-blue-400 text-white rounded-xl hover:bg-blue-300 transition duration-300 ease-in-out float-right"
+                                        className="px-4 py-2 bg-blue-400 text-white rounded-xl hover:bg-blue-300 transition duration-300 ease-in-out"
                                     >
                                         Edit
                                     </button>
-                                </pre>
+                                </div>
                             </div>
                         )}
                     </div>

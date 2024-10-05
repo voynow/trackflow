@@ -48,21 +48,25 @@ export function PreferencesForm({
                     <option value="half marathon">Half Marathon</option>
                     <option value="marathon">Marathon</option>
                     <option value="ultra marathon">Ultra Marathon</option>
+                    <option value="none">None</option>
                 </select>
             </div>
 
             <div className="mb-8">
                 <label className="block text-sm font-medium mb-4 text-gray-600">Ideal Training Week</label>
-                <div className="space-y-4">
+                <div className="space-y-2">
                     {days.map((day) => {
                         const sessionType = preferences.ideal_training_week?.find(session => session.day === day)?.session_type;
+                        const isPreferenceSet = !!sessionType;
                         return (
-                            <div key={day} className="flex items-center space-x-4">
-                                <span className="w-16 text-gray-600 font-medium">{day}</span>
+                            <div key={day} className={`flex items-center border rounded-xl overflow-hidden border-gray-300`}>
+                                <span className={`w-20 font-medium px-4 py-3 bg-gray-50 ${isPreferenceSet ? 'text-gray-600' : 'text-gray-300'}`}>
+                                    {day}
+                                </span>
                                 <select
                                     value={sessionType || ''}
                                     onChange={(e) => updateIdealTrainingWeek(day, e.target.value as SessionType || null)}
-                                    className="flex-grow bg-gray-50 rounded-xl py-3 px-4 text-gray-800 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300"
+                                    className={`flex-grow py-3 px-4 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-300 ${isPreferenceSet ? 'text-gray-800' : 'text-gray-300'}`}
                                 >
                                     <option value="">No Preference</option>
                                     {sessionTypes.map((type) => (
