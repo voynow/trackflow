@@ -1,5 +1,6 @@
 import logging
 import os
+import sys
 import traceback
 from typing import Optional
 
@@ -16,11 +17,15 @@ from src.supabase_client import (
     get_training_week,
     get_user,
     list_users,
+    update_preferences,
     upsert_user,
 )
 from src.types.training_week import TrainingWeek
 from src.types.user_row import UserRow
 from src.utils import datetime_now_est
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 
 def signup(email: str, code: str) -> str:
@@ -49,7 +54,9 @@ def signup(email: str, code: str) -> str:
     return user_auth.jwt_token
 
 
-def handle_frontend_request(jwt_token: str, method: str) -> dict:
+def handle_frontend_request(
+    jwt_token: str, method: str, payload: Optional[dict] = None
+) -> dict:
     """
     To be extended for other requests eventually
 
@@ -57,6 +64,7 @@ def handle_frontend_request(jwt_token: str, method: str) -> dict:
 
     :param jwt_token: jwt_token
     :param method: method
+    :param payload: optional dictionary with additional data
     :return: dict with {"success": bool}
     """
     try:
@@ -73,18 +81,23 @@ def handle_frontend_request(jwt_token: str, method: str) -> dict:
             }
         elif method == "get_profile":
             user = get_user(athlete_id)
-            athelete = get_strava_client(athlete_id).get_athlete()
+            athlete = get_strava_client(athlete_id).get_athlete()
             return {
                 "success": True,
                 "profile": {
-                    "firstname": athelete.firstname,
-                    "lastname": athelete.lastname,
-                    "profile": athelete.profile,
+                    "firstname": athlete.firstname,
+                    "lastname": athlete.lastname,
+                    "profile": athlete.profile,
                     "email": user.email,
-                    "preferences": user.preferences_json,
+                    "preferences": user.preferences_json.json(),
                     "is_active": user.is_active,
                 },
             }
+        elif method == "update_preferences":
+            update_preferences(
+                athlete_id=athlete_id, preferences_json=payload["preferences"]
+            )
+            return {"success": True}
         else:
             return {"success": False, "error": "Invalid method"}
     except Exception as e:
@@ -108,7 +121,7 @@ def daily_executor(user: UserRow) -> Optional[TrainingWeek]:
                 email_subject="www.trackflow.xyz is live! 🏃‍♂️🎯",
             )
     except Exception as e:
-        logging.error(f"Error processing user {user.athlete_id}: {e}")
+        logger.error(f"Error processing user {user.athlete_id}: {e}")
         send_alert_email(
             subject="TrackFlow Alert: Error in Lambda Function",
             text_content=f"Error for {user.email=} {e} with traceback: {traceback.format_exc()}",
@@ -126,8 +139,8 @@ def lambda_handler(event, context):
     :param context: lambda context
     :return: dict with {"success": bool}
     """
-    print(f"Event: {event}")
-    print(f"Context: {context}")
+    logger.info(f"Event: {event}")
+    logger.info(f"Context: {context}")
 
     # Will fail on bad authenticate_with_code
     if event.get("email") and event.get("code"):
@@ -144,7 +157,9 @@ def lambda_handler(event, context):
 
     elif event.get("jwt_token") and event.get("method"):
         return handle_frontend_request(
-            jwt_token=event["jwt_token"], method=event["method"]
+            jwt_token=event["jwt_token"],
+            method=event["method"],
+            payload=event.get("payload"),
         )
 
     # This will only run if triggered by NIGHTLY_EMAIL_TRIGGER_ARN

@@ -8,7 +8,7 @@ from supabase import Client, create_client
 
 from src.types.training_week import TrainingWeek
 from src.types.user_auth_row import UserAuthRow
-from src.types.user_row import UserRow
+from src.types.user_row import Preferences, UserRow
 
 load_dotenv()
 
@@ -193,4 +193,28 @@ def upsert_training_week_test(
     }
     table = client.table("training_week_test")
     response = table.upsert(row_data).execute()
+    return response
+
+
+def update_preferences(athlete_id: int, preferences_json: dict) -> APIResponse:
+    """
+    Update user's preferences
+
+    :param athlete_id: The ID of the athlete
+    :param preferences: json string representing a Preferences object
+    :return: APIResponse
+    """
+    print(preferences_json)
+    print(type(preferences_json))
+    try:
+        Preferences(**preferences_json)
+    except Exception as e:
+        raise ValueError("Invalid preferences") from e
+
+    table = client.table("user")
+    response = (
+        table.update({"preferences_json": preferences_json})
+        .eq("athlete_id", athlete_id)
+        .execute()
+    )
     return response
