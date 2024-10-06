@@ -1,17 +1,11 @@
 import logging
 import os
-import sys
-import traceback
 from typing import Optional
 
 import jwt
 
 from src.auth_manager import authenticate_with_code, decode_jwt, get_strava_client
-from src.daily_pipeline import (
-    daily_generic_pipeline,
-    mid_week_update_pipeline,
-    new_training_week_pipeline,
-)
+from src.daily_pipeline import daily_executor
 from src.email_manager import send_alert_email
 from src.supabase_client import (
     get_training_week,
@@ -20,15 +14,13 @@ from src.supabase_client import (
     update_preferences,
     upsert_user,
 )
-from src.types.training_week import TrainingWeek
 from src.types.user_row import UserRow
-from src.utils import datetime_now_est
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 
-def signup(email: str, code: str) -> str:
+def signup(email: str, code: str) -> dict:
     """
     Get authenticated user, upsert user with email and preferences
 
@@ -51,7 +43,7 @@ def signup(email: str, code: str) -> str:
             preferences=preferences,
         )
     )
-    return user_auth.jwt_token
+    return {"success": True, "jwt_token": user_auth.jwt_token}
 
 
 def handle_frontend_request(
@@ -72,61 +64,33 @@ def handle_frontend_request(
     except jwt.DecodeError:
         return {"success": False, "error": "Invalid JWT token"}
 
-    try:
-        if method == "get_training_week":
-            training_week = get_training_week(athlete_id)
-            return {
-                "success": True,
-                "training_week": training_week.json(),
-            }
-        elif method == "get_profile":
-            user = get_user(athlete_id)
-            athlete = get_strava_client(athlete_id).get_athlete()
-            return {
-                "success": True,
-                "profile": {
-                    "firstname": athlete.firstname,
-                    "lastname": athlete.lastname,
-                    "profile": athlete.profile,
-                    "email": user.email,
-                    "preferences": user.preferences_json.json(),
-                    "is_active": user.is_active,
-                },
-            }
-        elif method == "update_preferences":
-            update_preferences(
-                athlete_id=athlete_id, preferences_json=payload["preferences"]
-            )
-            return {"success": True}
-        else:
-            return {"success": False, "error": "Invalid method"}
-    except Exception as e:
-        return {"success": False, "error": str(e)}
-
-
-def daily_executor(user: UserRow) -> Optional[TrainingWeek]:
-    """Decides between generating a new week or updating based on the day."""
-    try:
-        # Sunday is day 6
-        if datetime_now_est().weekday() == 6:
-            return daily_generic_pipeline(
-                user=user,
-                pipeline_function=new_training_week_pipeline,
-                email_subject="Training Schedule Just Dropped 🏃‍♂️🎯",
-            )
-        else:
-            return daily_generic_pipeline(
-                user=user,
-                pipeline_function=mid_week_update_pipeline,
-                email_subject="www.trackflow.xyz is live! 🏃‍♂️🎯",
-            )
-    except Exception as e:
-        logger.error(f"Error processing user {user.athlete_id}: {e}")
-        send_alert_email(
-            subject="TrackFlow Alert: Error in Lambda Function",
-            text_content=f"Error for {user.email=} {e} with traceback: {traceback.format_exc()}",
+    if method == "get_training_week":
+        training_week = get_training_week(athlete_id)
+        return {
+            "success": True,
+            "training_week": training_week.json(),
+        }
+    elif method == "get_profile":
+        user = get_user(athlete_id)
+        athlete = get_strava_client(athlete_id).get_athlete()
+        return {
+            "success": True,
+            "profile": {
+                "firstname": athlete.firstname,
+                "lastname": athlete.lastname,
+                "profile": athlete.profile,
+                "email": user.email,
+                "preferences": user.preferences_json.json(),
+                "is_active": user.is_active,
+            },
+        }
+    elif method == "update_preferences":
+        update_preferences(
+            athlete_id=athlete_id, preferences_json=payload["preferences"]
         )
-        return None
+        return {"success": True}
+    else:
+        return {"success": False, "error": f"Invalid method: {method}"}
 
 
 def handle_strava_webhook(event: dict) -> dict:
@@ -136,58 +100,40 @@ def handle_strava_webhook(event: dict) -> dict:
     :param event: Webhook event payload from Strava
     :return: dict with {"success": bool}
     """
-    try:
-        # Validate subscription ID
-        if event.get("subscription_id") != os.environ["STRAVA_WEBHOOK_SUBSCRIPTION_ID"]:
-            return {"success": False, "error": "Invalid subscription ID"}
+    if event.get("subscription_id") != os.environ["STRAVA_WEBHOOK_SUBSCRIPTION_ID"]:
+        return {
+            "success": False,
+            "error": f"Invalid subscription ID: {event.get('subscription_id')}",
+        }
 
-        # Proceed with other event logic
-        aspect_type = event.get("aspect_type")
-        object_type = event.get("object_type")
-        object_id = event.get("object_id")
-        owner_id = event.get("owner_id")
+    aspect_type = event.get("aspect_type")
+    object_type = event.get("object_type")
+    object_id = event.get("object_id")
 
-        if object_type == "activity":
-            if aspect_type == "create":
-                return {"success": True, "message": f"Activity {object_id} created"}
-            elif aspect_type == "update":
-                return {"success": True, "message": f"Activity {object_id} updated"}
-            elif aspect_type == "delete":
-                return {"success": True, "message": f"Activity {object_id} deleted"}
-
-        elif object_type == "athlete" and aspect_type == "delete":
-            return {"success": True, "message": f"Athlete {owner_id} revoked access"}
-        return {"success": False, "error": "Unknown event type"}
-
-    except Exception as e:
-        return {"success": False, "error": str(e)}
+    if object_type == "activity" and aspect_type == "create":
+        return {"success": True, "message": f"Activity {object_id} created"}
+    return {"success": False, "error": f"Unknown event type: {event}"}
 
 
-def lambda_handler(event, context):
-    """
-    Main entry point for production workload. For simplicity, I've designed this
-    lambda to act like an API of sorts, using if/else logic to route events to
-    the correct function.
+def daily_exe_orchestrator() -> dict:
+    for user in list_users():
+        if user.is_active:
+            daily_executor(user)
+    return {"success": True}
 
-    :param event: lambda event
-    :param context: lambda context
-    :return: dict with {"success": bool}
-    """
-    logger.info(f"Event: {event}")
-    logger.info(f"Context: {context}")
+
+def strategy_router(event: dict) -> dict:
 
     # Will fail on bad authenticate_with_code
     if event.get("email") and event.get("code"):
-        response = signup(
+        return signup(
             email=event["email"],
             code=event["code"],
         )
-        return {"success": True, "jwt_token": response}
 
     # Will fail on bad authenticate_with_code
     elif event.get("code"):
-        user_auth = authenticate_with_code(event["code"])
-        return {"success": True, "jwt_token": user_auth.jwt_token}
+        return authenticate_with_code(event["code"])
 
     elif event.get("jwt_token") and event.get("method"):
         return handle_frontend_request(
@@ -210,19 +156,37 @@ def lambda_handler(event, context):
         event.get("resources")
         and event.get("resources")[0] == os.environ["NIGHTLY_EMAIL_TRIGGER_ARN"]
     ):
-        for user in list_users():
-            if user.is_active:
-                daily_executor(user)
-        return {"success": True}
+        return daily_exe_orchestrator()
 
     elif event.get("trigger_test_key") == os.environ["TRIGGER_TEST_KEY"]:
         daily_executor(get_user(os.environ["JAMIES_ATHLETE_ID"]))
         return {"success": True}
+    else:
+        return {"success": False, "error": f"Unknown event type: {event}"}
 
-    # Catch any error routing or funny business
+
+def lambda_handler(event, context):
+    """
+    Main entry point, responsible for logging and error handling, producing
+    email alerts on errors and failures
+
+    :param event: lambda event
+    :param context: lambda context
+    :return: dict with {"success": bool}
+    """
+    logger.info(f"Event: {event}")
+    logger.info(f"Context: {context}")
+
+    try:
+        response = strategy_router(event)
+    except Exception as e:
+        response = {"success": False, "error": str(e)}
+
+    if response["success"]:
+        return response
     else:
         send_alert_email(
-            subject="TrackFlow Alert: Unknown Lambda Invocation",
-            text_content=f"Unknown invocation of lambda with {event=} and {context=}",
+            subject="TrackFlow Alert: Error in lambda_handler",
+            text_content=response["error"],
         )
         return {"success": False}
