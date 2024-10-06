@@ -145,7 +145,8 @@ def strategy_router(event: dict) -> dict:
 
     # Will fail on bad authenticate_with_code
     elif event.get("code"):
-        return authenticate_with_code(event["code"])
+        authenticate_with_code(event["code"])
+        return {"success": True}
 
     elif event.get("jwt_token") and event.get("method"):
         return handle_frontend_request(
@@ -194,6 +195,15 @@ def lambda_handler(event, context):
     except Exception as e:
         response = {"success": False, "error": str(e)}
 
+    # Ensure response is a dictionary
+    if type(response) is not dict:
+        response = {"success": False, "error": f"Unknown response type: {response}"}
+
+    # Ensure response has success key
+    if "success" not in response:
+        response = {"success": False, "error": f"Unknown response: {response}"}
+
+    # Send alert on any and all errors/failures
     if response["success"]:
         return response
     else:
