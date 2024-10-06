@@ -1,4 +1,6 @@
-from typing import Callable, Dict
+import logging
+import traceback
+from typing import Callable, Dict, Optional
 
 from openai import APIResponse
 from stravalib.client import Client
@@ -12,6 +14,7 @@ from src.activities import (
 from src.auth_manager import get_strava_client
 from src.constants import COACH_ROLE
 from src.email_manager import (
+    send_alert_email,
     send_email,
     training_week_to_html,
 )
@@ -24,6 +27,10 @@ from src.supabase_client import (
 )
 from src.types.training_week import TrainingWeek
 from src.types.user_row import UserRow
+from src.utils import datetime_now_est
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 
 def daily_generic_pipeline(
@@ -88,3 +95,29 @@ def mid_week_update_pipeline_test(
         strava_client=strava_client,
         get_training_week=get_training_week_test,
     )
+
+
+def daily_executor(user: UserRow) -> dict:
+    """Decides between generating a new week or updating based on the day."""
+    try:
+        # Sunday is day 6
+        if datetime_now_est().weekday() == 6:
+            daily_generic_pipeline(
+                user=user,
+                pipeline_function=new_training_week_pipeline,
+                email_subject="Training Schedule Just Dropped 🏃‍♂️🎯",
+            )
+        else:
+            daily_generic_pipeline(
+                user=user,
+                pipeline_function=mid_week_update_pipeline,
+                email_subject="www.trackflow.xyz is live! 🏃‍♂️🎯",
+            )
+        return {"success": True}
+    except Exception as e:
+        logger.error(f"Error processing user {user.athlete_id}: {e}")
+        send_alert_email(
+            subject="TrackFlow Alert: Error in Lambda Function",
+            text_content=f"Error for {user.email=} {e} with traceback: {traceback.format_exc()}",
+        )
+        return {"success": False, "error": str(e)}
