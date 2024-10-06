@@ -129,6 +129,40 @@ def daily_executor(user: UserRow) -> Optional[TrainingWeek]:
         return None
 
 
+def handle_strava_webhook(event: dict) -> dict:
+    """
+    Handle Strava webhook events for activities and athletes.
+
+    :param event: Webhook event payload from Strava
+    :return: dict with {"success": bool}
+    """
+    try:
+        # Validate subscription ID
+        if event.get("subscription_id") != os.environ["STRAVA_WEBHOOK_SUBSCRIPTION_ID"]:
+            return {"success": False, "error": "Invalid subscription ID"}
+
+        # Proceed with other event logic
+        aspect_type = event.get("aspect_type")
+        object_type = event.get("object_type")
+        object_id = event.get("object_id")
+        owner_id = event.get("owner_id")
+
+        if object_type == "activity":
+            if aspect_type == "create":
+                return {"success": True, "message": f"Activity {object_id} created"}
+            elif aspect_type == "update":
+                return {"success": True, "message": f"Activity {object_id} updated"}
+            elif aspect_type == "delete":
+                return {"success": True, "message": f"Activity {object_id} deleted"}
+
+        elif object_type == "athlete" and aspect_type == "delete":
+            return {"success": True, "message": f"Athlete {owner_id} revoked access"}
+        return {"success": False, "error": "Unknown event type"}
+
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
 def lambda_handler(event, context):
     """
     Main entry point for production workload. For simplicity, I've designed this
@@ -161,6 +195,15 @@ def lambda_handler(event, context):
             method=event["method"],
             payload=event.get("payload"),
         )
+
+    elif (
+        event.get("subscription_id")
+        and event.get("aspect_type")
+        and event.get("object_type")
+        and event.get("object_id")
+        and event.get("owner_id")
+    ):
+        return handle_strava_webhook(event)
 
     # This will only run if triggered by NIGHTLY_EMAIL_TRIGGER_ARN
     elif (
