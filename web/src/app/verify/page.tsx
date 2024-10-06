@@ -25,6 +25,7 @@ function VerifyContent(): JSX.Element {
         const email = localStorage.getItem('email');
 
         const verifyAccount = async (payload: Record<string, string>) => {
+            console.log('Verifying with payload:', payload);
             try {
                 const response = await fetch('https://lwg77yq7dd.execute-api.us-east-1.amazonaws.com/prod/signup', {
                     method: 'POST',
@@ -32,7 +33,7 @@ function VerifyContent(): JSX.Element {
                     body: JSON.stringify(payload)
                 });
                 const data = await response.json();
-
+                console.log('Verification response:', data);
                 if (data.success) {
                     setStatus('success');
                     localStorage.removeItem('email');
@@ -56,12 +57,9 @@ function VerifyContent(): JSX.Element {
         };
 
         if (code) {
-            console.log('Verifying with code:', code);
             if (email) {
-                console.log('Email found in localStorage');
                 verifyAccount({ email, code });
             } else {
-                console.log('Email missing from localStorage');
                 verifyAccount({ code });
             }
         } else {
