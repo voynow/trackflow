@@ -6,9 +6,13 @@ export async function GET(request: NextRequest) {
     const token = searchParams.get('hub.verify_token');
     const challenge = searchParams.get('hub.challenge');
 
+    console.log(`Received GET request with mode: ${mode}, token: ${token}, and challenge: ${challenge}`);
+
     if (mode === 'subscribe' && token === process.env.STRAVA_VERIFY_TOKEN) {
+        console.log('Subscription mode with valid verify token, sending challenge response.');
         return NextResponse.json({ 'hub.challenge': challenge });
     } else {
+        console.error('Invalid verify token, returning 403 status.');
         return new NextResponse('Invalid verify token', { status: 403 });
     }
 }
