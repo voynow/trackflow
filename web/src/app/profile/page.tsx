@@ -5,9 +5,8 @@ import { useEffect, useState } from 'react';
 import DashboardNavbar from '../components/DashboardNavbar';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { PreferencesForm } from '../components/PreferencesForm';
-import { Preferences, ProfileData } from '../types';
+import { Day, Preferences, ProfileData, SessionType } from '../types';
 import { fetchProfileData, savePreferences } from './api';
-import { Day, SessionType } from '../types';
 
 export default function ProfilePage(): JSX.Element {
     const [profileData, setProfileData] = useState<ProfileData | null>(null);
@@ -74,7 +73,7 @@ export default function ProfilePage(): JSX.Element {
     return (
         <div className="min-h-screen bg-gray-100 text-gray-800">
             <DashboardNavbar />
-            <div className="max-w-4xl mx-auto mt-20 mb-10 p-8 bg-white rounded-3xl shadow-lg">
+            <div className="max-w-4xl mx-auto mt-20 mb-10 p-8 bg-200">
                 <div className="flex items-center mb-8 justify-between">
                     <div className="flex items-center">
                         <Image
@@ -135,17 +134,19 @@ export default function ProfilePage(): JSX.Element {
                                         })}
                                     </div>
                                 </div>
-
                                 <div className="flex justify-end">
                                     <button
                                         onClick={() => setIsEditing(true)}
-                                        className="px-4 py-2 bg-blue-400 text-white rounded-xl hover:bg-blue-300 transition duration-300 ease-in-out"
+                                        className="mt-2 px-4 py-2 bg-blue-400 text-white rounded-xl hover:bg-blue-300 transition duration-300 ease-in-out"
                                     >
                                         Edit
                                     </button>
                                 </div>
                             </div>
                         )}
+                        <p className="text-gray-400 mt-8 text-center">
+                            Note: These preferences are not yet incorporated into training week generation. Coming soon.
+                        </p>
                     </div>
                 </div>
             </div>

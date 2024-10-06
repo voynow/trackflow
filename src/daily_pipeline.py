@@ -97,6 +97,19 @@ def mid_week_update_pipeline_test(
     )
 
 
+def webhook_executor(user: UserRow) -> dict:
+    daily_generic_pipeline(
+        user=user,
+        pipeline_function=mid_week_update_pipeline,
+        email_subject="www.trackflow.xyz is live! 🏃‍♂️🎯",
+        send_email=lambda subject, html_content, to, sender={
+            "name": "",
+            "email": "",
+        }: None,
+    )
+    return {"success": True}
+
+
 def daily_executor(user: UserRow) -> dict:
     """Decides between generating a new week or updating based on the day."""
     try:

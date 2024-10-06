@@ -5,7 +5,7 @@ from typing import Optional
 import jwt
 
 from src.auth_manager import authenticate_with_code, decode_jwt, get_strava_client
-from src.daily_pipeline import daily_executor
+from src.daily_pipeline import daily_executor, webhook_executor
 from src.email_manager import send_alert_email
 from src.supabase_client import (
     get_training_week,
@@ -110,10 +110,7 @@ def handle_strava_webhook(event: dict) -> dict:
 
     if event.get("object_type") == "activity":
         if event.get("aspect_type") == "create":
-            return {
-                "success": True,
-                "message": f"Activity {event.get('object_id')} created",
-            }
+            return webhook_executor(get_user(event.get("owner_id")))
         elif event.get("aspect_type") == "update":
             return {
                 "success": True,

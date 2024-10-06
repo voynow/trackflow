@@ -93,7 +93,7 @@ def preprocess(df: pl.DataFrame) -> pl.DataFrame:
 
     # Apply transformations, sorting, column removals, and filtering
     return (
-        df.groupby("date")
+        df.group_by("date")
         .agg(col_operations)
         .sort("date")
         # drop incomplete first week
@@ -159,7 +159,7 @@ def get_day_of_week_summaries(activities_df: pl.DataFrame) -> List[DayOfWeekSumm
     day_of_week_order = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
 
     df = (
-        activities_df.groupby("day_of_week")
+        activities_df.group_by("day_of_week")
         .agg(
             [
                 pl.when(pl.col("distance_in_miles") > 0.25)
@@ -200,7 +200,7 @@ def get_weekly_summaries(activities_df: pl.DataFrame) -> List[WeekSummary]:
     :return: A list of WeekSummary objects with summary statistics
     """
     df = (
-        activities_df.groupby(["year", "week_of_year"])
+        activities_df.group_by(["year", "week_of_year"])
         .agg(
             [
                 pl.col("distance_in_miles").sum().alias("total_distance"),
