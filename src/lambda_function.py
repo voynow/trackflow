@@ -136,8 +136,8 @@ def handle_strava_webhook(event: dict) -> dict:
     :param event: Webhook event payload from Strava
     :return: dict with {"success": bool}
     """
+    logger.info(f"Received handle_strava_webhook event: {event}")
     try:
-        # Validate subscription ID
         if event.get("subscription_id") != os.environ["STRAVA_WEBHOOK_SUBSCRIPTION_ID"]:
             return {"success": False, "error": "Invalid subscription ID"}
 
