@@ -100,18 +100,30 @@ def handle_strava_webhook(event: dict) -> dict:
     :param event: Webhook event payload from Strava
     :return: dict with {"success": bool}
     """
-    if event.get("subscription_id") != os.environ["STRAVA_WEBHOOK_SUBSCRIPTION_ID"]:
+    subscription_id = int(event.get("subscription_id"))
+    expected_subscription_id = int(os.environ["STRAVA_WEBHOOK_SUBSCRIPTION_ID"])
+    if subscription_id != expected_subscription_id:
         return {
             "success": False,
             "error": f"Invalid subscription ID: {event.get('subscription_id')}",
         }
 
-    aspect_type = event.get("aspect_type")
-    object_type = event.get("object_type")
-    object_id = event.get("object_id")
-
-    if object_type == "activity" and aspect_type == "create":
-        return {"success": True, "message": f"Activity {object_id} created"}
+    if event.get("object_type") == "activity":
+        if event.get("aspect_type") == "create":
+            return {
+                "success": True,
+                "message": f"Activity {event.get('object_id')} created",
+            }
+        elif event.get("aspect_type") == "update":
+            return {
+                "success": True,
+                "message": f"Activity {event.get('object_id')} updated",
+            }
+        elif event.get("aspect_type") == "delete":
+            return {
+                "success": True,
+                "message": f"Activity {event.get('object_id')} deleted",
+            }
     return {"success": False, "error": f"Unknown event type: {event}"}
 
 
