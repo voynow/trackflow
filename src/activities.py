@@ -58,7 +58,7 @@ def add_missing_dates(
     date_range_df = pl.DataFrame(
         {"date": [start_date.date() + timedelta(days=i) for i in range(n_days)]}
     )
-    return date_range_df.join(df_with_date, on="date", how="left")
+    return date_range_df.join(df_with_date, on="date", how="left", coalesce=True)
 
 
 def preprocess(df: pl.DataFrame) -> pl.DataFrame:
@@ -130,12 +130,12 @@ def get_activity_summaries(strava_client, num_weeks=8) -> List[ActivitySummary]:
     """
     df = get_activities_df(strava_client, num_weeks)
     concise_activities_df = df.with_columns(
-        pl.col("date").apply(
+        pl.col("date").map_elements(
             lambda x: x.strftime("%A, %B %d, %Y"), return_dtype=pl.Utf8
         ),
-        pl.col("distance_in_miles").apply(lambda x: round(x, 2)),
-        pl.col("elevation_gain_in_feet").apply(lambda x: round(x, 2)),
-        pl.col("pace_minutes_per_mile").apply(lambda x: round(x, 2)),
+        pl.col("distance_in_miles").map_elements(lambda x: round(x, 2)),
+        pl.col("elevation_gain_in_feet").map_elements(lambda x: round(x, 2)),
+        pl.col("pace_minutes_per_mile").map_elements(lambda x: round(x, 2)),
     ).drop(
         "id",
         "name",

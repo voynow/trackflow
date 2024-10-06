@@ -1,5 +1,6 @@
 import logging
 import os
+import uuid
 from typing import Optional
 
 import jwt
@@ -184,8 +185,8 @@ def lambda_handler(event, context):
     :param context: lambda context
     :return: dict with {"success": bool}
     """
-    logger.info(f"Event: {event}")
-    logger.info(f"Context: {context}")
+    invocation_id = str(uuid.uuid4())
+    logger.info(f"{invocation_id=} | {event=} | {context=}")
 
     try:
         response = strategy_router(event)
@@ -202,10 +203,12 @@ def lambda_handler(event, context):
 
     # Send alert on any and all errors/failures
     if response["success"]:
+        logger.info(f"{invocation_id=} | {response=}")
         return response
     else:
+        logger.error(f"{invocation_id=} | Error in lambda_handler: {response['error']}")
         send_alert_email(
             subject="TrackFlow Alert: Error in lambda_handler",
-            text_content=response["error"],
+            text_content=f"{invocation_id=} | {response['error']}",
         )
         return {"success": False}
