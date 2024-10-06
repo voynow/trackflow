@@ -145,8 +145,8 @@ def strategy_router(event: dict) -> dict:
 
     # Will fail on bad authenticate_with_code
     elif event.get("code"):
-        authenticate_with_code(event["code"])
-        return {"success": True}
+        user_auth = authenticate_with_code(event["code"])
+        return {"success": True, "jwt_token": user_auth.jwt_token}
 
     elif event.get("jwt_token") and event.get("method"):
         return handle_frontend_request(
