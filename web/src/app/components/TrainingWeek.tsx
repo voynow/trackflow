@@ -24,8 +24,8 @@ const TrainingWeek: React.FC<TrainingWeekProps> = ({ data }) => {
     }
 
     const { sessions } = data.training_week;
-    const totalMileage = sessions.reduce((total, session) => total + session.distance, 0);
-    const completedMileage = sessions.reduce((total, session) => session.completed ? total + session.distance : total, 0);
+    const totalMileage = Math.round(sessions.reduce((total, session) => total + session.distance, 0));
+    const completedMileage = Math.round(sessions.reduce((total, session) => session.completed ? total + session.distance : total, 0));
     const roundedCompletedMileage = Number(completedMileage.toFixed(1));
     const progressPercentage = totalMileage > 0 ? Math.round((completedMileage / totalMileage) * 100) : 0;
 

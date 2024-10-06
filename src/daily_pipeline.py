@@ -98,10 +98,10 @@ def mid_week_update_pipeline_test(
 
 
 def webhook_executor(user: UserRow) -> dict:
+    """Silently updates db on every new activity"""
     daily_generic_pipeline(
         user=user,
         pipeline_function=mid_week_update_pipeline,
-        email_subject="www.trackflow.xyz is live! 🏃‍♂️🎯",
         send_email=lambda subject, html_content, to, sender={
             "name": "",
             "email": "",
