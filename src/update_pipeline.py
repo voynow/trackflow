@@ -1,6 +1,6 @@
 import logging
-import traceback
-from typing import Callable, Dict, Optional
+import os
+from typing import Callable, Dict
 
 from openai import APIResponse
 from stravalib.client import Client
@@ -13,19 +13,19 @@ from src.activities import (
 )
 from src.auth_manager import get_strava_client
 from src.constants import COACH_ROLE
-from src.email_manager import (
-    send_alert_email,
-    send_email,
-    training_week_to_html,
-)
+from src.email_manager import send_email, training_week_to_html
 from src.mid_week_update import generate_mid_week_update
 from src.new_training_week import generate_new_training_week
 from src.supabase_client import (
     get_training_week,
     get_training_week_test,
+    get_user,
+    has_user_updated_today,
+    list_users,
     upsert_training_week,
 )
 from src.types.training_week import TrainingWeek
+from src.types.update_pipeline import ExeType, TrainingWeekUpdateError
 from src.types.user_row import UserRow
 from src.utils import datetime_now_est
 
@@ -33,7 +33,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 
-def daily_generic_pipeline(
+def training_week_update_pipeline(
     user: UserRow,
     pipeline_function: Callable[[UserRow, Client], TrainingWeek],
     email_subject: str = "TrackFlow 🏃‍♂️🎯",
@@ -99,38 +99,57 @@ def mid_week_update_pipeline_test(
 
 def webhook_executor(user: UserRow) -> dict:
     """Silently updates db on every new activity"""
-    daily_generic_pipeline(
+    training_week_update_pipeline(
         user=user,
         pipeline_function=mid_week_update_pipeline,
-        send_email=lambda subject, html_content, to, sender={
-            "name": "",
-            "email": "",
-        }: None,
+        email_subject="TrackFlow Update Inbound! 🏃‍♂️🎯",
     )
     return {"success": True}
 
 
-def daily_executor(user: UserRow) -> dict:
+def training_week_update_executor(user: UserRow, exetype: ExeType) -> dict:
     """Decides between generating a new week or updating based on the day."""
     try:
-        # Sunday is day 6
-        if datetime_now_est().weekday() == 6:
-            daily_generic_pipeline(
+        if exetype == ExeType.NEW_WEEK:
+            training_week_update_pipeline(
                 user=user,
                 pipeline_function=new_training_week_pipeline,
                 email_subject="Training Schedule Just Dropped 🏃‍♂️🎯",
             )
-        else:
-            daily_generic_pipeline(
+        elif exetype == ExeType.MID_WEEK:
+            training_week_update_pipeline(
                 user=user,
                 pipeline_function=mid_week_update_pipeline,
-                email_subject="www.trackflow.xyz is live! 🏃‍♂️🎯",
+                email_subject="TrackFlow Update Inbound! 🏃‍♂️🎯",
             )
-        return {"success": True}
     except Exception as e:
-        logger.error(f"Error processing user {user.athlete_id}: {e}")
-        send_alert_email(
-            subject="TrackFlow Alert: Error in Lambda Function",
-            text_content=f"Error for {user.email=} {e} with traceback: {traceback.format_exc()}",
-        )
-        return {"success": False, "error": str(e)}
+        raise TrainingWeekUpdateError(f"Error processing user {user.athlete_id}: {e}")
+
+
+def integration_test_executor() -> dict:
+    """
+    Run a full update pipeline for Jamies account
+    """
+    training_week_update_executor(
+        get_user(os.environ["JAMIES_ATHLETE_ID"]), ExeType.MID_WEEK
+    )
+    training_week_update_executor(
+        get_user(os.environ["JAMIES_ATHLETE_ID"]), ExeType.NEW_WEEK
+    )
+    return {"success": True}
+
+
+def nightly_trigger_orchestrator() -> dict:
+    """
+    Evenings excluding Sunday: Send update to users who have not yet triggered an update today
+    Sunday evening: Send new training week to all active users
+    """
+    if datetime_now_est().weekday() != 6:
+        for user in list_users():
+            if user.is_active and not has_user_updated_today(user.athlete_id):
+                training_week_update_executor(user, ExeType.MID_WEEK)
+    else:
+        for user in list_users():
+            if user.is_active:
+                training_week_update_executor(user, ExeType.NEW_WEEK)
+    return {"success": True}
