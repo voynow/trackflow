@@ -20,22 +20,28 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
     const event = await request.json();
     console.log(`Received POST request with event: ${JSON.stringify(event)}`);
-    try {
-        const response = await fetch('https://lwg77yq7dd.execute-api.us-east-1.amazonaws.com/prod/signup', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(event),
-        });
-        if (response.ok) {
-            console.log('Successful response from signup API');
-            return NextResponse.json({ success: true });
-        } else {
-            const errorData = await response.json();
-            console.log(`Error response from signup API: ${JSON.stringify(errorData)}`);
-            return NextResponse.json({ success: false, error: errorData }, { status: 500 });
+
+    // Respond immediately to Strava with 200 OK
+    const immediateResponse = NextResponse.json({}, { status: 200 });
+
+    (async () => {
+        try {
+            const response = await fetch('https://lwg77yq7dd.execute-api.us-east-1.amazonaws.com/prod/signup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(event),
+            });
+
+            if (response.ok) {
+                console.log('Successful response from signup API');
+            } else {
+                const errorData = await response.json();
+                console.log(`Error response from signup API: ${JSON.stringify(errorData)}`);
+            }
+        } catch (error) {
+            console.error(`Error occurred while processing POST request: ${error}`);
         }
-    } catch (error) {
-        console.error(`Error occurred while processing POST request: ${error}`);
-        return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
-    }
+    })();
+
+    return immediateResponse;
 }

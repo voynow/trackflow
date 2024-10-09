@@ -4,10 +4,11 @@ from datetime import datetime, timezone
 import jwt
 from dotenv import load_dotenv
 from stravalib.client import Client
-from stravalib.model import Athlete
 
-from src.supabase_client import get_user_auth, upsert_user_auth
+from src.email_manager import send_alert_email
+from src.supabase_client import get_user_auth, upsert_user, upsert_user_auth
 from src.types.user_auth_row import UserAuthRow
+from src.types.user_row import UserRow
 
 load_dotenv()
 strava_client = Client()
@@ -123,3 +124,29 @@ def get_strava_client(athlete_id: int) -> Client:
     """Interface for retrieving a Strava client with valid authentication"""
     user_auth = authenticate_athlete(athlete_id)
     return get_configured_strava_client(user_auth)
+
+
+def signup(email: str, code: str) -> dict:
+    """
+    Get authenticated user, upsert user with email and preferences
+
+    :param email: user email
+    :param code: strava code
+    :return: jwt_token
+    """
+    preferences = (
+        "Looking for smart training recommendations to optimize my performance."
+    )
+    send_alert_email(
+        subject="TrackFlow Alert: New Signup Attempt",
+        text_content=f"You have a new client {email=} attempting to signup with {preferences=}",
+    )
+    user_auth = authenticate_with_code(code)
+    upsert_user(
+        UserRow(
+            athlete_id=user_auth.athlete_id,
+            email=email,
+            preferences=preferences,
+        )
+    )
+    return {"success": True, "jwt_token": user_auth.jwt_token}

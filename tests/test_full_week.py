@@ -5,10 +5,10 @@ from freezegun import freeze_time
 from stravalib.client import Client
 
 from src.auth_manager import get_strava_client
-from src.daily_pipeline import (
-    daily_generic_pipeline,
+from src.update_pipeline import (
     mid_week_update_pipeline_test,
     new_training_week_pipeline,
+    training_week_update_pipeline,
 )
 from src.supabase_client import upsert_training_week_test
 from src.types.training_week import TrainingWeek
@@ -22,7 +22,7 @@ def gen_helper(
 ) -> TrainingWeek:
     @freeze_time(f"{date_str} 20:30:00")
     def wrapped(user: UserRow) -> TrainingWeek:
-        training_week = daily_generic_pipeline(
+        training_week = training_week_update_pipeline(
             user=user,
             pipeline_function=func,
             upsert_training_week=upsert_training_week_test,
