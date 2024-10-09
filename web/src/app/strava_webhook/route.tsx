@@ -38,8 +38,8 @@ export async function POST(request: NextRequest) {
                 const errorData = await response.json();
                 console.log(`Error response from signup API: ${JSON.stringify(errorData)}`);
             }
-        } catch (error) {
-            console.error(`Error occurred while processing POST request: ${error}`);
+        } catch (error: any) {
+            console.error(`Error occurred while processing POST request: ${error.message}`);
         }
     })();
 
