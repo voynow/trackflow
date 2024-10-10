@@ -5,15 +5,20 @@ from src.supabase_client import (
     get_user,
 )
 from src.types.update_pipeline import ExeType
+from src.types.user_row import UserRow
 from src.update_pipeline import training_week_update_executor
 
 
-def handle_activity_create(user, event):
+def handle_activity_create(user: UserRow, event: dict, invocation_id: str) -> dict:
     strava_client = auth_manager.get_strava_client(user.athlete_id)
     activity = strava_client.get_activity(event.get("object_id"))
 
     if activity.sport_type == "Run":
-        return training_week_update_executor(user, ExeType.MID_WEEK)
+        return training_week_update_executor(
+            user=user,
+            exetype=ExeType.MID_WEEK,
+            invocation_id=invocation_id,
+        )
 
     return {
         "success": False,
@@ -21,7 +26,7 @@ def handle_activity_create(user, event):
     }
 
 
-def handle_request(event: dict) -> dict:
+def handle_request(event: dict, invocation_id: str) -> dict:
     """
     Handle Strava webhook events for activities and athletes.
 
@@ -39,7 +44,7 @@ def handle_request(event: dict) -> dict:
 
     if event_type == "activity":
         if aspect_type == "create":
-            return handle_activity_create(user, event)
+            return handle_activity_create(user, event, invocation_id)
         if aspect_type in {"update", "delete"}:
             return {
                 "success": True,
