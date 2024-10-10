@@ -1,5 +1,6 @@
 import logging
 import os
+import traceback
 import uuid
 
 from src import auth_manager, frontend_router, update_pipeline, webhook_router
@@ -9,7 +10,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 
-def strategy_router(event: dict) -> dict:
+def strategy_router(event: dict, invocation_id: str) -> dict:
 
     # Will fail on bad authenticate_with_code
     if event.get("email") and event.get("code"):
@@ -44,10 +45,10 @@ def strategy_router(event: dict) -> dict:
         event.get("resources")
         and event.get("resources")[0] == os.environ["NIGHTLY_EMAIL_TRIGGER_ARN"]
     ):
-        return update_pipeline.nightly_trigger_orchestrator()
+        return update_pipeline.nightly_trigger_orchestrator(invocation_id)
 
     elif event.get("trigger_test_key") == os.environ["TRIGGER_TEST_KEY"]:
-        return update_pipeline.integration_test_executor()
+        return update_pipeline.integration_test_executor(invocation_id)
     else:
         return {"success": False, "error": f"Unknown event type: {event}"}
 
@@ -65,9 +66,12 @@ def lambda_handler(event, context):
     logger.info(f"{invocation_id=} | {event=} | {context=}")
 
     try:
-        response = strategy_router(event)
+        response = strategy_router(event, invocation_id)
     except Exception as e:
-        response = {"success": False, "error": str(e)}
+        response = {
+            "success": False,
+            "error": f"{invocation_id=} | Error in lambda_handler: {str(e)}\nTraceback: {traceback.format_exc()}",
+        }
 
     # Ensure response is a dictionary
     if type(response) is not dict:

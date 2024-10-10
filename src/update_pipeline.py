@@ -1,5 +1,6 @@
 import logging
 import os
+import traceback
 from typing import Callable, Dict
 
 from openai import APIResponse
@@ -13,7 +14,7 @@ from src.activities import (
 )
 from src.auth_manager import get_strava_client
 from src.constants import COACH_ROLE
-from src.email_manager import send_email, training_week_to_html
+from src.email_manager import send_alert_email, send_email, training_week_to_html
 from src.mid_week_update import generate_mid_week_update
 from src.new_training_week import generate_new_training_week
 from src.supabase_client import (
@@ -25,7 +26,7 @@ from src.supabase_client import (
     upsert_training_week,
 )
 from src.types.training_week import TrainingWeek
-from src.types.update_pipeline import ExeType, TrainingWeekUpdateError
+from src.types.update_pipeline import ExeType
 from src.types.user_row import UserRow
 from src.utils import datetime_now_est
 
@@ -107,8 +108,13 @@ def webhook_executor(user: UserRow) -> dict:
     return {"success": True}
 
 
-def training_week_update_executor(user: UserRow, exetype: ExeType) -> dict:
-    """Decides between generating a new week or updating based on the day."""
+def training_week_update_executor(
+    user: UserRow, exetype: ExeType, invocation_id: str
+) -> dict:
+    """
+    Decides between generating a new week or updating based on the day.
+    Captures and logs full tracebacks for errors.
+    """
     try:
         if exetype == ExeType.NEW_WEEK:
             training_week_update_pipeline(
@@ -123,10 +129,19 @@ def training_week_update_executor(user: UserRow, exetype: ExeType) -> dict:
                 email_subject="TrackFlow Update Inbound! 🏃‍♂️🎯",
             )
     except Exception as e:
-        raise TrainingWeekUpdateError(f"Error processing user {user.athlete_id}: {e}")
+        error_msg = f"{invocation_id=} | Error processing user {user.athlete_id} | {str(e)}\nTraceback: {traceback.format_exc()}"
+        logger.error(error_msg)
+        send_alert_email(
+            subject="TrackFlow Alert: Error in lambda_handler",
+            text_content=error_msg,
+        )
+
+        return {"success": False, "error": str(e)}
+
+    return {"success": True}
 
 
-def integration_test_executor() -> dict:
+def integration_test_executor(invocation_id: str) -> dict:
     """
     Run a full update pipeline for Jamies account
     """
@@ -139,7 +154,7 @@ def integration_test_executor() -> dict:
     return {"success": True}
 
 
-def nightly_trigger_orchestrator() -> dict:
+def nightly_trigger_orchestrator(invocation_id: str) -> dict:
     """
     Evenings excluding Sunday: Send update to users who have not yet triggered an update today
     Sunday evening: Send new training week to all active users
