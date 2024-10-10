@@ -146,10 +146,14 @@ def integration_test_executor(invocation_id: str) -> dict:
     Run a full update pipeline for Jamies account
     """
     training_week_update_executor(
-        get_user(os.environ["JAMIES_ATHLETE_ID"]), ExeType.MID_WEEK
+        user=get_user(os.environ["JAMIES_ATHLETE_ID"]),
+        exetype=ExeType.MID_WEEK,
+        invocation_id=invocation_id,
     )
     training_week_update_executor(
-        get_user(os.environ["JAMIES_ATHLETE_ID"]), ExeType.NEW_WEEK
+        user=get_user(os.environ["JAMIES_ATHLETE_ID"]),
+        exetype=ExeType.NEW_WEEK,
+        invocation_id=invocation_id,
     )
     return {"success": True}
 
@@ -162,9 +166,17 @@ def nightly_trigger_orchestrator(invocation_id: str) -> dict:
     if datetime_now_est().weekday() != 6:
         for user in list_users():
             if user.is_active and not has_user_updated_today(user.athlete_id):
-                training_week_update_executor(user, ExeType.MID_WEEK)
+                training_week_update_executor(
+                    user=user,
+                    exetype=ExeType.MID_WEEK,
+                    invocation_id=invocation_id,
+                )
     else:
         for user in list_users():
             if user.is_active:
-                training_week_update_executor(user, ExeType.NEW_WEEK)
+                training_week_update_executor(
+                    user=user,
+                    exetype=ExeType.NEW_WEEK,
+                    invocation_id=invocation_id,
+                )
     return {"success": True}

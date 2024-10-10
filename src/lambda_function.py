@@ -11,6 +11,14 @@ logger.setLevel(logging.INFO)
 
 
 def strategy_router(event: dict, invocation_id: str) -> dict:
+    """
+    Route the event to the appropriate handler based on the event type.
+
+    :param event: The event dictionary containing event data
+    :param invocation_id: The unique identifier for the invocation
+    :return: {"success": bool, other_metadata: dict} where the error key is
+             only present if success is False
+    """
 
     # Will fail on bad authenticate_with_code
     if event.get("email") and event.get("code"):
@@ -38,7 +46,7 @@ def strategy_router(event: dict, invocation_id: str) -> dict:
         and event.get("object_id")
         and event.get("owner_id")
     ):
-        return webhook_router.handle_request(event)
+        return webhook_router.handle_request(event, invocation_id)
 
     # This will only run if triggered by NIGHTLY_EMAIL_TRIGGER_ARN
     elif (
