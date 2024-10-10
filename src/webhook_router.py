@@ -15,7 +15,10 @@ def handle_activity_create(user, event):
     if activity.sport_type == "Run":
         return training_week_update_executor(user, ExeType.MID_WEEK)
 
-    return {"success": False, "error": "Unsupported activity type"}
+    return {
+        "success": False,
+        "error": f"Unsupported activity type: {activity.sport_type}",
+    }
 
 
 def handle_request(event: dict) -> dict:
@@ -43,4 +46,4 @@ def handle_request(event: dict) -> dict:
                 "message": f"Activity {event.get('object_id')} {aspect_type}d",
             }
 
-    return {"success": False, "error": "Unknown event type"}
+    return {"success": False, "error": f"Unknown event type: {event_type}"}

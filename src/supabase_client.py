@@ -243,7 +243,7 @@ def has_user_updated_today(athlete_id: int) -> bool:
         return False
 
     # "Has this user posted an activity in the last 23 hours and 30 minutes?"
-    time_diff = datetime.now(timezone.utc) - datetime.fromisoformat(
+    time_diff = datetime.datetime.now(timezone.utc) - datetime.datetime.fromisoformat(
         response.data[0]["created_at"]
     )
     return time_diff < timedelta(hours=23, minutes=30)
