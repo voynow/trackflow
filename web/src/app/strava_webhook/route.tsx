@@ -31,6 +31,7 @@ export async function POST(request: NextRequest) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(event),
             });
+            console.log(`Response from signup API: ${JSON.stringify(response)}`);
 
             if (response.ok) {
                 console.log('Successful response from signup API');
