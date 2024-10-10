@@ -24,13 +24,12 @@ export async function POST(request: NextRequest) {
     // Respond immediately to Strava with 200 OK
     const immediateResponse = NextResponse.json({}, { status: 200 });
 
-    (async () => {
-        try {
-            const response = await fetch('https://lwg77yq7dd.execute-api.us-east-1.amazonaws.com/prod/signup', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(event),
-            });
+    fetch('https://lwg77yq7dd.execute-api.us-east-1.amazonaws.com/prod/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(event),
+    })
+        .then(async (response) => {
             console.log(`Response from signup API: ${JSON.stringify(response)}`);
 
             if (response.ok) {
@@ -39,10 +38,10 @@ export async function POST(request: NextRequest) {
                 const errorData = await response.json();
                 console.log(`Error response from signup API: ${JSON.stringify(errorData)}`);
             }
-        } catch (error: any) {
+        })
+        .catch((error: any) => {
             console.error(`Error occurred while processing POST request: ${error.message}`);
-        }
-    })();
+        });
 
     return immediateResponse;
 }
