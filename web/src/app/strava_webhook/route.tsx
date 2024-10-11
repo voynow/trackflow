@@ -29,13 +29,12 @@ export async function POST(request: NextRequest) {
         MessageBody: JSON.stringify(event),
     };
 
-    sqs.sendMessage(params, (err, data) => {
-        if (err) {
-            console.error(`Error sending message to SQS: ${err}`);
-        } else {
-            console.log(`Message sent to SQS with ID: ${data.MessageId}`);
-        }
-    });
+    try {
+        const data = await sqs.sendMessage(params).promise();
+        console.log(`Message sent to SQS with ID: ${data.MessageId}`);
+    } catch (err) {
+        console.error(`Error sending message to SQS: ${err}`);
+    }
 
     return NextResponse.json({}, { status: 200 });
 }
