@@ -16,13 +16,13 @@ export default function Navbar(): JSX.Element {
     };
 
     return (
-        <nav className="fixed top-0 w-full bg-white shadow-sm text-gray-800 z-10">
-            <div className="px-4 flex justify-between items-center h-16">
+        <nav className="fixed top-0 w-full bg-gray-100 text-gray-800 z-10">
+            <div className="px-8 flex justify-between items-center h-16">
                 <Link href="/" className="text-3xl font-bold hover:text-gray-500 transition duration-300 ease-in-out">
-                    Track<span className="text-blue-400">Flow</span>
+                    Track<span className="text-blue-500">Flow</span>
                 </Link>
                 <button
-                    className="text-white bg-gray-800 hover:bg-gray-700 font-semibold rounded-full px-4 py-2 transition duration-300 ease-in-out flex items-center space-x-2"
+                    className="px-4 py-2 text-gray-800 bg-white font-semibold rounded-3xl flex space-x-2 outline outline-2 outline-gray-800 hover:scale-105 hover:shadow-lg transition duration-300 ease-in-out"
                     onClick={handleSignIn}
                 >
                     <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">

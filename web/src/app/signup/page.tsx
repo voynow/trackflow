@@ -42,15 +42,17 @@ export default function SignUpPage(): JSX.Element {
                         required
                         className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                     />
-                    <button
-                        type="submit"
-                        className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-500 hover:bg-blue-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out"
-                    >
-                        <span className="absolute left-0 inset-y-0 flex items-center pl-3">
-                            <Image src="/strava-icon.png" alt="Strava Logo" width={20} height={20} />
-                        </span>
-                        Sign up with Strava
-                    </button>
+                    <div className="flex justify-center">
+                        <button
+                            type="submit"
+                            className="w-[65%] flex justify-center py-3 text-lg font-bold rounded-3xl text-orange-600 bg-white outline outline-2 outline-orange-600 hover:scale-105 hover:shadow-lg transition-all duration-300 ease-in-out"
+                        >
+                            Sign Up
+                            <span className="ml-2 my-auto">
+                                <Image src="/strava-icon.png" alt="Strava Logo" width={20} height={20} />
+                            </span>
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>

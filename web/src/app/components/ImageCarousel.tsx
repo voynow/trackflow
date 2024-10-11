@@ -19,7 +19,7 @@ export default function ImageCarousel(): JSX.Element {
     }, []);
 
     return (
-        <div className="mt-16 max-w-4xl w-full">
+        <div className="mt-20 max-w-4xl w-full">
             <div className="relative overflow-hidden">
                 <div
                     className="flex transition-transform duration-500 ease-in-out"

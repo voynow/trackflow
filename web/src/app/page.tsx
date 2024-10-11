@@ -10,7 +10,7 @@ export default function Home(): JSX.Element {
   const router = useRouter();
 
   return (
-    <div className="bg-gray-100 text-gray-800 min-h-screen">
+    <div className="bg-gray-100 text-gray-800 pt-8 min-h-screen">
       <Navbar />
       <main className="flex flex-col items-center justify-center px-4 py-16 sm:px-6 lg:px-8">
         <div className="text-center">
@@ -18,14 +18,16 @@ export default function Home(): JSX.Element {
             Track<span className="text-blue-400">Flow</span> 🏃‍♂️🎯
           </h1>
           <p className="text-xl sm:text-2xl text-gray-400 mb-8">
-            AI-Powered Training Plans, Tailored Just for You
+            Step into the Next Generation of Training
           </p>
-          <button
-            className="bg-red-600 hover:bg-red-500 text-white font-bold py-3 px-6 rounded-full text-lg transition duration-300 ease-in-out"
-            onClick={() => router.push('/signup')}
-          >
-            Get Started
-          </button>
+          <div className="space-y-4">
+            <button
+              className="px-6 py-3 text-white bg-gradient-to-r from-blue-400 to-indigo-600 font-bold rounded-full text-2xl hover:scale-105 hover:shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-1"
+              onClick={() => router.push('/signup')}
+            >
+              Join the Community
+            </button>
+          </div>
         </div>
 
         <ImageCarousel />
