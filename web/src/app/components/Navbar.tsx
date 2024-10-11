@@ -17,7 +17,7 @@ export default function Navbar(): JSX.Element {
 
     return (
         <nav className="fixed top-0 w-full bg-gray-100 text-gray-800 z-10">
-            <div className="px-8 flex justify-between items-center h-16">
+            <div className="px-4 sm:px-8 flex justify-between items-center h-16">
                 <Link href="/" className="text-3xl font-bold hover:text-gray-500 transition duration-300 ease-in-out">
                     Track<span className="text-blue-500">Flow</span>
                 </Link>
