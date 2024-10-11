@@ -1,7 +1,11 @@
 import AWS from 'aws-sdk';
 import { NextRequest, NextResponse } from 'next/server';
 
-const sqs = new AWS.SQS({ region: 'us-east-1' });
+const sqs = new AWS.SQS({
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    region: 'us-east-1',
+});
 
 export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;

@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import traceback
@@ -12,7 +13,9 @@ logger.setLevel(logging.INFO)
 
 def strategy_router(event: dict, invocation_id: str) -> dict:
     """
-    Route the event to the appropriate handler based on the event type.
+    Route the event to the appropriate handler based on the event type
+
+    This API is public but each method is protected in some way
 
     :param event: The event dictionary containing event data
     :param invocation_id: The unique identifier for the invocation
@@ -20,14 +23,12 @@ def strategy_router(event: dict, invocation_id: str) -> dict:
              only present if success is False
     """
 
-    # Will fail on bad authenticate_with_code
     if event.get("email") and event.get("code"):
         return auth_manager.signup(
             email=event["email"],
             code=event["code"],
         )
 
-    # Will fail on bad authenticate_with_code
     elif event.get("code"):
         user_auth = auth_manager.authenticate_with_code(event["code"])
         return {"success": True, "jwt_token": user_auth.jwt_token}
@@ -39,16 +40,9 @@ def strategy_router(event: dict, invocation_id: str) -> dict:
             payload=event.get("payload"),
         )
 
-    elif (
-        event.get("subscription_id")
-        and event.get("aspect_type")
-        and event.get("object_type")
-        and event.get("object_id")
-        and event.get("owner_id")
-    ):
+    elif webhook_router.is_strava_webhook_event(event):
         return webhook_router.handle_request(event, invocation_id)
 
-    # This will only run if triggered by NIGHTLY_EMAIL_TRIGGER_ARN
     elif (
         event.get("resources")
         and event.get("resources")[0] == os.environ["NIGHTLY_EMAIL_TRIGGER_ARN"]
@@ -58,7 +52,7 @@ def strategy_router(event: dict, invocation_id: str) -> dict:
     elif event.get("trigger_test_key") == os.environ["TRIGGER_TEST_KEY"]:
         return update_pipeline.integration_test_executor(invocation_id)
     else:
-        return {"success": False, "error": f"Unknown event type: {event}"}
+        return {"success": False, "error": f"Could not route event: {event}"}
 
 
 def lambda_handler(event, context):
