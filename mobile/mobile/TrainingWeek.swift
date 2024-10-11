@@ -13,7 +13,7 @@ struct TrainingWeekView: View {
       }
     }
     .padding()
-    .background(ColorTheme.bg1)
+    .background(ColorTheme.lightLightGrey)
   }
 }
 
@@ -36,12 +36,12 @@ struct WeeklyProgressView: View {
     VStack(alignment: .leading, spacing: 10) {
       Text("Weekly Progress")
         .font(.headline)
-        .foregroundColor(ColorTheme.t0)
+        .foregroundColor(ColorTheme.superDarkGrey)
 
       HStack {
         Text("\(progressPercentage)%")
           .font(.system(size: 36, weight: .bold))
-          .foregroundColor(ColorTheme.t0)
+          .foregroundColor(ColorTheme.superDarkGrey)
 
         Spacer()
 
@@ -49,13 +49,13 @@ struct WeeklyProgressView: View {
           "\(String(format: "%.1f", completedMileage)) of \(String(format: "%.1f", totalMileage)) miles completed"
         )
         .font(.caption)
-        .foregroundColor(ColorTheme.t1)
+        .foregroundColor(ColorTheme.darkGrey)
       }
 
       GeometryReader { geometry in
         ZStack(alignment: .leading) {
           Rectangle()
-            .fill(ColorTheme.bg1)
+            .fill(ColorTheme.lightLightGrey)
             .frame(height: 8)
             .cornerRadius(4)
 
@@ -72,11 +72,11 @@ struct WeeklyProgressView: View {
       .frame(height: 8)
     }
     .padding()
-    .background(ColorTheme.bg0)
+    .background(ColorTheme.white)
     .cornerRadius(10)
     .overlay(
       RoundedRectangle(cornerRadius: 10)
-        .stroke(ColorTheme.inverseBackground, lineWidth: 0.5)
+        .stroke(ColorTheme.superDarkGrey, lineWidth: 0.5)
     )
   }
 }
@@ -88,7 +88,7 @@ struct SessionView: View {
     HStack(alignment: .top) {
       Text(session.day.prefix(3).uppercased())
         .font(.headline)
-        .foregroundColor(ColorTheme.t1)
+        .foregroundColor(ColorTheme.darkGrey)
         .frame(width: 40, alignment: .leading)
 
       VStack(alignment: .leading, spacing: 4) {
@@ -96,29 +96,29 @@ struct SessionView: View {
           Text(String(format: "%.1f mi", session.distance))
             .font(.title2)
             .fontWeight(.bold)
-            .foregroundColor(ColorTheme.t0)
+            .foregroundColor(ColorTheme.superDarkGrey)
 
           Spacer()
 
           Circle()
-            .fill(session.completed ? .green : ColorTheme.bg0)
+            .fill(session.completed ? .green : ColorTheme.white)
             .frame(width: 12, height: 12)
         }
 
         Text(session.sessionType)
           .font(.subheadline)
-          .foregroundColor(ColorTheme.t1)
+          .foregroundColor(ColorTheme.darkGrey)
 
         if !session.notes.isEmpty {
           Text(session.notes)
             .font(.caption)
-            .foregroundColor(ColorTheme.t1)
+            .foregroundColor(ColorTheme.darkGrey)
             .padding(.top, 4)
         }
       }
     }
     .padding()
-    .background(ColorTheme.bg2)
+    .background(ColorTheme.lightGrey)
     .cornerRadius(10)
   }
 }

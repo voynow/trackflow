@@ -16,11 +16,11 @@ struct ProfileView: View {
       VStack(alignment: .leading, spacing: 6) {
         Text("\(data.firstname) \(data.lastname)")
           .font(.system(size: 18, weight: .semibold))
-          .foregroundColor(ColorTheme.t0)
+          .foregroundColor(ColorTheme.superDarkGrey)
 
         Text(data.email)
           .font(.system(size: 14))
-          .foregroundColor(ColorTheme.t1)
+          .foregroundColor(ColorTheme.darkGrey)
 
         HStack(spacing: 6) {
           Circle()
@@ -29,7 +29,7 @@ struct ProfileView: View {
 
           Text(data.isActive ? "Active" : "Inactive")
             .font(.system(size: 12))
-            .foregroundColor(ColorTheme.t1)
+            .foregroundColor(ColorTheme.darkGrey)
         }
       }
     }

@@ -11,7 +11,7 @@ struct DashboardView: View {
   var body: some View {
     NavigationView {
       ZStack(alignment: .top) {
-        ColorTheme.bg0.edgesIgnoringSafeArea(.all)
+        ColorTheme.white.edgesIgnoringSafeArea(.all)
 
         VStack(spacing: 0) {
           DashboardNavbar(onLogout: handleLogout)
@@ -33,7 +33,7 @@ struct DashboardView: View {
               } else if !isLoadingTrainingWeek {
                 Text("No training data available")
                   .font(.headline)
-                  .foregroundColor(ColorTheme.t1)
+                  .foregroundColor(ColorTheme.darkGrey)
               }
             }
             .padding()

@@ -10,7 +10,7 @@ struct DashboardNavbar: View {
         Text("Track")
           .font(.title)
           .fontWeight(.semibold)
-          .foregroundColor(ColorTheme.t0)
+          .foregroundColor(ColorTheme.superDarkGrey)
           + Text("Flow")
           .font(.title)
           .fontWeight(.semibold)
@@ -24,11 +24,11 @@ struct DashboardNavbar: View {
           Image(systemName: "person.circle")
             .resizable()
             .frame(width: 30, height: 30)
-            .foregroundColor(ColorTheme.t0)
+            .foregroundColor(ColorTheme.superDarkGrey)
         }
       }
       .padding()
     }
-    .background(ColorTheme.bg1)
+    .background(ColorTheme.lightLightGrey)
   }
 }
