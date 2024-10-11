@@ -1,4 +1,7 @@
+import AWS from 'aws-sdk';
 import { NextRequest, NextResponse } from 'next/server';
+
+const sqs = new AWS.SQS({ region: 'us-east-1' });
 
 export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
@@ -21,27 +24,18 @@ export async function POST(request: NextRequest) {
     const event = await request.json();
     console.log(`Received POST request with event: ${JSON.stringify(event)}`);
 
-    // Respond immediately to Strava with 200 OK
-    const immediateResponse = NextResponse.json({}, { status: 200 });
+    const params = {
+        QueueUrl: 'https://sqs.us-east-1.amazonaws.com/498969721544/trackflow-webhook-msg-queue',
+        MessageBody: JSON.stringify(event),
+    };
 
-    fetch('https://lwg77yq7dd.execute-api.us-east-1.amazonaws.com/prod/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(event),
-    })
-        .then(async (response) => {
-            console.log(`Response from signup API: ${JSON.stringify(response)}`);
+    sqs.sendMessage(params, (err, data) => {
+        if (err) {
+            console.error(`Error sending message to SQS: ${err}`);
+        } else {
+            console.log(`Message sent to SQS with ID: ${data.MessageId}`);
+        }
+    });
 
-            if (response.ok) {
-                console.log('Successful response from signup API');
-            } else {
-                const errorData = await response.json();
-                console.log(`Error response from signup API: ${JSON.stringify(errorData)}`);
-            }
-        })
-        .catch((error: any) => {
-            console.error(`Error occurred while processing POST request: ${error.message}`);
-        });
-
-    return immediateResponse;
+    return NextResponse.json({}, { status: 200 });
 }
