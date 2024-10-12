@@ -1,16 +1,58 @@
 import Foundation
 
 struct ProfileData: Codable {
-  let firstname: String
-  let lastname: String
-  let email: String
-  let profile: String
-  let isActive: Bool
-  let preferences: String
+  var firstname: String
+  var lastname: String
+  var email: String
+  var profile: String
+  var isActive: Bool
+  var preferences: String?
 
   enum CodingKeys: String, CodingKey {
     case firstname, lastname, email, profile, preferences
     case isActive = "is_active"
+  }
+}
+
+enum Day: String, CaseIterable, Codable {
+  case mon = "Mon"
+  case tues = "Tues"
+  case wed = "Wed"
+  case thurs = "Thurs"
+  case fri = "Fri"
+  case sat = "Sat"
+  case sun = "Sun"
+}
+
+struct TrainingDay: Codable {
+  let day: Day
+  let sessionType: String
+
+  enum CodingKeys: String, CodingKey {
+    case day
+    case sessionType = "session_type"
+  }
+}
+
+struct Preferences: Codable {
+  var raceDistance: String?
+  var idealTrainingWeek: [TrainingDay]?
+
+  enum CodingKeys: String, CodingKey {
+    case raceDistance = "race_distance"
+    case idealTrainingWeek = "ideal_training_week"
+  }
+
+  init(fromJSON json: String) {
+    let decoder = JSONDecoder()
+    if let jsonData = json.data(using: .utf8),
+      let decoded = try? decoder.decode(Preferences.self, from: jsonData)
+    {
+      self = decoded
+    } else {
+      self.raceDistance = nil
+      self.idealTrainingWeek = nil
+    }
   }
 }
 

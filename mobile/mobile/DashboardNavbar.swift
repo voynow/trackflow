@@ -2,6 +2,7 @@ import SwiftUI
 
 struct DashboardNavbar: View {
   var onLogout: () -> Void
+  @Binding var showProfile: Bool
 
   var body: some View {
     HStack {
@@ -16,9 +17,9 @@ struct DashboardNavbar: View {
 
       Spacer()
 
-      Menu {
-        Button("Logout", action: onLogout)
-      } label: {
+      Button(action: {
+        showProfile.toggle()
+      }) {
         Image(systemName: "person.circle")
           .resizable()
           .frame(width: 30, height: 30)
