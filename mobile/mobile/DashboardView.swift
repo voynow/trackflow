@@ -7,14 +7,12 @@ struct DashboardView: View {
 
   var body: some View {
     NavigationView {
-      ScrollView {
-        VStack(spacing: 24) {
-          DashboardNavbar(onLogout: handleLogout)
-          
-          Text("Your Training Week")
-            .font(.system(size: 28, weight: .bold))
-            .foregroundColor(ColorTheme.white)
-          
+      VStack(spacing: 0) {
+        DashboardNavbar(onLogout: handleLogout)
+          .background(ColorTheme.superDarkGrey)
+          .zIndex(1)
+
+        ScrollView {
           if isLoadingTrainingWeek {
             LoadingView()
           } else if let data = trainingWeekData {
@@ -25,7 +23,6 @@ struct DashboardView: View {
               .foregroundColor(ColorTheme.lightGrey)
           }
         }
-        .padding()
       }
       .background(ColorTheme.superDarkGrey.edgesIgnoringSafeArea(.all))
       .navigationBarHidden(true)

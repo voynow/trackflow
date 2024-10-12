@@ -4,80 +4,90 @@ struct TrainingWeekView: View {
   let data: TrainingWeekData
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 16) {
+    VStack(spacing: 24) {
       WeeklyProgressView(sessions: data.sessions)
-
-      ForEach(data.sessions) { session in
-        SessionView(session: session)
-      }
+      SessionListView(sessions: data.sessions)
     }
-    .padding()
-    .background(ColorTheme.darkDarkGrey)
-    .cornerRadius(12)
+    .padding(20)
+    .background(ColorTheme.superDarkGrey)
+    .cornerRadius(16)
   }
 }
 
 struct WeeklyProgressView: View {
   let sessions: [TrainingSession]
 
-  var totalMileage: Double {
-    sessions.reduce(0) { $0 + $1.distance }
-  }
-
-  var completedMileage: Double {
+  private var completedMileage: Double {
     sessions.reduce(0) { $0 + ($1.completed ? $1.distance : 0) }
   }
 
-  var progressPercentage: Int {
-    totalMileage > 0 ? Int((completedMileage / totalMileage) * 100) : 0
+  private var totalMileage: Double {
+    sessions.reduce(0) { $0 + $1.distance }
   }
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 10) {
+    VStack(alignment: .leading, spacing: 12) {
       Text("Weekly Progress")
         .font(.headline)
         .foregroundColor(ColorTheme.white)
 
       HStack {
-        Text("\(progressPercentage)%")
-          .font(.system(size: 36, weight: .bold))
-          .foregroundColor(ColorTheme.primary)
+        Text("\(Int((completedMileage / totalMileage) * 100))%")
+          .font(.system(size: 40, weight: .bold))
+          .foregroundColor(ColorTheme.white)
 
         Spacer()
 
-        Text(
-          "\(String(format: "%.1f", completedMileage)) of \(String(format: "%.1f", totalMileage)) miles completed"
-        )
-        .font(.caption)
-        .foregroundColor(ColorTheme.lightGrey)
+        Text("Completed \(Int(completedMileage)) of \(Int(totalMileage)) mi")
+          .font(.subheadline)
+          .foregroundColor(ColorTheme.lightGrey)
       }
 
-      GeometryReader { geometry in
-        ZStack(alignment: .leading) {
-          Rectangle()
-            .fill(ColorTheme.darkGrey)
-            .frame(height: 8)
-            .cornerRadius(4)
+      ProgressBar(progress: completedMileage / totalMileage)
+        .frame(height: 10)
+        .animation(.easeOut(duration: 1.0), value: completedMileage)
 
-          Rectangle()
-            .fill(
-              LinearGradient(
-                gradient: Gradient(colors: [ColorTheme.primaryLight, ColorTheme.primary]),
-                startPoint: .leading, endPoint: .trailing)
-            )
-            .frame(width: geometry.size.width * CGFloat(progressPercentage) / 100, height: 8)
-            .cornerRadius(4)
-        }
-      }
-      .frame(height: 8)
     }
     .padding()
     .background(ColorTheme.darkDarkGrey)
-    .cornerRadius(10)
-    .overlay(
-      RoundedRectangle(cornerRadius: 10)
-        .stroke(ColorTheme.darkGrey, lineWidth: 0.5)
-    )
+    .cornerRadius(16)
+  }
+}
+
+struct ProgressBar: View {
+  let progress: Double
+
+  @State private var animatedProgress: CGFloat = 0
+
+  var body: some View {
+    GeometryReader { geometry in
+      ZStack(alignment: .leading) {
+        Rectangle()
+          .fill(ColorTheme.darkGrey)
+        Rectangle()
+          .fill(ColorTheme.primary)
+          .frame(width: geometry.size.width * animatedProgress)
+      }
+    }
+    .frame(height: 8)
+    .cornerRadius(4)
+    .onAppear {
+      withAnimation(.easeOut(duration: 1.0)) {
+        animatedProgress = CGFloat(progress)
+      }
+    }
+  }
+}
+
+struct SessionListView: View {
+  let sessions: [TrainingSession]
+
+  var body: some View {
+    VStack(spacing: 16) {
+      ForEach(sessions) { session in
+        SessionView(session: session)
+      }
+    }
   }
 }
 
@@ -85,40 +95,39 @@ struct SessionView: View {
   let session: TrainingSession
 
   var body: some View {
-    HStack(alignment: .top) {
+    HStack(alignment: .top, spacing: 10) {
       Text(session.day.prefix(3).uppercased())
-        .font(.headline)
+        .font(.subheadline)
         .foregroundColor(ColorTheme.lightGrey)
         .frame(width: 40, alignment: .leading)
 
       VStack(alignment: .leading, spacing: 4) {
-        HStack {
-          Text(String(format: "%.1f mi", session.distance))
-            .font(.title2)
-            .fontWeight(.bold)
-            .foregroundColor(ColorTheme.white)
-
-          Spacer()
-
-          Circle()
-            .fill(session.completed ? ColorTheme.indigo : ColorTheme.darkGrey)
-            .frame(width: 12, height: 12)
-        }
-
         Text(session.sessionType)
-          .font(.subheadline)
-          .foregroundColor(ColorTheme.lightGrey)
+          .font(.headline)
+          .foregroundColor(ColorTheme.white)
 
         if !session.notes.isEmpty {
           Text(session.notes)
             .font(.caption)
             .foregroundColor(ColorTheme.lightGrey)
-            .padding(.top, 4)
+            .lineLimit(2)
         }
+      }
+
+      Spacer()
+
+      VStack(alignment: .trailing, spacing: 4) {
+        Text(String(format: "%.1f mi", session.distance))
+          .font(.subheadline)
+          .foregroundColor(ColorTheme.lightGrey)
+
+        Circle()
+          .fill(session.completed ? ColorTheme.green : ColorTheme.darkGrey)
+          .frame(width: 12, height: 12)
       }
     }
     .padding()
-    .background(ColorTheme.darkDarkGrey)
-    .cornerRadius(10)
+    .cornerRadius(8)
+    .overlay(RoundedRectangle(cornerRadius: 8).stroke(ColorTheme.darkDarkGrey, lineWidth: 1))
   }
 }

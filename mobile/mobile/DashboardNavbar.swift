@@ -8,8 +8,8 @@ struct DashboardNavbar: View {
       Text("Track")
         .font(.title)
         .fontWeight(.semibold)
-        .foregroundColor(ColorTheme.white)
-      + Text("Flow")
+        .foregroundColor(ColorTheme.primaryLight)
+        + Text("Flow")
         .font(.title)
         .fontWeight(.semibold)
         .foregroundColor(ColorTheme.primary)
@@ -26,7 +26,7 @@ struct DashboardNavbar: View {
       }
     }
     .padding()
-    .background(ColorTheme.darkDarkGrey)
+    .background(ColorTheme.superDarkGrey)
     .cornerRadius(12)
   }
 }
