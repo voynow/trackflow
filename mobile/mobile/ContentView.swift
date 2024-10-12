@@ -23,19 +23,6 @@ struct ContentView: View {
   }
 }
 
-struct IsLoadingView: View {
-  var body: some View {
-    ColorTheme.white
-      .edgesIgnoringSafeArea(.all)
-
-    ProgressView("Loading...")
-      .progressViewStyle(CircularProgressViewStyle(tint: ColorTheme.superDarkGrey))
-      .padding(20)
-      .background(ColorTheme.white)
-      .cornerRadius(10)
-  }
-}
-
 struct ContentView_Previews: PreviewProvider {
   @StateObject private var appState = AppState()
 

@@ -11,7 +11,6 @@ struct Feature: Identifiable {
 struct LandingPageView: View {
   @ObservedObject var authManager: StravaAuthManager
 
-  // List of features
   let features: [Feature] = [
     Feature(
       icon: "figure.run", title: "Personalized Plans",
@@ -36,7 +35,7 @@ struct LandingPageView: View {
         HStack(spacing: 0) {
           Text("Track")
             .font(.system(size: 50, weight: .black))
-            .foregroundColor(ColorTheme.white)
+            .foregroundColor(ColorTheme.primaryLight)
           Text("Flow")
             .font(.system(size: 50, weight: .black))
             .foregroundColor(ColorTheme.primary)
@@ -44,7 +43,7 @@ struct LandingPageView: View {
 
         Text("Step into the Next Generation of Training")
           .font(.title2)
-          .foregroundColor(.secondary)
+          .foregroundColor(ColorTheme.lightGrey)
           .multilineTextAlignment(.center)
           .padding(.horizontal)
 
@@ -83,10 +82,10 @@ struct LandingPageView: View {
       .frame(maxWidth: .infinity)
       .background(
         LinearGradient(
-          gradient: Gradient(colors: [ColorTheme.secondary, ColorTheme.primary]),
+          gradient: Gradient(colors: [ColorTheme.primary, ColorTheme.primaryLight]),
           startPoint: .leading, endPoint: .trailing)
       )
-      .foregroundColor(.white)
+      .foregroundColor(ColorTheme.white)
       .cornerRadius(12)
       .shadow(radius: 5)
     }

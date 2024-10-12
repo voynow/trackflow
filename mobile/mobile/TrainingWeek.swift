@@ -4,8 +4,7 @@ struct TrainingWeekView: View {
   let data: TrainingWeekData
 
   var body: some View {
-    VStack(alignment: .leading) {
-
+    VStack(alignment: .leading, spacing: 16) {
       WeeklyProgressView(sessions: data.sessions)
 
       ForEach(data.sessions) { session in
@@ -13,7 +12,8 @@ struct TrainingWeekView: View {
       }
     }
     .padding()
-    .background(ColorTheme.lightLightGrey)
+    .background(ColorTheme.darkDarkGrey)
+    .cornerRadius(12)
   }
 }
 
@@ -36,12 +36,12 @@ struct WeeklyProgressView: View {
     VStack(alignment: .leading, spacing: 10) {
       Text("Weekly Progress")
         .font(.headline)
-        .foregroundColor(ColorTheme.superDarkGrey)
+        .foregroundColor(ColorTheme.white)
 
       HStack {
         Text("\(progressPercentage)%")
           .font(.system(size: 36, weight: .bold))
-          .foregroundColor(ColorTheme.superDarkGrey)
+          .foregroundColor(ColorTheme.primary)
 
         Spacer()
 
@@ -49,21 +49,21 @@ struct WeeklyProgressView: View {
           "\(String(format: "%.1f", completedMileage)) of \(String(format: "%.1f", totalMileage)) miles completed"
         )
         .font(.caption)
-        .foregroundColor(ColorTheme.darkGrey)
+        .foregroundColor(ColorTheme.lightGrey)
       }
 
       GeometryReader { geometry in
         ZStack(alignment: .leading) {
           Rectangle()
-            .fill(ColorTheme.lightLightGrey)
+            .fill(ColorTheme.darkGrey)
             .frame(height: 8)
             .cornerRadius(4)
 
           Rectangle()
             .fill(
               LinearGradient(
-                gradient: Gradient(colors: [.green, .green.opacity(0.5)]), startPoint: .leading,
-                endPoint: .trailing)
+                gradient: Gradient(colors: [ColorTheme.primaryLight, ColorTheme.primary]),
+                startPoint: .leading, endPoint: .trailing)
             )
             .frame(width: geometry.size.width * CGFloat(progressPercentage) / 100, height: 8)
             .cornerRadius(4)
@@ -72,11 +72,11 @@ struct WeeklyProgressView: View {
       .frame(height: 8)
     }
     .padding()
-    .background(ColorTheme.white)
+    .background(ColorTheme.darkDarkGrey)
     .cornerRadius(10)
     .overlay(
       RoundedRectangle(cornerRadius: 10)
-        .stroke(ColorTheme.superDarkGrey, lineWidth: 0.5)
+        .stroke(ColorTheme.darkGrey, lineWidth: 0.5)
     )
   }
 }
@@ -88,7 +88,7 @@ struct SessionView: View {
     HStack(alignment: .top) {
       Text(session.day.prefix(3).uppercased())
         .font(.headline)
-        .foregroundColor(ColorTheme.darkGrey)
+        .foregroundColor(ColorTheme.lightGrey)
         .frame(width: 40, alignment: .leading)
 
       VStack(alignment: .leading, spacing: 4) {
@@ -96,29 +96,29 @@ struct SessionView: View {
           Text(String(format: "%.1f mi", session.distance))
             .font(.title2)
             .fontWeight(.bold)
-            .foregroundColor(ColorTheme.superDarkGrey)
+            .foregroundColor(ColorTheme.white)
 
           Spacer()
 
           Circle()
-            .fill(session.completed ? .green : ColorTheme.white)
+            .fill(session.completed ? ColorTheme.indigo : ColorTheme.darkGrey)
             .frame(width: 12, height: 12)
         }
 
         Text(session.sessionType)
           .font(.subheadline)
-          .foregroundColor(ColorTheme.darkGrey)
+          .foregroundColor(ColorTheme.lightGrey)
 
         if !session.notes.isEmpty {
           Text(session.notes)
             .font(.caption)
-            .foregroundColor(ColorTheme.darkGrey)
+            .foregroundColor(ColorTheme.lightGrey)
             .padding(.top, 4)
         }
       }
     }
     .padding()
-    .background(ColorTheme.lightGrey)
+    .background(ColorTheme.darkDarkGrey)
     .cornerRadius(10)
   }
 }

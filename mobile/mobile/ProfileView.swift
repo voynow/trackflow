@@ -16,24 +16,26 @@ struct ProfileView: View {
       VStack(alignment: .leading, spacing: 6) {
         Text("\(data.firstname) \(data.lastname)")
           .font(.system(size: 18, weight: .semibold))
-          .foregroundColor(ColorTheme.superDarkGrey)
+          .foregroundColor(ColorTheme.white)
 
         Text(data.email)
           .font(.system(size: 14))
-          .foregroundColor(ColorTheme.darkGrey)
+          .foregroundColor(ColorTheme.lightGrey)
 
         HStack(spacing: 6) {
           Circle()
-            .fill(data.isActive ? Color.green : Color.red)
+                .fill(data.isActive ? Color.cyan : Color.red)
             .frame(width: 8, height: 8)
 
           Text(data.isActive ? "Active" : "Inactive")
             .font(.system(size: 12))
-            .foregroundColor(ColorTheme.darkGrey)
+            .foregroundColor(ColorTheme.lightGrey)
         }
       }
     }
     .padding(.vertical, 16)
+    .padding(.horizontal)
+    .background(ColorTheme.darkDarkGrey)
     .cornerRadius(12)
   }
 }

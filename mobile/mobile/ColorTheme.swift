@@ -8,6 +8,7 @@ struct ColorTheme {
   static let darkDarkGrey = Color(white: 0.15)
   static let superDarkGrey = Color(white: 0.1)
 
-  static let primary: Color = Color(red: 0.25, green: 0.6, blue: 1.0)
-  static let secondary: Color = Color(red: 0.27, green: 0.25, blue: 1.0)
+  static let primary: Color = Color(red: 0.28, green: 0.5, blue: 1.0)  // #477eff
+  static let primaryLight: Color = Color(red: 0.55, green: 0.68, blue: 1.0)  // #8caeff
+  static let indigo: Color = Color(red: 0.42, green: 0.28, blue: 1.0)  // #6c47ff
 }

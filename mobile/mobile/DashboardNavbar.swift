@@ -1,34 +1,32 @@
 import SwiftUI
 
 struct DashboardNavbar: View {
-  @State private var isDropdownOpen: Bool = false
   var onLogout: () -> Void
 
   var body: some View {
-    VStack(spacing: 0) {
-      HStack {
-        Text("Track")
-          .font(.title)
-          .fontWeight(.semibold)
-          .foregroundColor(ColorTheme.superDarkGrey)
-          + Text("Flow")
-          .font(.title)
-          .fontWeight(.semibold)
-          .foregroundColor(ColorTheme.primary)
+    HStack {
+      Text("Track")
+        .font(.title)
+        .fontWeight(.semibold)
+        .foregroundColor(ColorTheme.white)
+      + Text("Flow")
+        .font(.title)
+        .fontWeight(.semibold)
+        .foregroundColor(ColorTheme.primary)
 
-        Spacer()
+      Spacer()
 
-        Menu {
-          Button("Logout", action: onLogout)
-        } label: {
-          Image(systemName: "person.circle")
-            .resizable()
-            .frame(width: 30, height: 30)
-            .foregroundColor(ColorTheme.superDarkGrey)
-        }
+      Menu {
+        Button("Logout", action: onLogout)
+      } label: {
+        Image(systemName: "person.circle")
+          .resizable()
+          .frame(width: 30, height: 30)
+          .foregroundColor(ColorTheme.white)
       }
-      .padding()
     }
-    .background(ColorTheme.lightLightGrey)
+    .padding()
+    .background(ColorTheme.darkDarkGrey)
+    .cornerRadius(12)
   }
 }
