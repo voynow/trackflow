@@ -23,6 +23,7 @@
 		80777D192C973F02007565FC /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 80777D182C973F02007565FC /* Assets.xcassets */; };
 		80777D1C2C973F02007565FC /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 80777D1B2C973F02007565FC /* Preview Assets.xcassets */; };
 		808B3E022C9CFB9B005BC890 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 808B3E012C9CFB9B005BC890 /* ProfileView.swift */; };
+		809E44762CBB42D6000BED21 /* PreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 809E44752CBB42D6000BED21 /* PreferencesView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -43,6 +44,7 @@
 		80777D182C973F02007565FC /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		80777D1B2C973F02007565FC /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		808B3E012C9CFB9B005BC890 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
+		809E44752CBB42D6000BED21 /* PreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesView.swift; sourceTree = "<group>"; };
 		80A6AD222C9A508D005145B3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -93,6 +95,7 @@
 				8021CCD12C9B6BAB00CB9B8D /* TrainingWeek.swift */,
 				80777D182C973F02007565FC /* Assets.xcassets */,
 				80777D1A2C973F02007565FC /* Preview Content */,
+				809E44752CBB42D6000BED21 /* PreferencesView.swift */,
 			);
 			path = mobile;
 			sourceTree = "<group>";
@@ -185,6 +188,7 @@
 				8021CCC62C9AFAA400CB9B8D /* AppDelegate.swift in Sources */,
 				80777D172C973F01007565FC /* ContentView.swift in Sources */,
 				80777D152C973F01007565FC /* mobileApp.swift in Sources */,
+				809E44762CBB42D6000BED21 /* PreferencesView.swift in Sources */,
 				8031CD792C9DC59C005CED34 /* APIManager.swift in Sources */,
 				8021CCD62C9B6DF900CB9B8D /* ColorTheme.swift in Sources */,
 				8021CCD22C9B6BAB00CB9B8D /* TrainingWeek.swift in Sources */,

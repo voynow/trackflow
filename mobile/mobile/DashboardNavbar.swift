@@ -7,12 +7,10 @@ struct DashboardNavbar: View {
   var body: some View {
     HStack {
       Text("Track")
-        .font(.title)
-        .fontWeight(.semibold)
+        .font(.system(size: 24, weight: .black))
         .foregroundColor(ColorTheme.primaryLight)
         + Text("Flow")
-        .font(.title)
-        .fontWeight(.semibold)
+        .font(.system(size: 24, weight: .black))
         .foregroundColor(ColorTheme.primary)
 
       Spacer()
