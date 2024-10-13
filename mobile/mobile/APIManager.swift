@@ -55,6 +55,42 @@ class APIManager {
     }
   }
 
+  func savePreferences(token: String, preferences: Preferences, completion: @escaping (Result<Void, Error>) -> Void) {
+    let idealTrainingWeek = preferences.idealTrainingWeek?.map { day in
+      return [
+        "day": day.day.rawValue,
+        "session_type": day.sessionType
+      ]
+    }
+
+    let preferencesPayload: [String: Any] = [
+      "race_distance": preferences.raceDistance ?? NSNull(),
+      "ideal_training_week": idealTrainingWeek ?? []
+    ]
+
+    let body: [String: Any] = [
+      "jwt_token": token,
+      "method": "update_preferences",
+      "payload": [
+        "preferences": preferencesPayload
+      ]
+    ]
+    
+    performRequest(body: body, responseType: SavePreferencesResponse.self) { result in
+      switch result {
+      case .success(let response):
+        if response.success {
+          completion(.success(()))
+        } else {
+          let errorMessage = response.error ?? "Failed to save preferences"
+          completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: errorMessage])))
+        }
+      case .failure(let error):
+        completion(.failure(error))
+      }
+    }
+  }
+
   private func performRequest<T: Decodable>(
     body: [String: Any], responseType: T.Type, completion: @escaping (Result<T, Error>) -> Void
   ) {
@@ -91,5 +127,24 @@ class APIManager {
         completion(.failure(error))
       }
     }.resume()
+  }
+}
+
+struct SavePreferencesResponse: Codable {
+  let success: Bool
+  let error: String?
+}
+
+extension Preferences {
+  func toJSON() -> String {
+    let encoder = JSONEncoder()
+    encoder.outputFormatting = .prettyPrinted
+    do {
+      let jsonData = try encoder.encode(self)
+      return String(data: jsonData, encoding: .utf8) ?? "{}"
+    } catch {
+      print("Error encoding preferences: \(error)")
+      return "{}"
+    }
   }
 }

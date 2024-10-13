@@ -18,7 +18,9 @@ struct ProfileView: View {
           ProfileHeader(profileData: profileData)
           PreferencesContainer(
             preferences: Binding(
-              get: { Preferences(fromJSON: profileData.preferences ?? "{}") },
+              get: {
+                Preferences(fromJSON: profileData.preferences ?? "{}")
+              },
               set: { newValue in
                 if let preferencesJSON = try? JSONEncoder().encode(newValue),
                   let preferencesString = String(data: preferencesJSON, encoding: .utf8)

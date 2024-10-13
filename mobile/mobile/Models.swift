@@ -26,7 +26,7 @@ enum Day: String, CaseIterable, Codable {
 
 struct TrainingDay: Codable {
   let day: Day
-  let sessionType: String
+  var sessionType: String  // Changed from 'let' to 'var'
 
   enum CodingKeys: String, CodingKey {
     case day

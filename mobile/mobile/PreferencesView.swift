@@ -1,36 +1,98 @@
 import SwiftUI
 
+struct PickerTextStyle: ViewModifier {
+  let isSelected: Bool
+
+  func body(content: Content) -> some View {
+    content
+      .foregroundColor(isSelected ? ColorTheme.white : ColorTheme.lightGrey.opacity(0.6))
+  }
+}
+
 struct PreferencesContainer: View {
   @Binding var preferences: Preferences
+  @State private var showingSavedPopup: Bool = false
   @State private var isSaving: Bool = false
+  @EnvironmentObject var appState: AppState
 
   var body: some View {
-    VStack(alignment: .leading) {
-      Text("Preferences")
-        .font(.title2)
-        .fontWeight(.bold)
-        .foregroundColor(ColorTheme.white)
+    ZStack(alignment: .topTrailing) {
+      VStack(alignment: .leading, spacing: 20) {
+        Text("Preferences")
+          .font(.title)
+          .fontWeight(.bold)
+          .foregroundColor(ColorTheme.white)
 
-      PreferencesContent(preferences: $preferences, onUpdate: savePreferences)
+        PreferencesContent(preferences: $preferences, onUpdate: savePreferences)
+      }
+      .padding()
+      .background(ColorTheme.darkDarkGrey)
+      .cornerRadius(12)
+
+      SavedPopup(isShowing: $showingSavedPopup)
+        .padding([.top, .trailing], 16)
     }
-    .padding()
-    .background(ColorTheme.darkDarkGrey)
-    .cornerRadius(12)
+    .disabled(isSaving)
     .overlay(
       Group {
         if isSaving {
           ProgressView()
-            .progressViewStyle(CircularProgressViewStyle(tint: ColorTheme.primary))
+            .progressViewStyle(CircularProgressViewStyle(tint: ColorTheme.white))
+            .scaleEffect(1.5)
         }
       }
     )
   }
 
   private func savePreferences() {
+    guard let token = appState.jwtToken else {
+      print("No JWT token available")
+      return
+    }
+
+    print("Saving preferences: \(preferences)")
     isSaving = true
-    // Simulate API call
-    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-      isSaving = false
+    APIManager.shared.savePreferences(token: token, preferences: preferences) { result in
+      DispatchQueue.main.async {
+        isSaving = false
+        switch result {
+        case .success:
+          print("Preferences saved successfully")
+          showingSavedPopup = true
+          DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            showingSavedPopup = false
+          }
+        case .failure(let error):
+          print("Failed to save preferences: \(error.localizedDescription)")
+        }
+      }
+    }
+  }
+}
+
+struct SavedPopup: View {
+  @Binding var isShowing: Bool
+
+  var body: some View {
+    Group {
+      if isShowing {
+        Text("Saved")
+          .font(.subheadline)
+          .fontWeight(.semibold)
+          .foregroundColor(ColorTheme.white)
+          .padding(.horizontal, 16)
+          .padding(.vertical, 8)
+          .background(ColorTheme.green)
+          .cornerRadius(20)
+          .transition(.scale.combined(with: .opacity))
+          .animation(.easeInOut(duration: 0.3), value: isShowing)
+          .onAppear {
+            print("Saved popup is showing")
+          }
+          .onDisappear {
+            print("Saved popup is hidden")
+          }
+      }
     }
   }
 }
@@ -53,13 +115,12 @@ struct PreferencesContent: View {
           )
         ) {
           Picker("Race Distance", selection: $0) {
-            Text("Select distance").tag("")
+            Text("Select distance").tag("none")
             Text("5K").tag("5k")
             Text("10K").tag("10k")
             Text("Half Marathon").tag("half marathon")
             Text("Marathon").tag("marathon")
             Text("Ultra Marathon").tag("ultra marathon")
-            Text("None").tag("none")
           }
           .pickerStyle(MenuPickerStyle())
         }
@@ -70,16 +131,22 @@ struct PreferencesContent: View {
           preferenceRowView(
             title: day.rawValue,
             value: sessionTypeBinding(for: day)
-          ) {
-            Picker("Session Type", selection: $0) {
-              Text("No Preference").tag("")
-              Text("Easy Run").tag("easy run")
-              Text("Long Run").tag("long run")
-              Text("Speed Workout").tag("speed workout")
-              Text("Rest Day").tag("rest day")
-              Text("Moderate Run").tag("moderate run")
-            }
-            .pickerStyle(MenuPickerStyle())
+          ) { binding in
+            CustomPickerWrapper(
+              selection: binding,
+              content:
+                AnyView(
+                  Picker("Session Type", selection: binding) {
+                    Text("No Preference").tag("")
+                    Text("Easy Run").tag("easy run")
+                    Text("Long Run").tag("long run")
+                    Text("Speed Workout").tag("speed workout")
+                    Text("Rest Day").tag("rest day")
+                    Text("Moderate Run").tag("moderate run")
+                  }
+                  .pickerStyle(MenuPickerStyle())
+                )
+            )
           }
         }
       }
@@ -88,29 +155,33 @@ struct PreferencesContent: View {
 
   private func sessionTypeBinding(for day: Day) -> Binding<String> {
     Binding(
-      get: { sessionType(for: day) },
-      set: {
-        updateSessionType(for: day, with: $0)
-        onUpdate()
+      get: {
+        let type = preferences.idealTrainingWeek?.first(where: { $0.day == day })?.sessionType ?? ""
+        return type
+      },
+      set: { newValue in
+        print("Setting session type for \(day) to \(newValue)")
+        updateSessionType(for: day, with: newValue)
       }
     )
   }
 
-  private func sessionType(for day: Day) -> String {
-    preferences.idealTrainingWeek?.first(where: { $0.day == day })?.sessionType ?? ""
-  }
-
   private func updateSessionType(for day: Day, with newValue: String) {
-    if var week = preferences.idealTrainingWeek {
-      if let index = week.firstIndex(where: { $0.day == day }) {
-        week[index] = TrainingDay(day: day, sessionType: newValue)
-      } else {
-        week.append(TrainingDay(day: day, sessionType: newValue))
-      }
-      preferences.idealTrainingWeek = week
-    } else {
-      preferences.idealTrainingWeek = [TrainingDay(day: day, sessionType: newValue)]
+    print("Updating session type for \(day) to \(newValue)")
+    print("Current preferences before update: \(preferences)")
+
+    if preferences.idealTrainingWeek == nil {
+      preferences.idealTrainingWeek = []
     }
+
+    if let index = preferences.idealTrainingWeek?.firstIndex(where: { $0.day == day }) {
+      preferences.idealTrainingWeek?[index].sessionType = newValue
+    } else {
+      preferences.idealTrainingWeek?.append(TrainingDay(day: day, sessionType: newValue))
+    }
+
+    print("Updated preferences: \(preferences)")
+    onUpdate()
   }
 
   private func preferenceSectionView<Content: View>(
@@ -125,7 +196,7 @@ struct PreferencesContent: View {
     }
   }
 
-  private func preferenceRowView<Value, EditContent: View>(
+  private func preferenceRowView<Value: Equatable, EditContent: View>(
     title: String,
     value: Binding<Value>,
     @ViewBuilder editContent: (Binding<Value>) -> EditContent
@@ -136,9 +207,23 @@ struct PreferencesContent: View {
         .foregroundColor(ColorTheme.lightGrey)
       Spacer()
       editContent(value)
-        .foregroundColor(ColorTheme.white)
         .frame(height: 30)
+        .foregroundColor(
+          (value.wrappedValue as? String)?.isEmpty == true
+            ? ColorTheme.lightGrey
+            : ColorTheme.white
+        )
     }
     .frame(height: 44)
+  }
+}
+
+struct CustomPickerWrapper: View {
+  @Binding var selection: String
+  let content: AnyView
+
+  var body: some View {
+    content
+      .opacity(selection.isEmpty ? 0.6 : 1.0)
   }
 }
