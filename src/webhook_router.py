@@ -70,7 +70,13 @@ def _handle_request(event: dict, invocation_id: str) -> dict:
 
     if event_type == "activity":
         if aspect_type == "create":
-            return handle_activity_create(user, event, invocation_id)
+            if user.is_active:
+                return handle_activity_create(user, event, invocation_id)
+            else:
+                return {
+                    "success": True,
+                    "message": f"Activity {event.get('object_id')} created, but user is inactive",
+                }
         if aspect_type in {"update", "delete"}:
             return {
                 "success": True,
