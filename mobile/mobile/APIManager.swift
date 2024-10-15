@@ -129,22 +129,3 @@ class APIManager {
     }.resume()
   }
 }
-
-struct SavePreferencesResponse: Codable {
-  let success: Bool
-  let error: String?
-}
-
-extension Preferences {
-  func toJSON() -> String {
-    let encoder = JSONEncoder()
-    encoder.outputFormatting = .prettyPrinted
-    do {
-      let jsonData = try encoder.encode(self)
-      return String(data: jsonData, encoding: .utf8) ?? "{}"
-    } catch {
-      print("Error encoding preferences: \(error)")
-      return "{}"
-    }
-  }
-}

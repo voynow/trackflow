@@ -16,19 +16,7 @@ struct ProfileView: View {
       ScrollView {
         VStack {
           ProfileHeader(profileData: profileData)
-          PreferencesContainer(
-            preferences: Binding(
-              get: {
-                Preferences(fromJSON: profileData.preferences ?? "{}")
-              },
-              set: { newValue in
-                if let preferencesJSON = try? JSONEncoder().encode(newValue),
-                  let preferencesString = String(data: preferencesJSON, encoding: .utf8)
-                {
-                  profileData.preferences = preferencesString
-                }
-              }
-            ))
+          PreferencesContainer(preferences: preferencesBinding)
         }
         .padding()
         SignOutButton(action: handleSignOut)
@@ -43,6 +31,21 @@ struct ProfileView: View {
     appState.jwtToken = nil
     UserDefaults.standard.removeObject(forKey: "jwt_token")
     isPresented = false
+  }
+
+  private var preferencesBinding: Binding<Preferences> {
+    Binding(
+      get: {
+        Preferences(fromJSON: profileData.preferences ?? "{}")
+      },
+      set: { newValue in
+        if let preferencesJSON = try? JSONEncoder().encode(newValue),
+          let preferencesString = String(data: preferencesJSON, encoding: .utf8)
+        {
+          profileData.preferences = preferencesString
+        }
+      }
+    )
   }
 }
 

@@ -50,7 +50,6 @@ struct PreferencesContainer: View {
       return
     }
 
-    print("Saving preferences: \(preferences)")
     isSaving = true
     APIManager.shared.savePreferences(token: token, preferences: preferences) { result in
       DispatchQueue.main.async {
@@ -86,12 +85,6 @@ struct SavedPopup: View {
           .cornerRadius(20)
           .transition(.scale.combined(with: .opacity))
           .animation(.easeInOut(duration: 0.3), value: isShowing)
-          .onAppear {
-            print("Saved popup is showing")
-          }
-          .onDisappear {
-            print("Saved popup is hidden")
-          }
       }
     }
   }
@@ -156,19 +149,16 @@ struct PreferencesContent: View {
   private func sessionTypeBinding(for day: Day) -> Binding<String> {
     Binding(
       get: {
-        let type = preferences.idealTrainingWeek?.first(where: { $0.day == day })?.sessionType ?? ""
-        return type
+        preferences.idealTrainingWeek?.first(where: { $0.day == day })?.sessionType ?? ""
       },
       set: { newValue in
-        print("Setting session type for \(day) to \(newValue)")
         updateSessionType(for: day, with: newValue)
       }
     )
   }
 
   private func updateSessionType(for day: Day, with newValue: String) {
-    print("Updating session type for \(day) to \(newValue)")
-    print("Current preferences before update: \(preferences)")
+    print("Setting session type for \(day.rawValue) to \(newValue)")
 
     if preferences.idealTrainingWeek == nil {
       preferences.idealTrainingWeek = []
@@ -180,7 +170,7 @@ struct PreferencesContent: View {
       preferences.idealTrainingWeek?.append(TrainingDay(day: day, sessionType: newValue))
     }
 
-    print("Updated preferences: \(preferences)")
+    print("Preferences after update: \(preferences.toJSON())")
     onUpdate()
   }
 

@@ -26,7 +26,7 @@ enum Day: String, CaseIterable, Codable {
 
 struct TrainingDay: Codable {
   let day: Day
-  var sessionType: String  // Changed from 'let' to 'var'
+  var sessionType: String
 
   enum CodingKeys: String, CodingKey {
     case day
@@ -43,6 +43,18 @@ struct Preferences: Codable {
     case idealTrainingWeek = "ideal_training_week"
   }
 
+  func toJSON() -> String {
+    let encoder = JSONEncoder()
+    encoder.outputFormatting = .prettyPrinted
+    do {
+      let jsonData = try encoder.encode(self)
+      return String(data: jsonData, encoding: .utf8) ?? "{}"
+    } catch {
+      print("Error encoding preferences: \(error)")
+      return "{}"
+    }
+  }
+
   init(fromJSON json: String) {
     let decoder = JSONDecoder()
     if let jsonData = json.data(using: .utf8),
@@ -54,6 +66,11 @@ struct Preferences: Codable {
       self.idealTrainingWeek = nil
     }
   }
+}
+
+struct SavePreferencesResponse: Codable {
+  let success: Bool
+  let error: String?
 }
 
 struct TrainingWeekData: Codable {
@@ -99,4 +116,9 @@ struct TrainingWeekResponse: Codable {
     case success, message
     case trainingWeek = "training_week"
   }
+}
+
+struct SignupResponse: Codable {
+  let success: Bool
+  let jwt_token: String
 }
