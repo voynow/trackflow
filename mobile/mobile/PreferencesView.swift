@@ -46,7 +46,6 @@ struct PreferencesContainer: View {
 
   private func savePreferences() {
     guard let token = appState.jwtToken else {
-      print("No JWT token available")
       return
     }
 
@@ -56,7 +55,6 @@ struct PreferencesContainer: View {
         isSaving = false
         switch result {
         case .success:
-          print("Preferences saved successfully")
           showingSavedPopup = true
           DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
             showingSavedPopup = false
@@ -158,8 +156,6 @@ struct PreferencesContent: View {
   }
 
   private func updateSessionType(for day: Day, with newValue: String) {
-    print("Setting session type for \(day.rawValue) to \(newValue)")
-
     if preferences.idealTrainingWeek == nil {
       preferences.idealTrainingWeek = []
     }
@@ -169,8 +165,6 @@ struct PreferencesContent: View {
     } else {
       preferences.idealTrainingWeek?.append(TrainingDay(day: day, sessionType: newValue))
     }
-
-    print("Preferences after update: \(preferences.toJSON())")
     onUpdate()
   }
 

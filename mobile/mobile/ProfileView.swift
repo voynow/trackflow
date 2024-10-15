@@ -2,10 +2,11 @@ import SwiftUI
 
 struct ProfileView: View {
   @Binding var isPresented: Bool
-  @Binding var profileData: ProfileData
+  @State private var profileData: ProfileData?
   @EnvironmentObject var appState: AppState
   @Binding var showProfile: Bool
   @State private var isSaving: Bool = false
+  @State private var isLoading: Bool = true
 
   var body: some View {
     VStack(spacing: 0) {
@@ -13,17 +14,25 @@ struct ProfileView: View {
         .background(ColorTheme.superDarkGrey)
         .zIndex(1)
 
-      ScrollView {
-        VStack {
-          ProfileHeader(profileData: profileData)
-          PreferencesContainer(preferences: preferencesBinding)
+      if isLoading {
+        LoadingView()
+      } else if let profileData = profileData {
+        ScrollView {
+          VStack {
+            ProfileHeader(profileData: profileData)
+            PreferencesContainer(preferences: preferencesBinding)
+          }
+          .padding()
+          SignOutButton(action: handleSignOut)
         }
-        .padding()
-        SignOutButton(action: handleSignOut)
+      } else {
+        Text("Failed to load profile")
+          .foregroundColor(ColorTheme.lightGrey)
       }
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .background(ColorTheme.superDarkGrey.edgesIgnoringSafeArea(.all))
+    .onAppear(perform: fetchProfileData)
   }
 
   private func handleSignOut() {
@@ -36,16 +45,35 @@ struct ProfileView: View {
   private var preferencesBinding: Binding<Preferences> {
     Binding(
       get: {
-        Preferences(fromJSON: profileData.preferences ?? "{}")
+        Preferences(fromJSON: profileData?.preferences ?? "{}")
       },
       set: { newValue in
         if let preferencesJSON = try? JSONEncoder().encode(newValue),
           let preferencesString = String(data: preferencesJSON, encoding: .utf8)
         {
-          profileData.preferences = preferencesString
+          profileData?.preferences = preferencesString
         }
       }
     )
+  }
+
+  private func fetchProfileData() {
+    guard let token = appState.jwtToken else {
+      isLoading = false
+      return
+    }
+
+    APIManager.shared.fetchProfileData(token: token) { result in
+      DispatchQueue.main.async {
+        self.isLoading = false
+        switch result {
+        case .success(let profile):
+          self.profileData = profile
+        case .failure(let error):
+          print("Error fetching profile data: \(error)")
+        }
+      }
+    }
   }
 }
 

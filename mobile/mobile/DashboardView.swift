@@ -3,9 +3,7 @@ import SwiftUI
 struct DashboardView: View {
   @EnvironmentObject var appState: AppState
   @State private var trainingWeekData: TrainingWeekData?
-  @State private var profileData: ProfileData?
   @State private var isLoadingTrainingWeek: Bool = true
-  @State private var isLoadingProfile: Bool = true
   @State private var showProfile: Bool = false
 
   var body: some View {
@@ -32,25 +30,12 @@ struct DashboardView: View {
         .navigationBarHidden(true)
 
         if showProfile {
-          if let profileData = profileData {
-            ProfileView(
-              isPresented: $showProfile,
-              profileData: Binding(
-                get: { profileData },
-                set: { self.profileData = $0 }
-              ),
-              showProfile: $showProfile
-            )
-            .transition(.move(edge: .trailing))
-            .zIndex(2)
-          } else if isLoadingProfile {
-            LoadingView()
-              .zIndex(2)
-          } else {
-            Text("Failed to load profile")
-              .foregroundColor(ColorTheme.lightGrey)
-              .zIndex(2)
-          }
+          ProfileView(
+            isPresented: $showProfile,
+            showProfile: $showProfile
+          )
+          .transition(.move(edge: .trailing))
+          .zIndex(2)
         }
       }
     }
@@ -65,7 +50,6 @@ struct DashboardView: View {
 
   private func fetchData() {
     fetchTrainingWeekData()
-    fetchProfileData()
   }
 
   private func fetchTrainingWeekData() {
@@ -82,25 +66,6 @@ struct DashboardView: View {
           self.trainingWeekData = trainingWeek
         case .failure(let error):
           print("Error fetching training data: \(error)")
-        }
-      }
-    }
-  }
-
-  private func fetchProfileData() {
-    guard let token = appState.jwtToken else {
-      isLoadingProfile = false
-      return
-    }
-
-    APIManager.shared.fetchProfileData(token: token) { result in
-      DispatchQueue.main.async {
-        self.isLoadingProfile = false
-        switch result {
-        case .success(let profile):
-          self.profileData = profile
-        case .failure(let error):
-          print("Error fetching profile data: \(error)")
         }
       }
     }
