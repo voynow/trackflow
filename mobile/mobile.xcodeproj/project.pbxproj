@@ -24,6 +24,8 @@
 		80777D1C2C973F02007565FC /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 80777D1B2C973F02007565FC /* Preview Assets.xcassets */; };
 		808B3E022C9CFB9B005BC890 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 808B3E012C9CFB9B005BC890 /* ProfileView.swift */; };
 		809E44762CBB42D6000BED21 /* PreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 809E44752CBB42D6000BED21 /* PreferencesView.swift */; };
+		80FED0482CC036A000972060 /* ProfileSkeletonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80FED0472CC036A000972060 /* ProfileSkeletonView.swift */; };
+		80FED04A2CC0377300972060 /* DashboardSkeletonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80FED0492CC0377300972060 /* DashboardSkeletonView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -46,6 +48,8 @@
 		808B3E012C9CFB9B005BC890 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		809E44752CBB42D6000BED21 /* PreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesView.swift; sourceTree = "<group>"; };
 		80A6AD222C9A508D005145B3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		80FED0472CC036A000972060 /* ProfileSkeletonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileSkeletonView.swift; sourceTree = "<group>"; };
+		80FED0492CC0377300972060 /* DashboardSkeletonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardSkeletonView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -96,6 +100,8 @@
 				80777D182C973F02007565FC /* Assets.xcassets */,
 				80777D1A2C973F02007565FC /* Preview Content */,
 				809E44752CBB42D6000BED21 /* PreferencesView.swift */,
+				80FED0472CC036A000972060 /* ProfileSkeletonView.swift */,
+				80FED0492CC0377300972060 /* DashboardSkeletonView.swift */,
 			);
 			path = mobile;
 			sourceTree = "<group>";
@@ -183,10 +189,12 @@
 				8021CCD02C9B6B9A00CB9B8D /* DashboardNavbar.swift in Sources */,
 				8021CCD82C9B9A1700CB9B8D /* LoadingView.swift in Sources */,
 				808B3E022C9CFB9B005BC890 /* ProfileView.swift in Sources */,
+				80FED0482CC036A000972060 /* ProfileSkeletonView.swift in Sources */,
 				8021CCCA2C9B367100CB9B8D /* AppState.swift in Sources */,
 				8021CCCE2C9B67F100CB9B8D /* DashboardView.swift in Sources */,
 				8021CCC62C9AFAA400CB9B8D /* AppDelegate.swift in Sources */,
 				80777D172C973F01007565FC /* ContentView.swift in Sources */,
+				80FED04A2CC0377300972060 /* DashboardSkeletonView.swift in Sources */,
 				80777D152C973F01007565FC /* mobileApp.swift in Sources */,
 				809E44762CBB42D6000BED21 /* PreferencesView.swift in Sources */,
 				8031CD792C9DC59C005CED34 /* APIManager.swift in Sources */,
