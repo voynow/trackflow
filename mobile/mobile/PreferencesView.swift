@@ -60,7 +60,7 @@ struct PreferencesContainer: View {
             showingSavedPopup = false
           }
         case .failure(let error):
-          print("Failed to save preferences: \(error.localizedDescription)")
+          print("Failed to save preferences: \(error)")
         }
       }
     }
@@ -79,10 +79,10 @@ struct SavedPopup: View {
           .foregroundColor(ColorTheme.white)
           .padding(.horizontal, 16)
           .padding(.vertical, 8)
-          .background(ColorTheme.green)
+          .background(ColorTheme.darkGrey)
           .cornerRadius(20)
           .transition(.scale.combined(with: .opacity))
-          .animation(.easeInOut(duration: 0.3), value: isShowing)
+          .animation(.easeInOut(duration: 2.0), value: isShowing)
       }
     }
   }
@@ -160,10 +160,15 @@ struct PreferencesContent: View {
       preferences.idealTrainingWeek = []
     }
 
-    if let index = preferences.idealTrainingWeek?.firstIndex(where: { $0.day == day }) {
-      preferences.idealTrainingWeek?[index].sessionType = newValue
+    if newValue.isEmpty {
+      // Remove the entry if "No Preference" is selected
+      preferences.idealTrainingWeek?.removeAll { $0.day == day }
     } else {
-      preferences.idealTrainingWeek?.append(TrainingDay(day: day, sessionType: newValue))
+      if let index = preferences.idealTrainingWeek?.firstIndex(where: { $0.day == day }) {
+        preferences.idealTrainingWeek?[index].sessionType = newValue
+      } else {
+        preferences.idealTrainingWeek?.append(TrainingDay(day: day, sessionType: newValue))
+      }
     }
     onUpdate()
   }
