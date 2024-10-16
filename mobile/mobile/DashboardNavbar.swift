@@ -6,26 +6,36 @@ struct DashboardNavbar: View {
 
   var body: some View {
     HStack {
-      Text("Track")
-        .font(.system(size: 24, weight: .black))
-        .foregroundColor(ColorTheme.primaryLight)
-        + Text("Flow")
-        .font(.system(size: 24, weight: .black))
-        .foregroundColor(ColorTheme.primary)
+      Button(action: {
+        showProfile = false
+      }) {
+        Text("Track")
+          .font(.system(size: 24, weight: .black))
+          .foregroundColor(ColorTheme.primaryLight)
+          + Text("Flow")
+          .font(.system(size: 24, weight: .black))
+          .foregroundColor(ColorTheme.primary)
+      }
+      .buttonStyle(PlainButtonStyle())
 
       Spacer()
 
       Button(action: {
-        showProfile.toggle()
+        showProfile = true
       }) {
-        Image(systemName: "person.circle")
+        Image(systemName: "person.crop.circle.fill")
           .resizable()
-          .frame(width: 30, height: 30)
+          .scaledToFit()
+          .frame(width: 24, height: 24)
           .foregroundColor(ColorTheme.white)
+          .padding(6)
+          .background(ColorTheme.black.opacity(0.8))
+          .clipShape(Circle())
       }
+      .buttonStyle(PlainButtonStyle())
     }
     .padding()
-    .background(ColorTheme.superDarkGrey)
+    .background(ColorTheme.black)
     .cornerRadius(12)
   }
 }

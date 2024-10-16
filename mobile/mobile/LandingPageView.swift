@@ -54,7 +54,7 @@ struct LandingPageView: View {
       }
       .padding()
     }
-    .background(ColorTheme.superDarkGrey.edgesIgnoringSafeArea(.all))
+    .background(ColorTheme.black.edgesIgnoringSafeArea(.all))
     .onOpenURL { url in
       authManager.handleURL(url)
     }

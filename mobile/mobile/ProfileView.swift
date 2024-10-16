@@ -9,30 +9,46 @@ struct ProfileView: View {
   @State private var isLoading: Bool = true
 
   var body: some View {
-    VStack(spacing: 0) {
-      DashboardNavbar(onLogout: handleSignOut, showProfile: $showProfile)
-        .background(ColorTheme.superDarkGrey)
-        .zIndex(1)
+    ZStack {
+      ColorTheme.black.edgesIgnoringSafeArea(.all)
 
-      if isLoading {
-        LoadingView()
-      } else if let profileData = profileData {
-        ScrollView {
-          VStack {
-            ProfileHeader(profileData: profileData)
-            PreferencesContainer(preferences: preferencesBinding)
+      VStack(spacing: 24) {
+        profileHeader
+
+        if isLoading {
+          ProfileSkeletonView()
+        } else if let profileData = profileData {
+          ScrollView {
+            VStack(spacing: 24) {
+              ProfileInfoCard(profileData: profileData)
+              PreferencesContainer(preferences: preferencesBinding)
+              SignOutButton(action: handleSignOut)
+            }
+            .padding(.horizontal)
           }
-          .padding()
-          SignOutButton(action: handleSignOut)
+        } else {
+          Text("Failed to load profile")
+            .foregroundColor(ColorTheme.lightGrey)
         }
-      } else {
-        Text("Failed to load profile")
+      }
+      .padding(.top, 16)
+    }
+    .onAppear(perform: fetchProfileData)
+  }
+
+  private var profileHeader: some View {
+    HStack {
+      Text("Profile")
+        .font(.system(size: 28, weight: .bold))
+        .foregroundColor(ColorTheme.white)
+      Spacer()
+      Button(action: { showProfile = false }) {
+        Image(systemName: "xmark")
           .foregroundColor(ColorTheme.lightGrey)
+          .font(.system(size: 20, weight: .semibold))
       }
     }
-    .frame(maxWidth: .infinity, maxHeight: .infinity)
-    .background(ColorTheme.superDarkGrey.edgesIgnoringSafeArea(.all))
-    .onAppear(perform: fetchProfileData)
+    .padding(.horizontal)
   }
 
   private func handleSignOut() {
@@ -77,70 +93,62 @@ struct ProfileView: View {
   }
 }
 
-struct ProfileHeader: View {
+struct ProfileInfoCard: View {
   let profileData: ProfileData
 
   var body: some View {
-    HStack(spacing: 16) {
-      ProfileImage(url: URL(string: profileData.profile))
-      ProfileInfo(profileData: profileData)
-      Spacer()
+    VStack(alignment: .leading, spacing: 16) {
+      HStack(spacing: 16) {
+        VStack {
+          AsyncImage(url: URL(string: profileData.profile)) { image in
+            image
+              .resizable()
+              .aspectRatio(contentMode: .fill)
+          } placeholder: {
+            ColorTheme.midDarkGrey
+          }
+          .frame(width: 80, height: 80)
+          .clipShape(Circle())
+          .overlay(Circle().stroke(ColorTheme.midDarkGrey, lineWidth: 2))
+          StatusIndicator(isActive: profileData.isActive)
+        }
+        Spacer()
+        VStack(alignment: .leading, spacing: 4) {
+          Text("\(profileData.firstname) \(profileData.lastname)")
+            .font(.system(size: 24, weight: .bold))
+            .foregroundColor(ColorTheme.white)
+          Text(profileData.email)
+            .font(.system(size: 14))
+            .foregroundColor(ColorTheme.lightGrey)
+          Text("Member since \(formattedJoinDate)")
+            .font(.system(size: 14))
+            .foregroundColor(ColorTheme.lightGrey)
+        }
+      }
     }
-    .padding(.vertical, 16)
-    .padding(.horizontal)
+    .padding(.vertical, 24)
+    .padding(.horizontal, 36)
+    .frame(maxWidth: .infinity)
     .background(ColorTheme.darkDarkGrey)
-    .cornerRadius(12)
+    .cornerRadius(20)
+  }
+
+  private var formattedJoinDate: String {
+    "Sept '24"
   }
 }
 
-struct ProfileImage: View {
-  let url: URL?
+struct StatusIndicator: View {
+  let isActive: Bool
 
   var body: some View {
-    AsyncImage(url: url) { phase in
-      switch phase {
-      case .empty:
-        ProgressView()
-          .frame(width: 70, height: 70)
-      case .success(let image):
-        image
-          .resizable()
-          .aspectRatio(contentMode: .fill)
-      case .failure:
-        Image(systemName: "person.circle.fill")
-          .resizable()
-          .foregroundColor(Color.gray.opacity(0.3))
-      @unknown default:
-        Color.gray.opacity(0.3)
-      }
-    }
-    .frame(width: 70, height: 70)
-    .clipShape(Circle())
-  }
-}
-
-struct ProfileInfo: View {
-  let profileData: ProfileData
-
-  var body: some View {
-    VStack(alignment: .leading, spacing: 6) {
-      Text("\(profileData.firstname) \(profileData.lastname)")
-        .font(.system(size: 18, weight: .semibold))
-        .foregroundColor(ColorTheme.white)
-
-      Text(profileData.email)
-        .font(.system(size: 14))
-        .foregroundColor(ColorTheme.lightGrey)
-
-      HStack(spacing: 6) {
-        Circle()
-          .fill(profileData.isActive ? ColorTheme.green : ColorTheme.darkGrey)
-          .frame(width: 8, height: 8)
-
-        Text(profileData.isActive ? "Active" : "Inactive")
-          .font(.system(size: 12))
-          .foregroundColor(ColorTheme.lightGrey)
-      }
+    HStack(spacing: 8) {
+      Circle()
+        .fill(isActive ? ColorTheme.green : ColorTheme.darkGrey)
+        .frame(width: 10, height: 10)
+      Text(isActive ? "Active" : "Inactive")
+        .font(.system(size: 14, weight: .medium))
+        .foregroundColor(isActive ? ColorTheme.green : ColorTheme.darkGrey)
     }
   }
 }
@@ -158,7 +166,5 @@ struct SignOutButton: View {
         .background(ColorTheme.primary)
         .cornerRadius(12)
     }
-    .padding(.horizontal)
-    .padding(.bottom, 20)
   }
 }

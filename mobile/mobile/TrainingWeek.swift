@@ -8,7 +8,7 @@ struct TrainingWeekView: View {
       SessionListView(sessions: data.sessions)
     }
     .padding(20)
-    .background(ColorTheme.superDarkGrey)
+    .background(ColorTheme.black)
     .cornerRadius(16)
   }
 }
@@ -95,7 +95,7 @@ struct SessionView: View {
   @State private var isExpanded: Bool = false
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 0) {
+    VStack(alignment: .leading, spacing: 24) {
       HStack(alignment: .center, spacing: 16) {
         Text(session.day.prefix(3).uppercased())
           .font(.system(size: 14, weight: .bold))
@@ -117,14 +117,12 @@ struct SessionView: View {
           .fill(session.completed ? ColorTheme.green : ColorTheme.darkGrey)
           .frame(width: 16, height: 16)
       }
-      .frame(height: 80)
-      .padding(.horizontal, 20)
 
       if isExpanded {
-        VStack(alignment: .leading, spacing: 12) {
-          Text("\(session.completed ? "Completed" : "Not Completed")")
+        VStack(alignment: .leading, spacing: 4) {
+          Text("\(session.completed ? "Completed" : "Upcoming")")
             .font(.system(size: 14, weight: .medium))
-            .foregroundColor(session.completed ? ColorTheme.green : ColorTheme.indigo)
+            .foregroundColor(session.completed ? ColorTheme.green : ColorTheme.yellow)
 
           if !session.notes.isEmpty {
             Text(session.notes)
@@ -133,19 +131,18 @@ struct SessionView: View {
               .lineSpacing(4)
           }
         }
-        .padding(.top, 12)
-        .padding(.horizontal, 20)
-        .padding(.bottom, 20)
         .transition(.opacity.combined(with: .move(edge: .top)))
       }
     }
-    .overlay(RoundedRectangle(cornerRadius: 12).stroke(ColorTheme.darkDarkGrey, lineWidth: 1))
+    .padding(.horizontal, 30)
+    .padding(.vertical, 20)
+    .overlay(RoundedRectangle(cornerRadius: 12).stroke(ColorTheme.darkGrey, lineWidth: 1))
+    .background(ColorTheme.black)
     .cornerRadius(12)
-    .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isExpanded)
+    .animation(.spring(response: 0.5, dampingFraction: 0.7), value: isExpanded)
     .onTapGesture {
       withAnimation {
         isExpanded.toggle()
-        print("Session: \(session)")
       }
     }
   }

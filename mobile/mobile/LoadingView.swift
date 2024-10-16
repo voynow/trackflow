@@ -8,12 +8,12 @@ struct LoadingView: View {
 
   var body: some View {
     ZStack {
-      ColorTheme.superDarkGrey
+      ColorTheme.black
         .edgesIgnoringSafeArea(.all)
 
       VStack(spacing: 40) {
         brandingView
-        
+
         VStack(spacing: 30) {
           ProgressView()
             .scaleEffect(1.5)
@@ -40,12 +40,12 @@ struct LoadingView: View {
       }
     }
   }
-  
+
   private var brandingView: some View {
     VStack(spacing: 16) {
       Text("🏃‍♂️🎯")
         .font(.system(size: 20))
-      
+
       HStack(spacing: 0) {
         Text("Track")
           .font(.system(size: 40, weight: .black))
@@ -54,7 +54,7 @@ struct LoadingView: View {
           .font(.system(size: 40, weight: .black))
           .foregroundColor(ColorTheme.primary)
       }
-      
+
       Text("Step into the Next Generation of Training")
         .font(.system(size: 16, weight: .light))
         .foregroundColor(ColorTheme.lightGrey)

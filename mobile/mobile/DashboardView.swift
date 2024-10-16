@@ -9,14 +9,14 @@ struct DashboardView: View {
   var body: some View {
     NavigationView {
       ZStack {
-        VStack(spacing: 0) {
+        VStack {
           DashboardNavbar(onLogout: handleLogout, showProfile: $showProfile)
-            .background(ColorTheme.superDarkGrey)
+            .background(ColorTheme.black)
             .zIndex(1)
 
           ScrollView {
             if isLoadingTrainingWeek {
-              LoadingView()
+              DashboardSkeletonView()
             } else if let data = trainingWeekData {
               TrainingWeekView(data: data)
             } else {
@@ -26,7 +26,7 @@ struct DashboardView: View {
             }
           }
         }
-        .background(ColorTheme.superDarkGrey.edgesIgnoringSafeArea(.all))
+        .background(ColorTheme.black.edgesIgnoringSafeArea(.all))
         .navigationBarHidden(true)
 
         if showProfile {

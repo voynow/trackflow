@@ -22,6 +22,18 @@ enum Day: String, CaseIterable, Codable {
   case fri = "Fri"
   case sat = "Sat"
   case sun = "Sun"
+  
+  var fullName: String {
+    switch self {
+    case .mon: return "Monday"
+    case .tues: return "Tuesday"
+    case .wed: return "Wednesday"
+    case .thurs: return "Thursday"
+    case .fri: return "Friday"
+    case .sat: return "Saturday"
+    case .sun: return "Sunday"
+    }
+  }
 }
 
 struct TrainingDay: Codable {

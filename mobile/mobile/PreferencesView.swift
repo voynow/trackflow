@@ -16,32 +16,22 @@ struct PreferencesContainer: View {
   @EnvironmentObject var appState: AppState
 
   var body: some View {
-    ZStack(alignment: .topTrailing) {
-      VStack(alignment: .leading, spacing: 20) {
-        Text("Preferences")
-          .font(.title)
-          .fontWeight(.bold)
-          .foregroundColor(ColorTheme.white)
+    ZStack {
+      PreferencesContent(preferences: $preferences, onUpdate: savePreferences)
 
-        PreferencesContent(preferences: $preferences, onUpdate: savePreferences)
+      if showingSavedPopup {
+        SavedPopup()
+          .transition(.scale.combined(with: .opacity))
+          .animation(.easeInOut(duration: 0.3), value: showingSavedPopup)
       }
-      .padding()
-      .background(ColorTheme.darkDarkGrey)
-      .cornerRadius(12)
 
-      SavedPopup(isShowing: $showingSavedPopup)
-        .padding([.top, .trailing], 16)
+      if isSaving {
+        ProgressView()
+          .progressViewStyle(CircularProgressViewStyle(tint: ColorTheme.white))
+          .scaleEffect(1.5)
+      }
     }
     .disabled(isSaving)
-    .overlay(
-      Group {
-        if isSaving {
-          ProgressView()
-            .progressViewStyle(CircularProgressViewStyle(tint: ColorTheme.white))
-            .scaleEffect(1.5)
-        }
-      }
-    )
   }
 
   private func savePreferences() {
@@ -55,9 +45,13 @@ struct PreferencesContainer: View {
         isSaving = false
         switch result {
         case .success:
-          showingSavedPopup = true
+          withAnimation {
+            showingSavedPopup = true
+          }
           DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-            showingSavedPopup = false
+            withAnimation {
+              showingSavedPopup = false
+            }
           }
         case .failure(let error):
           print("Failed to save preferences: \(error)")
@@ -68,23 +62,14 @@ struct PreferencesContainer: View {
 }
 
 struct SavedPopup: View {
-  @Binding var isShowing: Bool
-
   var body: some View {
-    Group {
-      if isShowing {
-        Text("Saved")
-          .font(.subheadline)
-          .fontWeight(.semibold)
-          .foregroundColor(ColorTheme.white)
-          .padding(.horizontal, 16)
-          .padding(.vertical, 8)
-          .background(ColorTheme.darkGrey)
-          .cornerRadius(20)
-          .transition(.scale.combined(with: .opacity))
-          .animation(.easeInOut(duration: 2.0), value: isShowing)
-      }
-    }
+    Text("Saved")
+      .font(.system(size: 32, weight: .semibold))
+      .foregroundColor(ColorTheme.green)
+      .padding(12)
+      .background(ColorTheme.green.opacity(0.25))
+      .cornerRadius(16)
+      .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
   }
 }
 
@@ -93,7 +78,7 @@ struct PreferencesContent: View {
   var onUpdate: () -> Void
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 20) {
+    VStack(alignment: .leading, spacing: 24) {
       preferenceSectionView(title: "Race Details") {
         preferenceRowView(
           title: "Race Distance",
@@ -120,7 +105,7 @@ struct PreferencesContent: View {
       preferenceSectionView(title: "Ideal Training Week") {
         ForEach(Day.allCases, id: \.self) { day in
           preferenceRowView(
-            title: day.rawValue,
+            title: day.fullName,
             value: sessionTypeBinding(for: day)
           ) { binding in
             CustomPickerWrapper(
@@ -142,6 +127,7 @@ struct PreferencesContent: View {
         }
       }
     }
+    .background(ColorTheme.black)
   }
 
   private func sessionTypeBinding(for day: Day) -> Binding<String> {
@@ -176,13 +162,15 @@ struct PreferencesContent: View {
   private func preferenceSectionView<Content: View>(
     title: String, @ViewBuilder content: () -> Content
   ) -> some View {
-    VStack(alignment: .leading, spacing: 4) {
+    VStack(alignment: .leading, spacing: 16) {
       Text(title)
-        .font(.headline)
-        .fontWeight(.semibold)
-        .foregroundColor(ColorTheme.lightGrey)
+        .font(.system(size: 20, weight: .semibold))
+        .foregroundColor(ColorTheme.white)
       content()
     }
+    .padding(24)
+    .background(ColorTheme.darkDarkGrey)
+    .cornerRadius(12)
   }
 
   private func preferenceRowView<Value: Equatable, EditContent: View>(
@@ -192,18 +180,14 @@ struct PreferencesContent: View {
   ) -> some View {
     HStack {
       Text(title)
-        .font(.subheadline)
-        .foregroundColor(ColorTheme.lightGrey)
+        .font(.system(size: 16))
+        .foregroundColor(ColorTheme.white)
       Spacer()
       editContent(value)
-        .frame(height: 30)
-        .foregroundColor(
-          (value.wrappedValue as? String)?.isEmpty == true
-            ? ColorTheme.lightGrey
-            : ColorTheme.white
-        )
+        .foregroundColor(ColorTheme.lightGrey) // Add this line to change the color
     }
-    .frame(height: 44)
+    .padding(.vertical, 8)
+    .padding(.horizontal, 12)
   }
 }
 
@@ -213,6 +197,8 @@ struct CustomPickerWrapper: View {
 
   var body: some View {
     content
-      .opacity(selection.isEmpty ? 0.6 : 1.0)
+      .opacity(selection.isEmpty ? 0.4 : 1.0)
+      .foregroundColor(selection.isEmpty ? ColorTheme.lightGrey : ColorTheme.white) // Add this line
+      .animation(.easeInOut(duration: 0.1), value: selection)
   }
 }
