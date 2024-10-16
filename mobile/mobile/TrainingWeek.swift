@@ -2,9 +2,8 @@ import SwiftUI
 
 struct TrainingWeekView: View {
   let data: TrainingWeekData
-
   var body: some View {
-    VStack(spacing: 24) {
+    VStack(spacing: 16) {
       WeeklyProgressView(sessions: data.sessions)
       SessionListView(sessions: data.sessions)
     }
@@ -93,41 +92,61 @@ struct SessionListView: View {
 
 struct SessionView: View {
   let session: TrainingSession
+  @State private var isExpanded: Bool = false
 
   var body: some View {
-    HStack(alignment: .top, spacing: 10) {
-      Text(session.day.prefix(3).uppercased())
-        .font(.subheadline)
-        .foregroundColor(ColorTheme.lightGrey)
-        .frame(width: 40, alignment: .leading)
-
-      VStack(alignment: .leading, spacing: 4) {
-        Text(session.sessionType)
-          .font(.headline)
-          .foregroundColor(ColorTheme.white)
-
-        if !session.notes.isEmpty {
-          Text(session.notes)
-            .font(.caption)
-            .foregroundColor(ColorTheme.lightGrey)
-            .lineLimit(2)
-        }
-      }
-
-      Spacer()
-
-      VStack(alignment: .trailing, spacing: 4) {
-        Text(String(format: "%.1f mi", session.distance))
-          .font(.subheadline)
+    VStack(alignment: .leading, spacing: 0) {
+      HStack(alignment: .center, spacing: 16) {
+        Text(session.day.prefix(3).uppercased())
+          .font(.system(size: 14, weight: .bold))
           .foregroundColor(ColorTheme.lightGrey)
+          .frame(width: 40, alignment: .leading)
+
+        VStack(alignment: .leading, spacing: 4) {
+          Text(session.sessionType)
+            .font(.system(size: 18, weight: .semibold))
+            .foregroundColor(ColorTheme.white)
+          Text(String(format: "%.1f mi", session.distance))
+            .font(.system(size: 14, weight: .regular))
+            .foregroundColor(ColorTheme.lightGrey)
+        }
+
+        Spacer()
 
         Circle()
           .fill(session.completed ? ColorTheme.green : ColorTheme.darkGrey)
-          .frame(width: 12, height: 12)
+          .frame(width: 16, height: 16)
+      }
+      .frame(height: 80)
+      .padding(.horizontal, 20)
+
+      if isExpanded {
+        VStack(alignment: .leading, spacing: 12) {
+          Text("\(session.completed ? "Completed" : "Not Completed")")
+            .font(.system(size: 14, weight: .medium))
+            .foregroundColor(session.completed ? ColorTheme.green : ColorTheme.indigo)
+
+          if !session.notes.isEmpty {
+            Text(session.notes)
+              .font(.system(size: 14, weight: .regular))
+              .foregroundColor(ColorTheme.lightGrey)
+              .lineSpacing(4)
+          }
+        }
+        .padding(.top, 12)
+        .padding(.horizontal, 20)
+        .padding(.bottom, 20)
+        .transition(.opacity.combined(with: .move(edge: .top)))
       }
     }
-    .padding()
-    .cornerRadius(8)
-    .overlay(RoundedRectangle(cornerRadius: 8).stroke(ColorTheme.darkDarkGrey, lineWidth: 1))
+    .overlay(RoundedRectangle(cornerRadius: 12).stroke(ColorTheme.darkDarkGrey, lineWidth: 1))
+    .cornerRadius(12)
+    .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isExpanded)
+    .onTapGesture {
+      withAnimation {
+        isExpanded.toggle()
+        print("Session: \(session)")
+      }
+    }
   }
 }
