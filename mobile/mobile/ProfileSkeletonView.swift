@@ -10,49 +10,77 @@ import SwiftUI
 struct ProfileSkeletonView: View {
   var body: some View {
     ScrollView {
-      VStack {
+      VStack(spacing: 24) {
         // Profile Header Skeleton
-        HStack(spacing: 16) {
-          Circle()
-            .fill(ColorTheme.darkGrey)
-            .frame(width: 70, height: 70)
-
-          VStack(alignment: .leading, spacing: 8) {
-            Rectangle()
-              .fill(ColorTheme.darkGrey)
-              .frame(width: 150, height: 20)
-            Rectangle()
-              .fill(ColorTheme.darkGrey)
-              .frame(width: 120, height: 16)
-            Rectangle()
-              .fill(ColorTheme.darkGrey)
-              .frame(width: 80, height: 12)
-          }
-          Spacer()
-        }
-        .padding()
-        .background(ColorTheme.darkDarkGrey)
-        .cornerRadius(12)
-
-        // Preferences Skeleton
-        VStack(alignment: .leading, spacing: 24) {
+        profileHeaderSkeleton
+        
+        // Preferences Container Skeleton
+        VStack(spacing: 24) {
+          // Race Details Section
+          preferenceSectionSkeleton(rowCount: 1)
+          
+          // Ideal Training Week Section
+          preferenceSectionSkeleton(rowCount: 7)
+          
+          // Sign Out Button Skeleton
           Rectangle()
             .fill(ColorTheme.darkGrey)
-            .frame(width: 100, height: 24)
-
-          ForEach(0..<10) { _ in
-            Rectangle()
-              .fill(ColorTheme.darkGrey)
-              .frame(width: .infinity, height: 16)
-          }
+            .frame(height: 50)
+            .cornerRadius(12)
         }
-        .padding()
-        .background(ColorTheme.darkDarkGrey)
-        .cornerRadius(12)
+        .padding(.horizontal)
       }
-      .padding()
+      .padding(.top, 16)
     }
     .profileShimmering()
+  }
+  
+  private var profileHeaderSkeleton: some View {
+    HStack(spacing: 16) {
+      Circle()
+        .fill(ColorTheme.darkGrey)
+        .frame(width: 80, height: 80)
+      
+      VStack(alignment: .leading, spacing: 8) {
+        Rectangle()
+          .fill(ColorTheme.darkGrey)
+          .frame(width: 150, height: 24)
+        Rectangle()
+          .fill(ColorTheme.darkGrey)
+          .frame(width: 120, height: 14)
+        Rectangle()
+          .fill(ColorTheme.darkGrey)
+          .frame(width: 100, height: 14)
+      }
+      Spacer()
+    }
+    .padding(24)
+    .background(ColorTheme.darkDarkGrey)
+    .cornerRadius(20)
+    .padding(.horizontal)
+  }
+  
+  private func preferenceSectionSkeleton(rowCount: Int) -> some View {
+    VStack(alignment: .leading, spacing: 16) {
+      Rectangle()
+        .fill(ColorTheme.darkGrey)
+        .frame(width: 120, height: 20)
+      
+      ForEach(0..<rowCount, id: \.self) { _ in
+        HStack {
+          Rectangle()
+            .fill(ColorTheme.darkGrey)
+            .frame(width: 100, height: 16)
+          Spacer()
+          Rectangle()
+            .fill(ColorTheme.darkGrey)
+            .frame(width: 80, height: 16)
+        }
+      }
+    }
+    .padding(24)
+    .background(ColorTheme.darkDarkGrey)
+    .cornerRadius(12)
   }
 }
 

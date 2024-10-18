@@ -24,14 +24,13 @@ struct ProfileView: View {
               PreferencesContainer(preferences: preferencesBinding)
               SignOutButton(action: handleSignOut)
             }
-            .padding(.horizontal)
+            .padding()
           }
         } else {
           Text("Failed to load profile")
             .foregroundColor(ColorTheme.lightGrey)
         }
       }
-      .padding(.top, 16)
     }
     .onAppear(perform: fetchProfileData)
   }
@@ -39,7 +38,7 @@ struct ProfileView: View {
   private var profileHeader: some View {
     HStack {
       Text("Profile")
-        .font(.system(size: 28, weight: .bold))
+        .font(.system(size: 28, weight: .black))
         .foregroundColor(ColorTheme.white)
       Spacer()
       Button(action: { showProfile = false }) {
@@ -49,6 +48,7 @@ struct ProfileView: View {
       }
     }
     .padding(.horizontal)
+    .padding(.top, 4)
   }
 
   private func handleSignOut() {
@@ -105,11 +105,11 @@ struct ProfileInfoCard: View {
               .resizable()
               .aspectRatio(contentMode: .fill)
           } placeholder: {
-            ColorTheme.midDarkGrey
+            ColorTheme.midLightGrey
           }
           .frame(width: 80, height: 80)
           .clipShape(Circle())
-          .overlay(Circle().stroke(ColorTheme.midDarkGrey, lineWidth: 2))
+          .overlay(Circle().stroke(ColorTheme.midLightGrey, lineWidth: 2))
           StatusIndicator(isActive: profileData.isActive)
         }
         Spacer()
@@ -154,17 +154,20 @@ struct StatusIndicator: View {
 }
 
 struct SignOutButton: View {
-  let action: () -> Void
+    let action: () -> Void
 
-  var body: some View {
-    Button(action: action) {
-      Text("Sign Out")
-        .font(.system(size: 18, weight: .semibold))
-        .foregroundColor(ColorTheme.white)
-        .frame(maxWidth: .infinity)
-        .padding()
-        .background(ColorTheme.primary)
-        .cornerRadius(12)
+    var body: some View {
+        Button(action: action) {
+            Text("Sign Out")
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundColor(ColorTheme.primaryDark)
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(ColorTheme.darkDarkGrey)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(ColorTheme.primaryDark, lineWidth: 2)
+                )
+        }
     }
-  }
 }

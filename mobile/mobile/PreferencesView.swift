@@ -11,19 +11,15 @@ struct PickerTextStyle: ViewModifier {
 
 struct PreferencesContainer: View {
   @Binding var preferences: Preferences
-  @State private var showingSavedPopup: Bool = false
   @State private var isSaving: Bool = false
   @EnvironmentObject var appState: AppState
 
   var body: some View {
     ZStack {
-      PreferencesContent(preferences: $preferences, onUpdate: savePreferences)
-
-      if showingSavedPopup {
-        SavedPopup()
-          .transition(.scale.combined(with: .opacity))
-          .animation(.easeInOut(duration: 0.3), value: showingSavedPopup)
-      }
+      PreferencesContent(
+        preferences: $preferences, 
+        onUpdate: savePreferences
+      )
 
       if isSaving {
         ProgressView()
@@ -45,14 +41,8 @@ struct PreferencesContainer: View {
         isSaving = false
         switch result {
         case .success:
-          withAnimation {
-            showingSavedPopup = true
-          }
-          DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-            withAnimation {
-              showingSavedPopup = false
-            }
-          }
+          // The SaveBanner is now handled within PreferencesContent
+          break
         case .failure(let error):
           print("Failed to save preferences: \(error)")
         }
@@ -61,25 +51,35 @@ struct PreferencesContainer: View {
   }
 }
 
-struct SavedPopup: View {
+struct SaveBanner: View {
   var body: some View {
-    Text("Saved")
-      .font(.system(size: 32, weight: .semibold))
-      .foregroundColor(ColorTheme.green)
-      .padding(12)
-      .background(ColorTheme.green.opacity(0.25))
-      .cornerRadius(16)
-      .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
+    HStack {
+      Image(systemName: "checkmark.circle.fill")
+        .foregroundColor(ColorTheme.green)
+      Text("Preferences saved")
+        .font(.system(size: 16, weight: .medium))
+        .foregroundColor(ColorTheme.white)
+    }
+    .padding(.vertical, 8)
+    .padding(.horizontal, 16)
+    .background(Color.black.opacity(0.6))
+    .cornerRadius(8)
+    .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
   }
 }
 
 struct PreferencesContent: View {
   @Binding var preferences: Preferences
   var onUpdate: () -> Void
+  @State private var activeSaveSection: String?
 
   var body: some View {
     VStack(alignment: .leading, spacing: 24) {
-      preferenceSectionView(title: "Race Details") {
+      preferenceSectionView(
+        title: "Race Details",
+        subtitle: "Optionally select your race distance",
+        sectionId: "race"
+      ) {
         preferenceRowView(
           title: "Race Distance",
           value: Binding(
@@ -87,22 +87,32 @@ struct PreferencesContent: View {
             set: {
               preferences.raceDistance = $0.isEmpty ? nil : $0
               onUpdate()
+              showSaveBanner(for: "race")
             }
           )
-        ) {
-          Picker("Race Distance", selection: $0) {
-            Text("Select distance").tag("none")
-            Text("5K").tag("5k")
-            Text("10K").tag("10k")
-            Text("Half Marathon").tag("half marathon")
-            Text("Marathon").tag("marathon")
-            Text("Ultra Marathon").tag("ultra marathon")
-          }
-          .pickerStyle(MenuPickerStyle())
+        ) { binding in
+          CustomPickerWrapper(
+            selection: binding,
+            content: AnyView(
+              Picker("Race Distance", selection: binding) {
+                Text("No Preference").tag("")
+                Text("5K").tag("5k")
+                Text("10K").tag("10k")
+                Text("Half Marathon").tag("half marathon")
+                Text("Marathon").tag("marathon")
+                Text("Ultra Marathon").tag("ultra marathon")
+              }
+              .pickerStyle(MenuPickerStyle())
+            )
+          )
         }
       }
 
-      preferenceSectionView(title: "Ideal Training Week") {
+      preferenceSectionView(
+        title: "Training Week",
+        subtitle: "Help our AI understand your preferences",
+        sectionId: "training"
+      ) {
         ForEach(Day.allCases, id: \.self) { day in
           preferenceRowView(
             title: day.fullName,
@@ -110,24 +120,32 @@ struct PreferencesContent: View {
           ) { binding in
             CustomPickerWrapper(
               selection: binding,
-              content:
-                AnyView(
-                  Picker("Session Type", selection: binding) {
-                    Text("No Preference").tag("")
-                    Text("Easy Run").tag("easy run")
-                    Text("Long Run").tag("long run")
-                    Text("Speed Workout").tag("speed workout")
-                    Text("Rest Day").tag("rest day")
-                    Text("Moderate Run").tag("moderate run")
-                  }
-                  .pickerStyle(MenuPickerStyle())
-                )
+              content: AnyView(
+                Picker("Session Type", selection: binding) {
+                  Text("No Preference").tag("")
+                  Text("Easy Run").tag("easy run")
+                  Text("Long Run").tag("long run")
+                  Text("Speed Workout").tag("speed workout")
+                  Text("Rest Day").tag("rest day")
+                  Text("Moderate Run").tag("moderate run")
+                }
+                .pickerStyle(MenuPickerStyle())
+              )
             )
           }
         }
       }
     }
     .background(ColorTheme.black)
+  }
+
+  private func showSaveBanner(for section: String) {
+    activeSaveSection = section
+    DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+      if activeSaveSection == section {
+        activeSaveSection = nil
+      }
+    }
   }
 
   private func sessionTypeBinding(for day: Day) -> Binding<String> {
@@ -137,6 +155,7 @@ struct PreferencesContent: View {
       },
       set: { newValue in
         updateSessionType(for: day, with: newValue)
+        showSaveBanner(for: "training")
       }
     )
   }
@@ -160,17 +179,35 @@ struct PreferencesContent: View {
   }
 
   private func preferenceSectionView<Content: View>(
-    title: String, @ViewBuilder content: () -> Content
+    title: String,
+    subtitle: String,
+    sectionId: String,
+    @ViewBuilder content: () -> Content
   ) -> some View {
-    VStack(alignment: .leading, spacing: 16) {
-      Text(title)
-        .font(.system(size: 20, weight: .semibold))
-        .foregroundColor(ColorTheme.white)
-      content()
+    ZStack(alignment: .topTrailing) {
+      VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 4) {
+          Text(title)
+            .font(.system(size: 20, weight: .semibold))
+            .foregroundColor(ColorTheme.white)
+          Text(subtitle)
+            .font(.system(size: 14))
+            .foregroundColor(ColorTheme.midLightGrey)
+        }
+        content()
+      }
+      .padding(24)
+      .background(ColorTheme.darkDarkGrey)
+      .cornerRadius(12)
+      
+      if activeSaveSection == sectionId {
+        SaveBanner()
+          .transition(.move(edge: .top).combined(with: .opacity))
+          .animation(.easeInOut(duration: 0.3), value: activeSaveSection)
+          .padding(.top, 8)
+          .padding(.trailing, 8)
+      }
     }
-    .padding(24)
-    .background(ColorTheme.darkDarkGrey)
-    .cornerRadius(12)
   }
 
   private func preferenceRowView<Value: Equatable, EditContent: View>(
@@ -181,12 +218,11 @@ struct PreferencesContent: View {
     HStack {
       Text(title)
         .font(.system(size: 16))
-        .foregroundColor(ColorTheme.white)
+        .foregroundColor(ColorTheme.primaryLight)
       Spacer()
       editContent(value)
-        .foregroundColor(ColorTheme.lightGrey) // Add this line to change the color
+        .foregroundColor(ColorTheme.lightGrey)
     }
-    .padding(.vertical, 8)
     .padding(.horizontal, 12)
   }
 }
@@ -198,7 +234,5 @@ struct CustomPickerWrapper: View {
   var body: some View {
     content
       .opacity(selection.isEmpty ? 0.4 : 1.0)
-      .foregroundColor(selection.isEmpty ? ColorTheme.lightGrey : ColorTheme.white) // Add this line
-      .animation(.easeInOut(duration: 0.1), value: selection)
   }
 }
