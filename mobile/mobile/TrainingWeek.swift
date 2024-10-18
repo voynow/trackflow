@@ -88,7 +88,7 @@ struct MultiWeekProgressView: View {
   let numberOfWeeks: Int
 
   private var displayedSummaries: [WeekSummary] {
-    Array(weeklySummaries.prefix(numberOfWeeks).reversed())
+    Array(weeklySummaries.prefix(numberOfWeeks))
   }
 
   private var chartData: [(String, Double)] {
@@ -116,12 +116,23 @@ struct MultiWeekProgressView: View {
         valueSpecifier: "%.1f"
       )
       .frame(height: 350)
+      
+      // X-axis labels
+      HStack(spacing: 0) {
+        ForEach(chartData, id: \.0) { item in
+          Text(item.0)
+            .font(.caption)
+            .foregroundColor(ColorTheme.lightGrey)
+            .frame(maxWidth: .infinity)
+            .rotationEffect(.degrees(-45))
+        }
+      }
+      .padding(.bottom, 8)
+      
       HStack {
-        Text(
-          "Total: \(String(format: "%.1f mi", displayedSummaries.reduce(0) { $0 + $1.totalDistance }))"
-        )
-        .font(.headline)
-        .foregroundColor(ColorTheme.white)
+        Text("Total: \(String(format: "%.1f mi", displayedSummaries.reduce(0) { $0 + $1.totalDistance }))")
+          .font(.headline)
+          .foregroundColor(ColorTheme.white)
         Spacer()
         Text("Max: \(String(format: "%.1f mi", chartData.map { $0.1 }.max() ?? 0))")
           .font(.subheadline)
