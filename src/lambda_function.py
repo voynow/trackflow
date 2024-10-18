@@ -1,4 +1,3 @@
-import json
 import logging
 import os
 import traceback
@@ -6,6 +5,11 @@ import uuid
 
 from src import auth_manager, frontend_router, update_pipeline, webhook_router
 from src.email_manager import send_alert_email
+
+logging.getLogger("openai").setLevel(logging.ERROR)
+logging.getLogger("httpx").setLevel(logging.ERROR)
+logging.getLogger("stravalib").setLevel(logging.ERROR)
+logging.getLogger("supabase").setLevel(logging.ERROR)
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)

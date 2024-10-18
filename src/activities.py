@@ -194,7 +194,7 @@ def get_day_of_week_summaries(activities_df: pl.DataFrame) -> List[DayOfWeekSumm
 def get_weekly_summaries(activities_df: pl.DataFrame) -> List[WeekSummary]:
     """
     Aggregate activities DataFrame by week of the year and calculate
-    load for each week
+    load for each week, anchored by the first date of the week.
 
     :param activities_df: The DataFrame containing activities data
     :return: A list of WeekSummary objects with summary statistics
@@ -205,6 +205,7 @@ def get_weekly_summaries(activities_df: pl.DataFrame) -> List[WeekSummary]:
             [
                 pl.col("distance_in_miles").sum().alias("total_distance"),
                 pl.col("distance_in_miles").max().alias("longest_run"),
+                pl.col("date").min().alias("start_of_week"),
             ]
         )
         .sort(["year", "week_of_year"])
@@ -214,6 +215,7 @@ def get_weekly_summaries(activities_df: pl.DataFrame) -> List[WeekSummary]:
         WeekSummary(
             year=row["year"],
             week_of_year=row["week_of_year"],
+            week_start_date=datetime.strptime(str(row["start_of_week"]), "%Y-%m-%d"),
             longest_run=round(row["longest_run"], 2),
             total_distance=round(row["total_distance"], 2),
         )

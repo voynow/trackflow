@@ -1,3 +1,4 @@
+import logging
 import os
 from datetime import datetime, timezone
 
@@ -12,6 +13,8 @@ from src.types.user_row import UserRow
 
 load_dotenv()
 strava_client = Client()
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 
 def generate_jwt(athlete_id: int, expires_at: int) -> str:
@@ -28,15 +31,21 @@ def generate_jwt(athlete_id: int, expires_at: int) -> str:
     return token
 
 
-def decode_jwt(jwt_token: str) -> int | None:
+def decode_jwt(jwt_token: str, verify_exp: bool = True) -> int:
     """
     Decode JWT token and return athlete_id
 
     :param jwt_token: JWT token
+    :param verify_exp: whether to verify expiration
     :return: int if successful, None if decoding fails
     :raises: jwt.DecodeError if token is invalid
     """
-    payload = jwt.decode(jwt_token, os.environ["JWT_SECRET"], algorithms=["HS256"])
+    payload = jwt.decode(
+        jwt_token,
+        os.environ["JWT_SECRET"],
+        algorithms=["HS256"],
+        options={"verify_exp": verify_exp},
+    )
     return payload["athlete_id"]
 
 
@@ -87,7 +96,7 @@ def refresh_and_update_user_token(athlete_id: int, refresh_token: str) -> UserAu
     :param refresh_token: refresh token for Strava API
     :return: UserAuthRow
     """
-
+    logger.info(f"Refreshing and updating token for athlete {athlete_id}")
     access_info = strava_client.refresh_access_token(
         client_id=os.environ["STRAVA_CLIENT_ID"],
         client_secret=os.environ["STRAVA_CLIENT_SECRET"],
