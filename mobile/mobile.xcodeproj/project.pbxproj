@@ -16,6 +16,7 @@
 		8021CCD22C9B6BAB00CB9B8D /* TrainingWeek.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8021CCD12C9B6BAB00CB9B8D /* TrainingWeek.swift */; };
 		8021CCD62C9B6DF900CB9B8D /* ColorTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8021CCD52C9B6DF900CB9B8D /* ColorTheme.swift */; };
 		8021CCD82C9B9A1700CB9B8D /* LoadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8021CCD72C9B9A1700CB9B8D /* LoadingView.swift */; };
+		802FA9272CC30248006F168C /* SwiftUICharts in Frameworks */ = {isa = PBXBuildFile; productRef = 802FA9262CC30248006F168C /* SwiftUICharts */; };
 		8031CD792C9DC59C005CED34 /* APIManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8031CD782C9DC59C005CED34 /* APIManager.swift */; };
 		8031CD7B2C9DC602005CED34 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8031CD7A2C9DC602005CED34 /* Models.swift */; };
 		80777D152C973F01007565FC /* mobileApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80777D142C973F01007565FC /* mobileApp.swift */; };
@@ -57,6 +58,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				802FA9272CC30248006F168C /* SwiftUICharts in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -158,6 +160,9 @@
 				Base,
 			);
 			mainGroup = 80777D082C973F01007565FC;
+			packageReferences = (
+				802FA9252CC30248006F168C /* XCRemoteSwiftPackageReference "ChartView" */,
+			);
 			productRefGroup = 80777D122C973F01007565FC /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -409,6 +414,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		802FA9252CC30248006F168C /* XCRemoteSwiftPackageReference "ChartView" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/AppPear/ChartView";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.5.5;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		802FA9262CC30248006F168C /* SwiftUICharts */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 802FA9252CC30248006F168C /* XCRemoteSwiftPackageReference "ChartView" */;
+			productName = SwiftUICharts;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 80777D092C973F01007565FC /* Project object */;
 }

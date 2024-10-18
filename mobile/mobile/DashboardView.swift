@@ -5,6 +5,7 @@ struct DashboardView: View {
   @State private var trainingWeekData: TrainingWeekData?
   @State private var isLoadingTrainingWeek: Bool = true
   @State private var showProfile: Bool = false
+  @State private var weeklySummaries: [WeekSummary]?
 
   var body: some View {
     NavigationView {
@@ -17,8 +18,8 @@ struct DashboardView: View {
           ScrollView {
             if isLoadingTrainingWeek {
               DashboardSkeletonView()
-            } else if let data = trainingWeekData {
-              TrainingWeekView(data: data)
+            } else if let data = trainingWeekData, let summaries = weeklySummaries {
+              TrainingWeekView(trainingWeekData: data, weeklySummaries: summaries)
             } else {
               Text("No training data available")
                 .font(.headline)
@@ -49,6 +50,8 @@ struct DashboardView: View {
   }
 
   private func fetchData() {
+    isLoadingTrainingWeek = true
+    fetchWeeklySummaries()
     fetchTrainingWeekData()
   }
 
@@ -60,14 +63,40 @@ struct DashboardView: View {
 
     APIManager.shared.fetchTrainingWeekData(token: token) { result in
       DispatchQueue.main.async {
-        self.isLoadingTrainingWeek = false
         switch result {
         case .success(let trainingWeek):
           self.trainingWeekData = trainingWeek
         case .failure(let error):
           print("Error fetching training data: \(error)")
+          self.trainingWeekData = nil
         }
+        self.checkLoadingComplete()
       }
+    }
+  }
+
+  private func fetchWeeklySummaries() {
+    guard let token = appState.jwtToken else {
+      isLoadingTrainingWeek = false
+      return
+    }
+    APIManager.shared.fetchWeeklySummaries(token: token) { result in
+      DispatchQueue.main.async {
+        switch result {
+        case .success(let summaries):
+          self.weeklySummaries = summaries
+        case .failure(let error):
+          print("Error fetching weekly summaries: \(error)")
+          self.weeklySummaries = []
+        }
+        self.checkLoadingComplete()
+      }
+    }
+  }
+
+  private func checkLoadingComplete() {
+    if trainingWeekData != nil && weeklySummaries != nil {
+      isLoadingTrainingWeek = false
     }
   }
 }

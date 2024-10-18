@@ -1,11 +1,14 @@
 import SwiftUI
+import SwiftUICharts
 
 struct TrainingWeekView: View {
-  let data: TrainingWeekData
+  let trainingWeekData: TrainingWeekData
+  let weeklySummaries: [WeekSummary]
+
   var body: some View {
     VStack(spacing: 16) {
-      WeeklyProgressView(sessions: data.sessions)
-      SessionListView(sessions: data.sessions)
+      WeeklyProgressView(sessions: trainingWeekData.sessions, weeklySummaries: weeklySummaries)
+      SessionListView(sessions: trainingWeekData.sessions)
     }
     .padding(20)
     .background(ColorTheme.black)
@@ -15,6 +18,8 @@ struct TrainingWeekView: View {
 
 struct WeeklyProgressView: View {
   let sessions: [TrainingSession]
+  let weeklySummaries: [WeekSummary]
+  @State private var showingMultiWeek: Bool = false
 
   private var completedMileage: Double {
     sessions.reduce(0) { $0 + ($1.completed ? $1.distance : 0) }
@@ -23,6 +28,32 @@ struct WeeklyProgressView: View {
   private var totalMileage: Double {
     sessions.reduce(0) { $0 + $1.distance }
   }
+
+  var body: some View {
+    VStack {
+      ZStack {
+        if showingMultiWeek {
+          MultiWeekProgressView(weeklySummaries: weeklySummaries, numberOfWeeks: 8)
+            .transition(.opacity)
+        } else {
+          WeeklyProgressContent(completedMileage: completedMileage, totalMileage: totalMileage)
+            .transition(.opacity)
+        }
+      }
+      .animation(.easeInOut(duration: 0.3), value: showingMultiWeek)
+    }
+    .padding()
+    .background(ColorTheme.darkDarkGrey)
+    .cornerRadius(16)
+    .onTapGesture {
+      showingMultiWeek.toggle()
+    }
+  }
+}
+
+struct WeeklyProgressContent: View {
+  let completedMileage: Double
+  let totalMileage: Double
 
   var body: some View {
     VStack(alignment: .leading, spacing: 12) {
@@ -39,17 +70,69 @@ struct WeeklyProgressView: View {
 
         Text("Completed \(Int(completedMileage)) of \(Int(totalMileage)) mi")
           .font(.subheadline)
-          .foregroundColor(ColorTheme.lightGrey)
+          .foregroundColor(ColorTheme.midLightGrey)
       }
+      .padding(.top, 6)
 
       ProgressBar(progress: completedMileage / totalMileage)
         .frame(height: 10)
         .animation(.easeOut(duration: 1.0), value: completedMileage)
-
     }
-    .padding()
-    .background(ColorTheme.darkDarkGrey)
-    .cornerRadius(16)
+  }
+}
+
+struct MultiWeekProgressView: View {
+  let weeklySummaries: [WeekSummary]
+  let numberOfWeeks: Int
+
+  private var displayedSummaries: [WeekSummary] {
+    Array(weeklySummaries.prefix(numberOfWeeks).reversed())
+  }
+
+  private var chartData: [(String, Double)] {
+    displayedSummaries.map { (weekLabel(for: $0.parsedWeekStartDate), $0.totalDistance) }
+  }
+
+  var body: some View {
+    VStack(spacing: 8) {
+      Text("Last \(numberOfWeeks) Weeks")
+        .font(.headline)
+        .foregroundColor(ColorTheme.white)
+        .frame(maxWidth: .infinity, alignment: .leading)
+      LineView(
+        data: chartData.map { $0.1 },
+        title: "Weekly Distance",
+        legend: "Miles",
+        style: ChartStyle(
+          backgroundColor: Color.clear,
+          accentColor: ColorTheme.primary,
+          gradientColor: GradientColors.blue,
+          textColor: ColorTheme.lightGrey,
+          legendTextColor: ColorTheme.lightGrey,
+          dropShadowColor: Color.clear
+        ),
+        valueSpecifier: "%.1f"
+      )
+      .frame(height: 350)
+      HStack {
+        Text(
+          "Total: \(String(format: "%.1f mi", displayedSummaries.reduce(0) { $0 + $1.totalDistance }))"
+        )
+        .font(.headline)
+        .foregroundColor(ColorTheme.white)
+        Spacer()
+        Text("Max: \(String(format: "%.1f mi", chartData.map { $0.1 }.max() ?? 0))")
+          .font(.subheadline)
+          .foregroundColor(ColorTheme.lightGrey)
+      }
+    }
+  }
+
+  private func weekLabel(for date: Date?) -> String {
+    guard let date = date else { return "" }
+    let formatter = DateFormatter()
+    formatter.dateFormat = "MM/dd"
+    return formatter.string(from: date)
   }
 }
 
@@ -99,7 +182,7 @@ struct SessionView: View {
       HStack(alignment: .center, spacing: 16) {
         Text(session.day.prefix(3).uppercased())
           .font(.system(size: 14, weight: .bold))
-          .foregroundColor(ColorTheme.lightGrey)
+          .foregroundColor(ColorTheme.primaryLight)
           .frame(width: 40, alignment: .leading)
 
         VStack(alignment: .leading, spacing: 4) {

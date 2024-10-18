@@ -10,10 +10,10 @@ struct DashboardNavbar: View {
         showProfile = false
       }) {
         Text("Track")
-          .font(.system(size: 24, weight: .black))
+          .font(.system(size: 28, weight: .black))
           .foregroundColor(ColorTheme.primaryLight)
           + Text("Flow")
-          .font(.system(size: 24, weight: .black))
+          .font(.system(size: 28, weight: .black))
           .foregroundColor(ColorTheme.primary)
       }
       .buttonStyle(PlainButtonStyle())
@@ -26,7 +26,7 @@ struct DashboardNavbar: View {
         Image(systemName: "person.crop.circle.fill")
           .resizable()
           .scaledToFit()
-          .frame(width: 24, height: 24)
+          .frame(width: 32, height: 32)
           .foregroundColor(ColorTheme.white)
           .padding(6)
           .background(ColorTheme.black.opacity(0.8))
@@ -34,8 +34,7 @@ struct DashboardNavbar: View {
       }
       .buttonStyle(PlainButtonStyle())
     }
-    .padding()
     .background(ColorTheme.black)
-    .cornerRadius(12)
+    .padding(.horizontal)
   }
 }
