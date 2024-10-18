@@ -134,3 +134,9 @@ struct SignupResponse: Codable {
   let success: Bool
   let jwt_token: String
 }
+
+struct RefreshTokenResponse: Codable {
+  let success: Bool
+  let message: String?
+  let jwt_token: String?
+}

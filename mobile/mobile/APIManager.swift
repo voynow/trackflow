@@ -91,6 +91,22 @@ class APIManager {
     }
   }
 
+  func refreshToken(token: String, completion: @escaping (Result<String, Error>) -> Void) {
+    let body: [String: Any] = ["jwt_token": token, "method": "refresh_token"]
+    performRequest(body: body, responseType: RefreshTokenResponse.self) { result in
+      switch result {
+      case .success(let response):
+        if response.success, let newToken = response.jwt_token {
+          completion(.success(newToken))
+        } else {
+          completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: response.message ?? "Token refresh failed"])))
+        }
+      case .failure(let error):
+        completion(.failure(error))
+      }
+    }
+  }
+
   private func performRequest<T: Decodable>(
     body: [String: Any], responseType: T.Type, completion: @escaping (Result<T, Error>) -> Void
   ) {
