@@ -55,17 +55,19 @@ class APIManager {
     }
   }
 
-  func savePreferences(token: String, preferences: Preferences, completion: @escaping (Result<Void, Error>) -> Void) {
+  func savePreferences(
+    token: String, preferences: Preferences, completion: @escaping (Result<Void, Error>) -> Void
+  ) {
     let idealTrainingWeek = preferences.idealTrainingWeek?.map { day in
       return [
         "day": day.day.rawValue,
-        "session_type": day.sessionType
+        "session_type": day.sessionType,
       ]
     }
 
     let preferencesPayload: [String: Any] = [
       "race_distance": preferences.raceDistance ?? NSNull(),
-      "ideal_training_week": idealTrainingWeek ?? []
+      "ideal_training_week": idealTrainingWeek ?? [],
     ]
 
     let body: [String: Any] = [
@@ -73,9 +75,9 @@ class APIManager {
       "method": "update_preferences",
       "payload": [
         "preferences": preferencesPayload
-      ]
+      ],
     ]
-    
+
     performRequest(body: body, responseType: SavePreferencesResponse.self) { result in
       switch result {
       case .success(let response):
@@ -83,7 +85,9 @@ class APIManager {
           completion(.success(()))
         } else {
           let errorMessage = response.error ?? "Failed to save preferences"
-          completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: errorMessage])))
+          completion(
+            .failure(
+              NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: errorMessage])))
         }
       case .failure(let error):
         completion(.failure(error))
@@ -99,7 +103,42 @@ class APIManager {
         if response.success, let newToken = response.jwt_token {
           completion(.success(newToken))
         } else {
-          completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: response.message ?? "Token refresh failed"])))
+          completion(
+            .failure(
+              NSError(
+                domain: "", code: 0,
+                userInfo: [NSLocalizedDescriptionKey: response.message ?? "Token refresh failed"])))
+        }
+      case .failure(let error):
+        completion(.failure(error))
+      }
+    }
+  }
+
+  func fetchWeeklySummaries(
+    token: String, completion: @escaping (Result<[WeekSummary], Error>) -> Void
+  ) {
+    let body: [String: Any] = ["jwt_token": token, "method": "get_weekly_summaries"]
+    performRequest(body: body, responseType: WeeklySummariesResponse.self) { result in
+      switch result {
+      case .success(let response):
+        if response.success, let summariesStrings = response.weekly_summaries {
+          let summaries = summariesStrings.compactMap { summaryString -> WeekSummary? in
+            guard let data = summaryString.data(using: .utf8) else { return nil }
+            do {
+              let summary = try JSONDecoder().decode(WeekSummary.self, from: data)
+              return summary
+            } catch {
+              print("Failed to decode summary. Error: \(error)")
+              return nil
+            }
+          }
+          completion(.success(summaries))
+        } else {
+          let errorMessage = response.message ?? "Unknown error"
+          completion(
+            .failure(
+              NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: errorMessage])))
         }
       case .failure(let error):
         completion(.failure(error))

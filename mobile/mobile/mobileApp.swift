@@ -9,7 +9,10 @@ struct mobileApp: App {
             ContentView(appState: appState)
                 .environmentObject(appState)
                 .onAppear {
-                    checkAndRefreshToken()
+                    if let token = UserDefaults.standard.string(forKey: "jwt_token") {
+                        appState.isLoggedIn = true
+                        appState.jwtToken = token
+                    }
                 }
         }
     }

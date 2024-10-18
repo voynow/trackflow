@@ -140,3 +140,32 @@ struct RefreshTokenResponse: Codable {
   let message: String?
   let jwt_token: String?
 }
+
+
+struct WeekSummary: Codable {
+    var year: Int
+    var weekOfYear: Int
+    var weekStartDate: String
+    var longestRun: Double
+    var totalDistance: Double
+
+    enum CodingKeys: String, CodingKey {
+        case year
+        case weekOfYear = "week_of_year"
+        case weekStartDate = "week_start_date"
+        case longestRun = "longest_run"
+        case totalDistance = "total_distance"
+    }
+
+    var parsedWeekStartDate: Date? {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+        return formatter.date(from: weekStartDate)
+    }
+}
+
+struct WeeklySummariesResponse: Codable {
+  let success: Bool
+  let message: String?
+  let weekly_summaries: [String]?
+}
