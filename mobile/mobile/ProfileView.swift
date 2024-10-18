@@ -100,16 +100,24 @@ struct ProfileInfoCard: View {
     VStack(alignment: .leading, spacing: 16) {
       HStack(spacing: 16) {
         VStack {
-          AsyncImage(url: URL(string: profileData.profile)) { image in
-            image
-              .resizable()
-              .aspectRatio(contentMode: .fill)
-          } placeholder: {
-            ColorTheme.midLightGrey
+          AsyncImage(url: URL(string: profileData.profile)) { phase in
+            switch phase {
+            case .empty:
+              LoadingIcon()
+            case .success(let image):
+              image
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+            case .failure:
+              Image(systemName: "person.fill")
+                .foregroundColor(ColorTheme.midLightGrey)
+            @unknown default:
+              EmptyView()
+            }
           }
           .frame(width: 80, height: 80)
           .clipShape(Circle())
-          .overlay(Circle().stroke(ColorTheme.midLightGrey, lineWidth: 2))
+          .overlay(Circle().stroke(ColorTheme.primary, lineWidth: 2))
           StatusIndicator(isActive: profileData.isActive)
         }
         Spacer()
@@ -170,4 +178,20 @@ struct SignOutButton: View {
                 )
         }
     }
+}
+
+struct LoadingIcon: View {
+  @State private var isRotating = false
+
+  var body: some View {
+    Circle()
+      .trim(from: 0, to: 0.7)
+      .stroke(ColorTheme.primaryDark, lineWidth: 2)
+      .frame(width: 50, height: 50)
+      .rotationEffect(Angle(degrees: isRotating ? 360 : 0))
+      .animation(Animation.linear(duration: 1).repeatForever(autoreverses: false), value: isRotating)
+      .onAppear() {
+        isRotating = true
+      }
+  }
 }

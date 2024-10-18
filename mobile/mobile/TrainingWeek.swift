@@ -31,14 +31,16 @@ struct WeeklyProgressView: View {
 
   var body: some View {
     VStack {
-      ZStack {
-        if showingMultiWeek {
-          MultiWeekProgressView(weeklySummaries: weeklySummaries, numberOfWeeks: 8)
-            .transition(.opacity)
-        } else {
-          WeeklyProgressContent(completedMileage: completedMileage, totalMileage: totalMileage)
-            .transition(.opacity)
-        }
+      ZStack(alignment: .top) {
+        WeeklyProgressContent(completedMileage: completedMileage, totalMileage: totalMileage)
+          .opacity(showingMultiWeek ? 0 : 1)
+          .zIndex(showingMultiWeek ? 0 : 1)
+
+        MultiWeekProgressView(weeklySummaries: weeklySummaries, numberOfWeeks: 8)
+          .opacity(showingMultiWeek ? 1 : 0)
+          .frame(height: showingMultiWeek ? nil : 0, alignment: .top)
+          .clipped()
+          .zIndex(showingMultiWeek ? 1 : 0)
       }
       .animation(.easeInOut(duration: 0.3), value: showingMultiWeek)
     }
