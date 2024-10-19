@@ -1,76 +1,47 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
-import React, { Suspense, useCallback, useEffect, useState } from 'react';
-import DashboardNavbar from '../components/DashboardNavbar';
-import { LoadingSpinner } from '../components/LoadingSpinner';
-import TrainingWeek, { TrainingWeekProps } from '../components/TrainingWeek';
+import { motion } from 'framer-motion';
+import Link from 'next/link';
+import Footer from '../components/Footer';
 
-React
-
-export default function Dashboard(): JSX.Element {
+const DashboardPage = () => {
     return (
-        <>
-            <DashboardNavbar />
-            <Suspense fallback={<LoadingSpinner error={null} />}>
-                <DashboardContent />
-            </Suspense>
-        </>
-    );
-}
-
-function DashboardContent(): JSX.Element {
-    const router = useRouter();
-    const searchParams = useSearchParams();
-    const [trainingWeekData, setTrainingWeekData] = useState<TrainingWeekProps['data'] | null>(null);
-    const [error, setError] = useState<string | null>(null);
-
-    const fetchTrainingWeekData = useCallback(async (token: string): Promise<void> => {
-        try {
-            const response = await fetch('https://lwg77yq7dd.execute-api.us-east-1.amazonaws.com/prod/signup', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ jwt_token: token, method: 'get_training_week' })
-            });
-            const data = await response.json();
-
-            if (response.ok && data.success) {
-                data.training_week = JSON.parse(data.training_week);
-                setTrainingWeekData(data);
-            } else {
-                setError(data.error || 'An error occurred while fetching training data.');
-            }
-        } catch (error) {
-            setError('An unexpected error occurred. Please try again later.');
-        }
-    }, []);
-
-    useEffect(() => {
-        const token = searchParams.get('token');
-
-        if (token) {
-            localStorage.setItem('jwt_token', token);
-            router.replace('/dashboard');
-            return;
-        }
-
-        const storedToken = localStorage.getItem('jwt_token');
-
-        if (!storedToken) {
-            router.push('/');
-        } else {
-            fetchTrainingWeekData(storedToken);
-        }
-    }, [router, searchParams, fetchTrainingWeekData]);
-
-    return (
-        <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center">
-            <h1 className="mb-16"></h1>
-            {trainingWeekData ? (
-                <TrainingWeek data={trainingWeekData} />
-            ) : (
-                <LoadingSpinner error={error} />
-            )}
+        <div className="bg-gray-900 text-gray-100 min-h-screen">
+            {/* Navbar like component */}
+            <div className="flex items-center justify-left h-16 px-4 text-2xl font-bold">
+                <span className="text-blue-200">Track</span><span className="text-blue-400">Flow</span>
+            </div>
+            <main className="container mx-auto px-6 py-24 sm:px-8 lg:px-12">
+                <motion.div
+                    className="text-center mb-24"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8 }}
+                >
+                    <h1 className="text-blue-400 text-6xl sm:text-7xl font-extrabold tracking-tight mb-8 mt-12">
+                        Coming Soon 🚧
+                    </h1>
+                    <p className="text-2xl sm:text-3xl text-gray-100 mb-16">
+                        We&apos;re working hard to bring you an amazing web experience!
+                    </p>
+                    <div className="bg-gray-800 bg-opacity-50 backdrop-blur-sm p-10 rounded-lg max-w-2xl mx-auto">
+                        <h3 className="text-3xl font-semibold mb-6 text-center">
+                            In the meantime...
+                        </h3>
+                        <ul className="list-disc list-inside mb-8 text-left sm:text-lg md:text-xl">
+                            <li className="mb-2">Our mobile app is the preferred interface</li>
+                            <li className="mb-2">Web dashboard will be ready in about a week</li>
+                            <li>Feel free to reach out with any questions</li>
+                        </ul>
+                        <Link href="mailto:voynow99@gmail.com" className="px-8 py-4 text-xl text-gray-200 bg-blue-600 font-bold rounded-full hover:bg-blue-700 hover:scale-105 transition duration-300 ease-in-out shadow-lg hover:shadow-blue-500/50 inline-block">
+                            Contact @jamievoynow
+                        </Link>
+                    </div>
+                </motion.div>
+            </main>
+            <Footer />
         </div>
     );
-}
+};
+
+export default DashboardPage;
