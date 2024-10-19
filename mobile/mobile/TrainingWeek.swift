@@ -31,24 +31,28 @@ struct WeeklyProgressView: View {
 
   var body: some View {
     VStack {
-      ZStack(alignment: .top) {
-        WeeklyProgressContent(completedMileage: completedMileage, totalMileage: totalMileage)
-          .opacity(showingMultiWeek ? 0 : 1)
-          .zIndex(showingMultiWeek ? 0 : 1)
-
+      if showingMultiWeek {
         MultiWeekProgressView(weeklySummaries: weeklySummaries, numberOfWeeks: 8)
-          .opacity(showingMultiWeek ? 1 : 0)
-          .frame(height: showingMultiWeek ? nil : 0, alignment: .top)
-          .clipped()
-          .zIndex(showingMultiWeek ? 1 : 0)
+          .transition(.asymmetric(
+            insertion: .opacity.combined(with: .move(edge: .bottom)),
+            removal: .opacity.combined(with: .move(edge: .top))
+          ))
+      } else {
+        WeeklyProgressContent(completedMileage: completedMileage, totalMileage: totalMileage)
+          .transition(.asymmetric(
+            insertion: .opacity.combined(with: .move(edge: .bottom)),
+            removal: .opacity.combined(with: .move(edge: .top))
+          ))
       }
-      .animation(.easeInOut(duration: 0.3), value: showingMultiWeek)
     }
+    .animation(.easeInOut(duration: 0.3), value: showingMultiWeek)
     .padding()
     .background(ColorTheme.darkDarkGrey)
     .cornerRadius(16)
     .onTapGesture {
-      showingMultiWeek.toggle()
+      withAnimation {
+        showingMultiWeek.toggle()
+      }
     }
   }
 }
@@ -86,61 +90,52 @@ struct WeeklyProgressContent: View {
 struct MultiWeekProgressView: View {
   let weeklySummaries: [WeekSummary]
   let numberOfWeeks: Int
-
+  
   private var displayedSummaries: [WeekSummary] {
-    Array(weeklySummaries.prefix(numberOfWeeks))
+    Array(weeklySummaries.prefix(numberOfWeeks).reversed())
   }
-
-  private var chartData: [(String, Double)] {
-    displayedSummaries.map { (weekLabel(for: $0.parsedWeekStartDate), $0.totalDistance) }
+  
+  private var maxMileage: Double {
+    displayedSummaries.map(\.totalDistance).max() ?? 1
   }
-
+  
   var body: some View {
-    VStack(spacing: 8) {
+    VStack(spacing: 12) {
       Text("Last \(numberOfWeeks) Weeks")
         .font(.headline)
         .foregroundColor(ColorTheme.white)
         .frame(maxWidth: .infinity, alignment: .leading)
-      LineView(
-        data: chartData.map { $0.1 },
-        title: "Weekly Distance",
-        legend: "Miles",
-        style: ChartStyle(
-          backgroundColor: Color.clear,
-          accentColor: ColorTheme.primary,
-          gradientColor: GradientColors.blue,
-          textColor: ColorTheme.lightGrey,
-          legendTextColor: ColorTheme.lightGrey,
-          dropShadowColor: Color.clear
-        ),
-        valueSpecifier: "%.1f"
-      )
-      .frame(height: 350)
       
-      // X-axis labels
-      HStack(spacing: 0) {
-        ForEach(chartData, id: \.0) { item in
-          Text(item.0)
-            .font(.caption)
+      ForEach(displayedSummaries, id: \.parsedWeekStartDate) { summary in
+        HStack(spacing: 10) {
+          Text(weekLabel(for: summary.parsedWeekStartDate))
+            .font(.subheadline)
             .foregroundColor(ColorTheme.lightGrey)
-            .frame(maxWidth: .infinity)
-            .rotationEffect(.degrees(-45))
+            .frame(width: 50, alignment: .leading)
+          
+          ProgressBar(progress: summary.totalDistance / maxMileage)
+            .frame(height: 8)
+          
+          Text(String(format: "%.1f mi", summary.totalDistance))
+            .font(.subheadline)
+            .foregroundColor(ColorTheme.white)
+            .frame(width: 60, alignment: .trailing)
         }
       }
-      .padding(.bottom, 8)
       
       HStack {
-        Text("Total: \(String(format: "%.1f mi", displayedSummaries.reduce(0) { $0 + $1.totalDistance }))")
+        Spacer()
+        Text("Total:")
           .font(.headline)
           .foregroundColor(ColorTheme.white)
-        Spacer()
-        Text("Max: \(String(format: "%.1f mi", chartData.map { $0.1 }.max() ?? 0))")
-          .font(.subheadline)
-          .foregroundColor(ColorTheme.lightGrey)
+        Text(String(format: "%.1f mi", displayedSummaries.reduce(0) { $0 + $1.totalDistance }))
+          .font(.headline)
+          .foregroundColor(ColorTheme.white)
       }
+      .padding(.top, 8)
     }
   }
-
+  
   private func weekLabel(for date: Date?) -> String {
     guard let date = date else { return "" }
     let formatter = DateFormatter()

@@ -51,13 +51,26 @@ struct DashboardView: View {
 
   private func fetchData() {
     isLoadingTrainingWeek = true
-    fetchWeeklySummaries()
-    fetchTrainingWeekData()
+    let group = DispatchGroup()
+
+    group.enter()
+    fetchWeeklySummaries {
+      group.leave()
+    }
+
+    group.enter()
+    fetchTrainingWeekData {
+      group.leave()
+    }
+
+    group.notify(queue: .main) {
+      self.isLoadingTrainingWeek = false
+    }
   }
 
-  private func fetchTrainingWeekData() {
+  private func fetchTrainingWeekData(completion: @escaping () -> Void) {
     guard let token = appState.jwtToken else {
-      isLoadingTrainingWeek = false
+      completion()
       return
     }
 
@@ -70,16 +83,17 @@ struct DashboardView: View {
           print("Error fetching training data: \(error)")
           self.trainingWeekData = nil
         }
-        self.checkLoadingComplete()
+        completion()
       }
     }
   }
 
-  private func fetchWeeklySummaries() {
+  private func fetchWeeklySummaries(completion: @escaping () -> Void) {
     guard let token = appState.jwtToken else {
-      isLoadingTrainingWeek = false
+      completion()
       return
     }
+
     APIManager.shared.fetchWeeklySummaries(token: token) { result in
       DispatchQueue.main.async {
         switch result {
@@ -89,7 +103,7 @@ struct DashboardView: View {
           print("Error fetching weekly summaries: \(error)")
           self.weeklySummaries = []
         }
-        self.checkLoadingComplete()
+        completion()
       }
     }
   }
