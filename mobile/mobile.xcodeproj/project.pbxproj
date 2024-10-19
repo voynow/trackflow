@@ -161,7 +161,6 @@
 			);
 			mainGroup = 80777D082C973F01007565FC;
 			packageReferences = (
-				802FA9252CC30248006F168C /* XCRemoteSwiftPackageReference "ChartView" */,
 			);
 			productRefGroup = 80777D122C973F01007565FC /* Products */;
 			projectDirPath = "";
