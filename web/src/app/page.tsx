@@ -156,7 +156,7 @@ export default function Home(): JSX.Element {
                     priority
                   />
                 </div>
-                <p className="italic mb-6 text-xl">"{testimonial.quote}"</p>
+                <p className="italic mb-6 text-xl">&ldquo;{testimonial.quote}&rdquo;</p>
                 <p className="font-semibold text-lg text-blue-300">- {testimonial.name}</p>
               </motion.div>
             ))}

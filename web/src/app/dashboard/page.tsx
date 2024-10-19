@@ -22,7 +22,7 @@ const DashboardPage = () => {
                         Coming Soon 🚧
                     </h1>
                     <p className="text-2xl sm:text-3xl text-gray-100 mb-16">
-                        We're working hard to bring you an amazing web experience!
+                        We&apos;re working hard to bring you an amazing web experience!
                     </p>
                     <div className="bg-gray-800 bg-opacity-50 backdrop-blur-sm p-10 rounded-lg max-w-2xl mx-auto">
                         <h3 className="text-3xl font-semibold mb-6 text-center">
