@@ -1,5 +1,5 @@
 import SwiftUI
-import SwiftUICharts
+
 
 struct TrainingWeekView: View {
   let trainingWeekData: TrainingWeekData
