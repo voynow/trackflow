@@ -28,41 +28,45 @@ struct LandingPageView: View {
   ]
 
   var body: some View {
-    ScrollView {
-      VStack(spacing: 24) {
-        Text("🏃‍♂️🎯")
-        Spacer()
-        HStack(spacing: 0) {
-          Text("Track")
-            .font(.system(size: 50, weight: .black))
-            .foregroundColor(ColorTheme.primaryLight)
-          Text("Flow")
-            .font(.system(size: 50, weight: .black))
-            .foregroundColor(ColorTheme.primary)
+    GeometryReader { geometry in
+      ScrollView {
+        VStack(spacing: 24) {
+          Text("🏃‍♂️🎯")
+          Spacer()
+          HStack(spacing: 0) {
+            Text("Track")
+              .font(.system(size: 50, weight: .black))
+              .foregroundColor(ColorTheme.primaryLight)
+            Text("Flow")
+              .font(.system(size: 50, weight: .black))
+              .foregroundColor(ColorTheme.primary)
+          }
+
+          Text("Step into the Next Generation of Training")
+            .font(.title2)
+            .foregroundColor(ColorTheme.lightGrey)
+            .multilineTextAlignment(.center)
+            .padding(.horizontal)
+
+          signInButton
+
+          FeaturesListView(features: features)
+            .padding(.horizontal)
         }
-
-        Text("Step into the Next Generation of Training")
-          .font(.title2)
-          .foregroundColor(ColorTheme.lightGrey)
-          .multilineTextAlignment(.center)
-          .padding(.horizontal)
-
-        signInButton
-
-        FeaturesListView(features: features)
-          .padding(.horizontal)
+        .padding()
+        .frame(maxWidth: min(geometry.size.width, 600))
+        .frame(maxWidth: .infinity)
       }
-      .padding()
-    }
-    .background(ColorTheme.black.edgesIgnoringSafeArea(.all))
-    .onOpenURL { url in
-      authManager.handleURL(url)
-    }
-    .alert(isPresented: $authManager.showAlert) {
-      Alert(
-        title: Text("Strava App Not Installed"),
-        message: Text("Please install the Strava app to continue."),
-        dismissButton: .default(Text("OK")))
+      .background(ColorTheme.black.edgesIgnoringSafeArea(.all))
+      .onOpenURL { url in
+        authManager.handleURL(url)
+      }
+      .alert(isPresented: $authManager.showAlert) {
+        Alert(
+          title: Text("Strava App Not Installed"),
+          message: Text("Please install the Strava app to continue."),
+          dismissButton: .default(Text("OK")))
+      }
     }
   }
 
