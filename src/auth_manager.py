@@ -55,38 +55,6 @@ def decode_jwt(jwt_token: str, verify_exp: bool = True) -> int:
     return payload["athlete_id"]
 
 
-def authenticate_with_code(code: str) -> UserAuthRow:
-    """
-    Authenticate athlete with code, exchange with strava client for token,
-    generate new JWT, and update database
-
-    :param code: temporary authorization code
-    :return: UserAuthRow
-    """
-    token = strava_client.exchange_code_for_token(
-        client_id=os.environ["STRAVA_CLIENT_ID"],
-        client_secret=os.environ["STRAVA_CLIENT_SECRET"],
-        code=code,
-    )
-    strava_client.access_token = token["access_token"]
-    strava_client.refresh_token = token["refresh_token"]
-    strava_client.token_expires_at = token["expires_at"]
-
-    athlete = strava_client.get_athlete()
-
-    jwt_token = generate_jwt(athlete_id=athlete.id, expires_at=token["expires_at"])
-
-    user_auth_row = UserAuthRow(
-        athlete_id=athlete.id,
-        access_token=strava_client.access_token,
-        refresh_token=strava_client.refresh_token,
-        expires_at=strava_client.token_expires_at,
-        jwt_token=jwt_token,
-    )
-    upsert_user_auth(user_auth_row)
-    return user_auth_row
-
-
 def get_configured_strava_client(user_auth: UserAuthRow) -> Client:
     strava_client.access_token = user_auth.access_token
     strava_client.refresh_token = user_auth.refresh_token
@@ -141,6 +109,38 @@ def get_strava_client(athlete_id: int) -> Client:
     return get_configured_strava_client(user_auth)
 
 
+def authenticate_with_code(code: str) -> UserAuthRow:
+    """
+    Authenticate athlete with code, exchange with strava client for token,
+    generate new JWT, and update database
+
+    :param code: temporary authorization code
+    :return: UserAuthRow
+    """
+    token = strava_client.exchange_code_for_token(
+        client_id=os.environ["STRAVA_CLIENT_ID"],
+        client_secret=os.environ["STRAVA_CLIENT_SECRET"],
+        code=code,
+    )
+    strava_client.access_token = token["access_token"]
+    strava_client.refresh_token = token["refresh_token"]
+    strava_client.token_expires_at = token["expires_at"]
+
+    athlete = strava_client.get_athlete()
+
+    jwt_token = generate_jwt(athlete_id=athlete.id, expires_at=token["expires_at"])
+
+    user_auth_row = UserAuthRow(
+        athlete_id=athlete.id,
+        access_token=strava_client.access_token,
+        refresh_token=strava_client.refresh_token,
+        expires_at=strava_client.token_expires_at,
+        jwt_token=jwt_token,
+    )
+    upsert_user_auth(user_auth_row)
+    return user_auth_row
+
+
 def signup(code: str, email: Optional[str] = None) -> dict:
     """
     Get authenticated user, upsert user with email and preferences
@@ -167,15 +167,26 @@ def signup(code: str, email: Optional[str] = None) -> dict:
     return {"success": True, "jwt_token": user_auth.jwt_token}
 
 
+def signup_with_user_auth(user_auth: UserAuthRow) -> dict:
+    """ """
+    preferences = (
+        "I'm looking to improve my running performance while being smart and realistic."
+    )
+    upsert_user(UserRow(athlete_id=user_auth.athlete_id, preferences=preferences))
+    return {"success": True, "jwt_token": user_auth.jwt_token}
+
+
 def authenticate_and_maybe_signup(code: str, email: Optional[str] = None) -> dict:
     """
-    Authenticate with strava code, then if user doesn't exist sign them up
+    Authenticate with Strava code, and sign up the user if they don't exist.
+
+    :param code: Strava authorization code
+    :param email: User's email (optional)
+    :return: Dictionary with success status and JWT token
     """
     user_auth = authenticate_with_code(code)
 
     if not user_exists(user_auth.athlete_id):
-        signup_response = signup(code, email)
-        if not signup_response["success"]:
-            return signup_response
+        return signup_with_user_auth(user_auth)
 
     return {"success": True, "jwt_token": user_auth.jwt_token}
