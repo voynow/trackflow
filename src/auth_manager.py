@@ -1,13 +1,19 @@
 import logging
 import os
 from datetime import datetime, timezone
+from typing import Optional
 
 import jwt
 from dotenv import load_dotenv
 from stravalib.client import Client
 
 from src.email_manager import send_alert_email
-from src.supabase_client import get_user_auth, upsert_user, upsert_user_auth
+from src.supabase_client import (
+    get_user_auth,
+    upsert_user,
+    upsert_user_auth,
+    user_exists,
+)
 from src.types.user_auth_row import UserAuthRow
 from src.types.user_row import UserRow
 
@@ -135,7 +141,7 @@ def get_strava_client(athlete_id: int) -> Client:
     return get_configured_strava_client(user_auth)
 
 
-def signup(email: str, code: str) -> dict:
+def signup(code: str, email: Optional[str] = None) -> dict:
     """
     Get authenticated user, upsert user with email and preferences
 
@@ -144,7 +150,7 @@ def signup(email: str, code: str) -> dict:
     :return: jwt_token
     """
     preferences = (
-        "Looking for smart training recommendations to optimize my performance."
+        "I'm looking to improve my running performance while being smart and realistic."
     )
     send_alert_email(
         subject="TrackFlow Alert: New Signup Attempt",
@@ -158,4 +164,18 @@ def signup(email: str, code: str) -> dict:
             preferences=preferences,
         )
     )
+    return {"success": True, "jwt_token": user_auth.jwt_token}
+
+
+def authenticate_and_maybe_signup(code: str, email: Optional[str] = None) -> dict:
+    """
+    Authenticate with strava code, then if user doesn't exist sign them up
+    """
+    user_auth = authenticate_with_code(code)
+
+    if not user_exists(user_auth.athlete_id):
+        signup_response = signup(code, email)
+        if not signup_response["success"]:
+            return signup_response
+
     return {"success": True, "jwt_token": user_auth.jwt_token}

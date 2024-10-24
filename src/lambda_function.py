@@ -29,13 +29,12 @@ def strategy_router(event: dict, invocation_id: str) -> dict:
 
     if event.get("email") and event.get("code"):
         return auth_manager.signup(
-            email=event["email"],
             code=event["code"],
+            email=event["email"],
         )
 
     elif event.get("code"):
-        user_auth = auth_manager.authenticate_with_code(event["code"])
-        return {"success": True, "jwt_token": user_auth.jwt_token}
+        return auth_manager.authenticate_and_maybe_signup(event["code"])
 
     elif event.get("jwt_token") and event.get("method"):
         return frontend_router.handle_request(
