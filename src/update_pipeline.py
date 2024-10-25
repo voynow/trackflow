@@ -49,11 +49,13 @@ def training_week_update_pipeline(
     training_week = pipeline_function(user=user, strava_client=strava_client)
 
     upsert_training_week(user.athlete_id, training_week)
-    send_email(
-        to={"email": user.email, "name": f"{athlete.firstname} {athlete.lastname}"},
-        subject=email_subject,
-        html_content=training_week_to_html(training_week),
-    )
+
+    if user.email:
+        send_email(
+            to={"email": user.email, "name": f"{athlete.firstname} {athlete.lastname}"},
+            subject=email_subject,
+            html_content=training_week_to_html(training_week),
+        )
     return training_week
 
 
@@ -109,7 +111,7 @@ def webhook_executor(user: UserRow) -> dict:
 
 
 def training_week_update_executor(
-    user: UserRow, exetype: ExeType, invocation_id: str
+    user: UserRow, exetype: ExeType, invocation_id: str = "manual-trigger"
 ) -> dict:
     """
     Decides between generating a new week or updating based on the day.

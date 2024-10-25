@@ -37,15 +37,9 @@ class StravaAuthManager: ObservableObject {
   }
 
   private func handleAuthorizationCode(_ code: String) {
-    appState.isLoading = true
+    appState.status = .loading
 
     Task {
-      defer {
-        DispatchQueue.main.async {
-          self.appState.isLoading = false
-        }
-      }
-
       do {
         let url = URL(string: "https://lwg77yq7dd.execute-api.us-east-1.amazonaws.com/prod/signup")!
         var request = URLRequest(url: url)
@@ -61,10 +55,11 @@ class StravaAuthManager: ObservableObject {
         if response.success {
           UserDefaults.standard.set(response.jwt_token, forKey: "jwt_token")
           DispatchQueue.main.async {
-            self.appState.isLoggedIn = true
             self.appState.jwtToken = response.jwt_token
-            if let isNewUser = response.is_new_user {
-              self.appState.isNewUser = isNewUser
+            if let isNewUser = response.is_new_user, isNewUser {
+              self.appState.status = .newUser
+            } else {
+              self.appState.status = .loggedIn
             }
           }
         } else {
@@ -80,4 +75,3 @@ class StravaAuthManager: ObservableObject {
   }
 
 }
-
