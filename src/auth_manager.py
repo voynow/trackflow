@@ -151,7 +151,7 @@ def signup(user_auth: UserAuthRow, email: Optional[str] = None) -> dict:
         text_content=f"You have a new client {email=} attempting to signup with {preferences=}",
     )
     upsert_user(UserRow(athlete_id=user_auth.athlete_id, preferences=preferences))
-    return {"success": True, "jwt_token": user_auth.jwt_token}
+    return {"success": True, "jwt_token": user_auth.jwt_token, "is_new_user": True}
 
 
 def authenticate_on_signin(code: str, email: Optional[str] = None) -> dict:
@@ -167,4 +167,8 @@ def authenticate_on_signin(code: str, email: Optional[str] = None) -> dict:
     if not user_exists(user_auth.athlete_id):
         return signup(user_auth, email)
 
-    return {"success": True, "jwt_token": user_auth.jwt_token}
+    return {
+        "success": True,
+        "jwt_token": user_auth.jwt_token,
+        "is_new_user": False,
+    }
