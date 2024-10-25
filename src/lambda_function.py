@@ -27,14 +27,10 @@ def strategy_router(event: dict, invocation_id: str) -> dict:
              only present if success is False
     """
 
-    if event.get("email") and event.get("code"):
-        return auth_manager.signup(
-            code=event["code"],
-            email=event["email"],
+    if event.get("code"):
+        return auth_manager.authenticate_on_signin(
+            code=event["code"], email=event.get("email")
         )
-
-    elif event.get("code"):
-        return auth_manager.authenticate_and_maybe_signup(event["code"])
 
     elif event.get("jwt_token") and event.get("method"):
         return frontend_router.handle_request(

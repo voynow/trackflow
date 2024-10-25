@@ -141,14 +141,8 @@ def authenticate_with_code(code: str) -> UserAuthRow:
     return user_auth_row
 
 
-def signup(code: str, email: Optional[str] = None) -> dict:
-    """
-    Get authenticated user, upsert user with email and preferences
-
-    :param email: user email
-    :param code: strava code
-    :return: jwt_token
-    """
+def signup(user_auth: UserAuthRow, email: Optional[str] = None) -> dict:
+    """ """
     preferences = (
         "I'm looking to improve my running performance while being smart and realistic."
     )
@@ -156,27 +150,11 @@ def signup(code: str, email: Optional[str] = None) -> dict:
         subject="TrackFlow Alert: New Signup Attempt",
         text_content=f"You have a new client {email=} attempting to signup with {preferences=}",
     )
-    user_auth = authenticate_with_code(code)
-    upsert_user(
-        UserRow(
-            athlete_id=user_auth.athlete_id,
-            email=email,
-            preferences=preferences,
-        )
-    )
-    return {"success": True, "jwt_token": user_auth.jwt_token}
-
-
-def signup_with_user_auth(user_auth: UserAuthRow) -> dict:
-    """ """
-    preferences = (
-        "I'm looking to improve my running performance while being smart and realistic."
-    )
     upsert_user(UserRow(athlete_id=user_auth.athlete_id, preferences=preferences))
     return {"success": True, "jwt_token": user_auth.jwt_token}
 
 
-def authenticate_and_maybe_signup(code: str, email: Optional[str] = None) -> dict:
+def authenticate_on_signin(code: str, email: Optional[str] = None) -> dict:
     """
     Authenticate with Strava code, and sign up the user if they don't exist.
 
@@ -187,6 +165,6 @@ def authenticate_and_maybe_signup(code: str, email: Optional[str] = None) -> dic
     user_auth = authenticate_with_code(code)
 
     if not user_exists(user_auth.athlete_id):
-        return signup_with_user_auth(user_auth)
+        return signup(user_auth, email)
 
     return {"success": True, "jwt_token": user_auth.jwt_token}
