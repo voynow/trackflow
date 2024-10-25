@@ -133,6 +133,7 @@ struct TrainingWeekResponse: Codable {
 struct SignupResponse: Codable {
   let success: Bool
   let jwt_token: String
+  let is_new_user: Bool?
 }
 
 struct RefreshTokenResponse: Codable {

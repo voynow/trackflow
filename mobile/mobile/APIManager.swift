@@ -183,21 +183,4 @@ class APIManager {
       }
     }.resume()
   }
-
-  func generateInitialTrainingPlan(token: String, completion: @escaping (Result<Void, Error>) -> Void) {
-    let body: [String: Any] = ["jwt_token": token, "method": "generate_initial_training_plan"]
-    performRequest(body: body, responseType: GenerateTrainingPlanResponse.self) { result in
-      switch result {
-      case .success(let response):
-        if response.success {
-          completion(.success(()))
-        } else {
-          let errorMessage = response.message ?? "Failed to generate initial training plan"
-          completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: errorMessage])))
-        }
-      case .failure(let error):
-        completion(.failure(error))
-      }
-    }
-  }
 }

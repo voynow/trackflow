@@ -10,7 +10,10 @@ struct ContentView: View {
 
   var body: some View {
     ZStack {
-      if appState.isLoggedIn {
+      if appState.isNewUser {
+        // TODO: Create state enum
+        // OnboardingView(onComplete: handleOnboardingComplete)
+      } else if appState.isLoggedIn {
         DashboardView()
       } else {
         LandingPageView(authManager: authManager)

@@ -3,54 +3,44 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 56;
+	objectVersion = 70;
 	objects = {
 
-/* Begin PBXBuildFile section */
-		8021CCC62C9AFAA400CB9B8D /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8021CCC52C9AFAA400CB9B8D /* AppDelegate.swift */; };
-		8021CCC82C9B337900CB9B8D /* StravaAuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8021CCC72C9B337900CB9B8D /* StravaAuthManager.swift */; };
-		8021CCCA2C9B367100CB9B8D /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8021CCC92C9B367100CB9B8D /* AppState.swift */; };
-		8021CCCC2C9B4EBD00CB9B8D /* LandingPageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8021CCCB2C9B4EBD00CB9B8D /* LandingPageView.swift */; };
-		8021CCCE2C9B67F100CB9B8D /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8021CCCD2C9B67F100CB9B8D /* DashboardView.swift */; };
-		8021CCD02C9B6B9A00CB9B8D /* DashboardNavbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8021CCCF2C9B6B9A00CB9B8D /* DashboardNavbar.swift */; };
-		8021CCD22C9B6BAB00CB9B8D /* TrainingWeek.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8021CCD12C9B6BAB00CB9B8D /* TrainingWeek.swift */; };
-		8021CCD62C9B6DF900CB9B8D /* ColorTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8021CCD52C9B6DF900CB9B8D /* ColorTheme.swift */; };
-		8021CCD82C9B9A1700CB9B8D /* LoadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8021CCD72C9B9A1700CB9B8D /* LoadingView.swift */; };
-		8031CD792C9DC59C005CED34 /* APIManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8031CD782C9DC59C005CED34 /* APIManager.swift */; };
-		8031CD7B2C9DC602005CED34 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8031CD7A2C9DC602005CED34 /* Models.swift */; };
-		80777D152C973F01007565FC /* mobileApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80777D142C973F01007565FC /* mobileApp.swift */; };
-		80777D172C973F01007565FC /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80777D162C973F01007565FC /* ContentView.swift */; };
-		80777D192C973F02007565FC /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 80777D182C973F02007565FC /* Assets.xcassets */; };
-		80777D1C2C973F02007565FC /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 80777D1B2C973F02007565FC /* Preview Assets.xcassets */; };
-		808B3E022C9CFB9B005BC890 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 808B3E012C9CFB9B005BC890 /* ProfileView.swift */; };
-		809E44762CBB42D6000BED21 /* PreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 809E44752CBB42D6000BED21 /* PreferencesView.swift */; };
-		80FED0482CC036A000972060 /* ProfileSkeletonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80FED0472CC036A000972060 /* ProfileSkeletonView.swift */; };
-		80FED04A2CC0377300972060 /* DashboardSkeletonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80FED0492CC0377300972060 /* DashboardSkeletonView.swift */; };
-/* End PBXBuildFile section */
-
 /* Begin PBXFileReference section */
-		8021CCC52C9AFAA400CB9B8D /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		8021CCC72C9B337900CB9B8D /* StravaAuthManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StravaAuthManager.swift; sourceTree = "<group>"; };
-		8021CCC92C9B367100CB9B8D /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
-		8021CCCB2C9B4EBD00CB9B8D /* LandingPageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LandingPageView.swift; sourceTree = "<group>"; };
-		8021CCCD2C9B67F100CB9B8D /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
-		8021CCCF2C9B6B9A00CB9B8D /* DashboardNavbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardNavbar.swift; sourceTree = "<group>"; };
-		8021CCD12C9B6BAB00CB9B8D /* TrainingWeek.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrainingWeek.swift; sourceTree = "<group>"; };
-		8021CCD52C9B6DF900CB9B8D /* ColorTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorTheme.swift; sourceTree = "<group>"; };
-		8021CCD72C9B9A1700CB9B8D /* LoadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingView.swift; sourceTree = "<group>"; };
-		8031CD782C9DC59C005CED34 /* APIManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIManager.swift; sourceTree = "<group>"; };
-		8031CD7A2C9DC602005CED34 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
-		80777D112C973F01007565FC /* mobile.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = mobile.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		80777D142C973F01007565FC /* mobileApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = mobileApp.swift; sourceTree = "<group>"; };
-		80777D162C973F01007565FC /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
-		80777D182C973F02007565FC /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		80777D1B2C973F02007565FC /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
-		808B3E012C9CFB9B005BC890 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
-		809E44752CBB42D6000BED21 /* PreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesView.swift; sourceTree = "<group>"; };
-		80A6AD222C9A508D005145B3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
-		80FED0472CC036A000972060 /* ProfileSkeletonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileSkeletonView.swift; sourceTree = "<group>"; };
-		80FED0492CC0377300972060 /* DashboardSkeletonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardSkeletonView.swift; sourceTree = "<group>"; };
+		80777D112C973F01007565FC /* mobile.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = mobile.app; path = "/Users/jamievoynow/Desktop/code/trackflow/mobile/build/Debug-iphoneos/mobile.app"; sourceTree = "<absolute>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		807A712E2CCB2DA30032BA17 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				APIManager.swift,
+				AppDelegate.swift,
+				AppState.swift,
+				Assets.xcassets,
+				ColorTheme.swift,
+				ContentView.swift,
+				DashboardNavbar.swift,
+				DashboardSkeletonView.swift,
+				DashboardView.swift,
+				LandingPageView.swift,
+				LoadingView.swift,
+				mobileApp.swift,
+				Models.swift,
+				PreferencesView.swift,
+				"Preview Content/Preview Assets.xcassets",
+				ProfileSkeletonView.swift,
+				ProfileView.swift,
+				StravaAuthManager.swift,
+				TrainingWeek.swift,
+			);
+			target = 80777D102C973F01007565FC /* mobile */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		807A711A2CCB2DA30032BA17 /* mobile */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (807A712E2CCB2DA30032BA17 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = mobile; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		80777D0E2C973F01007565FC /* Frameworks */ = {
@@ -66,52 +56,8 @@
 		80777D082C973F01007565FC = {
 			isa = PBXGroup;
 			children = (
-				80777D132C973F01007565FC /* mobile */,
-				80777D122C973F01007565FC /* Products */,
+				807A711A2CCB2DA30032BA17 /* mobile */,
 			);
-			sourceTree = "<group>";
-		};
-		80777D122C973F01007565FC /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				80777D112C973F01007565FC /* mobile.app */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
-		80777D132C973F01007565FC /* mobile */ = {
-			isa = PBXGroup;
-			children = (
-				80A6AD222C9A508D005145B3 /* Info.plist */,
-				8031CD782C9DC59C005CED34 /* APIManager.swift */,
-				8021CCC52C9AFAA400CB9B8D /* AppDelegate.swift */,
-				8021CCC92C9B367100CB9B8D /* AppState.swift */,
-				8021CCD52C9B6DF900CB9B8D /* ColorTheme.swift */,
-				80777D162C973F01007565FC /* ContentView.swift */,
-				8021CCCF2C9B6B9A00CB9B8D /* DashboardNavbar.swift */,
-				8021CCCD2C9B67F100CB9B8D /* DashboardView.swift */,
-				8021CCCB2C9B4EBD00CB9B8D /* LandingPageView.swift */,
-				8021CCD72C9B9A1700CB9B8D /* LoadingView.swift */,
-				80777D142C973F01007565FC /* mobileApp.swift */,
-				8031CD7A2C9DC602005CED34 /* Models.swift */,
-				808B3E012C9CFB9B005BC890 /* ProfileView.swift */,
-				8021CCC72C9B337900CB9B8D /* StravaAuthManager.swift */,
-				8021CCD12C9B6BAB00CB9B8D /* TrainingWeek.swift */,
-				80777D182C973F02007565FC /* Assets.xcassets */,
-				80777D1A2C973F02007565FC /* Preview Content */,
-				809E44752CBB42D6000BED21 /* PreferencesView.swift */,
-				80FED0472CC036A000972060 /* ProfileSkeletonView.swift */,
-				80FED0492CC0377300972060 /* DashboardSkeletonView.swift */,
-			);
-			path = mobile;
-			sourceTree = "<group>";
-		};
-		80777D1A2C973F02007565FC /* Preview Content */ = {
-			isa = PBXGroup;
-			children = (
-				80777D1B2C973F02007565FC /* Preview Assets.xcassets */,
-			);
-			path = "Preview Content";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -160,7 +106,7 @@
 			mainGroup = 80777D082C973F01007565FC;
 			packageReferences = (
 			);
-			productRefGroup = 80777D122C973F01007565FC /* Products */;
+			productRefGroup = 80777D082C973F01007565FC;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -174,8 +120,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				80777D1C2C973F02007565FC /* Preview Assets.xcassets in Resources */,
-				80777D192C973F02007565FC /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -186,23 +130,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8021CCC82C9B337900CB9B8D /* StravaAuthManager.swift in Sources */,
-				8021CCCC2C9B4EBD00CB9B8D /* LandingPageView.swift in Sources */,
-				8021CCD02C9B6B9A00CB9B8D /* DashboardNavbar.swift in Sources */,
-				8021CCD82C9B9A1700CB9B8D /* LoadingView.swift in Sources */,
-				808B3E022C9CFB9B005BC890 /* ProfileView.swift in Sources */,
-				80FED0482CC036A000972060 /* ProfileSkeletonView.swift in Sources */,
-				8021CCCA2C9B367100CB9B8D /* AppState.swift in Sources */,
-				8021CCCE2C9B67F100CB9B8D /* DashboardView.swift in Sources */,
-				8021CCC62C9AFAA400CB9B8D /* AppDelegate.swift in Sources */,
-				80777D172C973F01007565FC /* ContentView.swift in Sources */,
-				80FED04A2CC0377300972060 /* DashboardSkeletonView.swift in Sources */,
-				80777D152C973F01007565FC /* mobileApp.swift in Sources */,
-				809E44762CBB42D6000BED21 /* PreferencesView.swift in Sources */,
-				8031CD792C9DC59C005CED34 /* APIManager.swift in Sources */,
-				8021CCD62C9B6DF900CB9B8D /* ColorTheme.swift in Sources */,
-				8021CCD22C9B6BAB00CB9B8D /* TrainingWeek.swift in Sources */,
-				8031CD7B2C9DC602005CED34 /* Models.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
