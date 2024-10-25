@@ -125,9 +125,11 @@ struct ProfileInfoCard: View {
           Text("\(profileData.firstname) \(profileData.lastname)")
             .font(.system(size: 24, weight: .bold))
             .foregroundColor(ColorTheme.white)
-          Text(profileData.email)
-            .font(.system(size: 14))
-            .foregroundColor(ColorTheme.lightGrey)
+          if let email = profileData.email {
+            Text(email)
+              .font(.system(size: 14))
+              .foregroundColor(ColorTheme.lightGrey)
+          }
           Text("Member since \(formattedJoinDate)")
             .font(.system(size: 14))
             .foregroundColor(ColorTheme.lightGrey)

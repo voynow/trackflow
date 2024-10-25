@@ -3,7 +3,7 @@ import Foundation
 struct ProfileData: Codable {
   var firstname: String
   var lastname: String
-  var email: String
+  var email: String?
   var profile: String
   var isActive: Bool
   var preferences: String?
