@@ -6,6 +6,9 @@ struct DashboardView: View {
   @State private var isLoadingTrainingWeek: Bool = true
   @State private var showProfile: Bool = false
   @State private var weeklySummaries: [WeekSummary]?
+  @State private var showOnboarding: Bool = false
+  @State private var showErrorAlert: Bool = false
+  @State private var errorMessage: String = ""
 
   var body: some View {
     NavigationView {
@@ -21,9 +24,7 @@ struct DashboardView: View {
             } else if let data = trainingWeekData, let summaries = weeklySummaries {
               TrainingWeekView(trainingWeekData: data, weeklySummaries: summaries)
             } else {
-              Text("No training data available")
-                .font(.headline)
-                .foregroundColor(ColorTheme.lightGrey)
+              InitialLoadingView(onGeneratePlan: generateInitialTrainingPlan)
             }
           }
         }
@@ -41,6 +42,13 @@ struct DashboardView: View {
       }
     }
     .onAppear(perform: fetchData)
+    .alert(isPresented: $showErrorAlert) {
+      Alert(
+        title: Text("Error"),
+        message: Text(errorMessage),
+        dismissButton: .default(Text("OK"))
+      )
+    }
   }
 
   private func handleLogout() {
@@ -111,6 +119,92 @@ struct DashboardView: View {
   private func checkLoadingComplete() {
     if trainingWeekData != nil && weeklySummaries != nil {
       isLoadingTrainingWeek = false
+    }
+  }
+
+  private func generateInitialTrainingPlan() {
+    guard let token = appState.jwtToken else { return }
+    
+    isLoadingTrainingWeek = true
+    APIManager.shared.generateInitialTrainingPlan(token: token) { result in
+      DispatchQueue.main.async {
+        self.isLoadingTrainingWeek = false
+        switch result {
+        case .success:
+          self.fetchData()
+        case .failure(let error):
+          print("Error generating initial training plan: \(error)")
+          self.showErrorAlert(message: "Failed to generate initial training plan. Please try again.")
+        }
+      }
+    }
+  }
+
+  private func showErrorAlert(message: String) {
+    self.errorMessage = message
+    self.showErrorAlert = true
+  }
+}
+
+
+struct InitialLoadingView: View {
+  let onGeneratePlan: () -> Void
+  @State private var isGenerating: Bool = false
+  @State private var progress: Double = 0
+  
+  var body: some View {
+    VStack(spacing: 40) {
+      Text("Welcome to TrackFlow")
+        .font(.system(size: 28, weight: .bold))
+        .foregroundColor(ColorTheme.white)
+      
+      Text("We're creating your personalized training plan")
+        .font(.system(size: 18))
+        .foregroundColor(ColorTheme.lightGrey)
+        .multilineTextAlignment(.center)
+      
+      ZStack {
+        Circle()
+          .stroke(lineWidth: 8.0)
+          .opacity(0.3)
+          .foregroundColor(ColorTheme.primary)
+        
+        Circle()
+          .trim(from: 0.0, to: CGFloat(min(self.progress, 1.0)))
+          .stroke(style: StrokeStyle(lineWidth: 8.0, lineCap: .round, lineJoin: .round))
+          .foregroundColor(ColorTheme.primary)
+          .rotationEffect(Angle(degrees: 270.0))
+          .animation(.linear(duration: 1.0), value: progress)
+
+        Text("\(Int(progress * 100))%")
+          .font(.system(size: 24, weight: .bold))
+          .foregroundColor(ColorTheme.white)
+      }
+      .frame(width: 150, height: 150)
+      
+      Text("This may take a few moments")
+        .font(.system(size: 16))
+        .foregroundColor(ColorTheme.midLightGrey)
+    }
+    .padding()
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
+    .background(ColorTheme.black)
+    .onAppear {
+      startGeneratingPlan()
+    }
+  }
+  
+  private func startGeneratingPlan() {
+    isGenerating = true
+    onGeneratePlan()
+    
+    // Simulate progress
+    Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { timer in
+      if self.progress < 1.0 {
+        self.progress += 0.1
+      } else {
+        timer.invalidate()
+      }
     }
   }
 }
