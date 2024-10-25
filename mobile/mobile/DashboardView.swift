@@ -27,6 +27,9 @@ struct DashboardView: View {
               Text("No training data available")
                 .font(.headline)
                 .foregroundColor(ColorTheme.lightGrey)
+              Button(action: handleLogout) {
+                Text("Logout")
+              }
             }
           }
         }
@@ -54,7 +57,7 @@ struct DashboardView: View {
   }
 
   private func handleLogout() {
-    appState.isLoggedIn = false
+    appState.status = .loggedOut
     appState.jwtToken = nil
     UserDefaults.standard.removeObject(forKey: "jwt_token")
   }

@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		80777D112C973F01007565FC /* mobile.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = mobile.app; path = "/Users/jamievoynow/Desktop/code/trackflow/mobile/build/Debug-iphoneos/mobile.app"; sourceTree = "<absolute>"; };
+		809F8EBF2CCBE0BE00D41481 /* mobile.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = mobile.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -27,6 +27,7 @@
 				LoadingView.swift,
 				mobileApp.swift,
 				Models.swift,
+				OnboardingView.swift,
 				PreferencesView.swift,
 				"Preview Content/Preview Assets.xcassets",
 				ProfileSkeletonView.swift,
@@ -57,6 +58,7 @@
 			isa = PBXGroup;
 			children = (
 				807A711A2CCB2DA30032BA17 /* mobile */,
+				809F8EBF2CCBE0BE00D41481 /* mobile.app */,
 			);
 			sourceTree = "<group>";
 		};
@@ -77,7 +79,7 @@
 			);
 			name = mobile;
 			productName = mobile;
-			productReference = 80777D112C973F01007565FC /* mobile.app */;
+			productReference = 809F8EBF2CCBE0BE00D41481 /* mobile.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */

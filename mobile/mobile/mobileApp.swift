@@ -10,7 +10,7 @@ struct mobileApp: App {
                 .environmentObject(appState)
                 .onAppear {
                     if let token = UserDefaults.standard.string(forKey: "jwt_token") {
-                        appState.isLoggedIn = true
+                        appState.status = .loggedIn
                         appState.jwtToken = token
                     }
                 }
@@ -23,12 +23,12 @@ struct mobileApp: App {
                 DispatchQueue.main.async {
                     switch result {
                     case .success(let newToken):
-                        appState.isLoggedIn = true
+                        appState.status = .loggedIn
                         appState.jwtToken = newToken
                         UserDefaults.standard.set(newToken, forKey: "jwt_token")
                     case .failure(_):
                         // Token refresh failed, user needs to log in again
-                        appState.isLoggedIn = false
+                        appState.status = .loggedOut
                         appState.jwtToken = nil
                         UserDefaults.standard.removeObject(forKey: "jwt_token")
                     }

@@ -183,4 +183,26 @@ class APIManager {
       }
     }.resume()
   }
+
+  func startOnboarding(token: String, completion: @escaping (Result<Void, Error>) -> Void) {
+    let body: [String: Any] = ["jwt_token": token, "method": "start_onboarding"]
+    performRequest(body: body, responseType: GenericResponse.self) { result in
+      switch result {
+      case .success(let response):
+        if response.success {
+          completion(.success(()))
+        } else {
+          let errorMessage = response.message ?? "Failed to start onboarding"
+          completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: errorMessage])))
+        }
+      case .failure(let error):
+        completion(.failure(error))
+      }
+    }
+  }
+}
+
+struct GenericResponse: Codable {
+    let success: Bool
+    let message: String?
 }

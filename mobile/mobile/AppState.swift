@@ -1,8 +1,15 @@
 import SwiftUI
 
 class AppState: ObservableObject {
-  @Published var isLoggedIn: Bool = false
-  @Published var jwtToken: String? = nil
-  @Published var isLoading: Bool = false
-  @Published var isNewUser: Bool = false
+  @Published var status: AppStateStatus = .loggedOut {
+    didSet {
+      print("AppState status changed to: \(status)")
+    }
+  }
+
+  @Published var jwtToken: String? = nil {
+    didSet {
+      print("AppState jwtToken changed to: \(jwtToken ?? "nil")")
+    }
+  }
 }

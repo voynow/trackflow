@@ -173,3 +173,10 @@ struct WeeklySummariesResponse: Codable {
 struct GenerateTrainingPlanResponse: Codable {
   let success: Bool
 }
+
+enum AppStateStatus {
+  case loading
+  case loggedOut
+  case loggedIn
+  case newUser
+}

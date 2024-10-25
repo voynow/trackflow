@@ -52,7 +52,7 @@ struct ProfileView: View {
   }
 
   private func handleSignOut() {
-    appState.isLoggedIn = false
+    appState.status = .loggedOut
     appState.jwtToken = nil
     UserDefaults.standard.removeObject(forKey: "jwt_token")
     isPresented = false
