@@ -205,8 +205,6 @@ def update_preferences(athlete_id: int, preferences_json: dict) -> APIResponse:
     :param preferences: json string representing a Preferences object
     :return: APIResponse
     """
-    print(preferences_json)
-    print(type(preferences_json))
     try:
         Preferences(**preferences_json)
     except Exception as e:
@@ -247,3 +245,15 @@ def has_user_updated_today(athlete_id: int) -> bool:
         response.data[0]["created_at"]
     )
     return time_diff < timedelta(hours=23, minutes=30)
+
+
+def user_exists(athlete_id: int) -> bool:
+    """
+    Check if a user exists in the user table
+
+    :param athlete_id: The ID of the athlete
+    :return: True if the user exists, False otherwise
+    """
+    table = client.table("user")
+    response = table.select("*").eq("athlete_id", athlete_id).execute()
+    return bool(response.data)

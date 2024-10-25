@@ -6,6 +6,9 @@ struct DashboardView: View {
   @State private var isLoadingTrainingWeek: Bool = true
   @State private var showProfile: Bool = false
   @State private var weeklySummaries: [WeekSummary]?
+  @State private var showOnboarding: Bool = false
+  @State private var showErrorAlert: Bool = false
+  @State private var errorMessage: String = ""
 
   var body: some View {
     NavigationView {
@@ -41,6 +44,13 @@ struct DashboardView: View {
       }
     }
     .onAppear(perform: fetchData)
+    .alert(isPresented: $showErrorAlert) {
+      Alert(
+        title: Text("Error"),
+        message: Text(errorMessage),
+        dismissButton: .default(Text("OK"))
+      )
+    }
   }
 
   private func handleLogout() {
@@ -112,5 +122,10 @@ struct DashboardView: View {
     if trainingWeekData != nil && weeklySummaries != nil {
       isLoadingTrainingWeek = false
     }
+  }
+
+  private func showErrorAlert(message: String) {
+    self.errorMessage = message
+    self.showErrorAlert = true
   }
 }

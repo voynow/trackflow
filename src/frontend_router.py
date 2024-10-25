@@ -1,3 +1,4 @@
+import time
 from typing import Callable, Dict, Optional
 
 import jwt
@@ -66,11 +67,18 @@ def get_weekly_summaries_handler(athlete_id: str, payload: dict) -> dict:
     }
 
 
+def generate_initial_training_plan_handler(athlete_id: str, payload: dict) -> dict:
+    """Handle generate_initial_training_plan request."""
+    time.sleep(10)
+    return {"success": True}
+
+
 METHOD_HANDLERS: Dict[str, Callable[[str, Optional[dict]], dict]] = {
     "get_training_week": get_training_week_handler,
     "get_profile": get_profile_handler,
     "update_preferences": update_preferences_handler,
     "get_weekly_summaries": get_weekly_summaries_handler,
+    "generate_initial_training_plan": generate_initial_training_plan_handler,
 }
 
 

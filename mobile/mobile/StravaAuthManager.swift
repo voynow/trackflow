@@ -63,6 +63,9 @@ class StravaAuthManager: ObservableObject {
           DispatchQueue.main.async {
             self.appState.isLoggedIn = true
             self.appState.jwtToken = response.jwt_token
+            if let isNewUser = response.is_new_user {
+              self.appState.isNewUser = isNewUser
+            }
           }
         } else {
           throw NSError(

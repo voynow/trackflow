@@ -1,13 +1,19 @@
 import logging
 import os
 from datetime import datetime, timezone
+from typing import Optional
 
 import jwt
 from dotenv import load_dotenv
 from stravalib.client import Client
 
 from src.email_manager import send_alert_email
-from src.supabase_client import get_user_auth, upsert_user, upsert_user_auth
+from src.supabase_client import (
+    get_user_auth,
+    upsert_user,
+    upsert_user_auth,
+    user_exists,
+)
 from src.types.user_auth_row import UserAuthRow
 from src.types.user_row import UserRow
 
@@ -47,38 +53,6 @@ def decode_jwt(jwt_token: str, verify_exp: bool = True) -> int:
         options={"verify_exp": verify_exp},
     )
     return payload["athlete_id"]
-
-
-def authenticate_with_code(code: str) -> UserAuthRow:
-    """
-    Authenticate athlete with code, exchange with strava client for token,
-    generate new JWT, and update database
-
-    :param code: temporary authorization code
-    :return: UserAuthRow
-    """
-    token = strava_client.exchange_code_for_token(
-        client_id=os.environ["STRAVA_CLIENT_ID"],
-        client_secret=os.environ["STRAVA_CLIENT_SECRET"],
-        code=code,
-    )
-    strava_client.access_token = token["access_token"]
-    strava_client.refresh_token = token["refresh_token"]
-    strava_client.token_expires_at = token["expires_at"]
-
-    athlete = strava_client.get_athlete()
-
-    jwt_token = generate_jwt(athlete_id=athlete.id, expires_at=token["expires_at"])
-
-    user_auth_row = UserAuthRow(
-        athlete_id=athlete.id,
-        access_token=strava_client.access_token,
-        refresh_token=strava_client.refresh_token,
-        expires_at=strava_client.token_expires_at,
-        jwt_token=jwt_token,
-    )
-    upsert_user_auth(user_auth_row)
-    return user_auth_row
 
 
 def get_configured_strava_client(user_auth: UserAuthRow) -> Client:
@@ -135,27 +109,62 @@ def get_strava_client(athlete_id: int) -> Client:
     return get_configured_strava_client(user_auth)
 
 
-def signup(email: str, code: str) -> dict:
+def authenticate_with_code(code: str) -> UserAuthRow:
     """
-    Get authenticated user, upsert user with email and preferences
+    Authenticate athlete with code, exchange with strava client for token,
+    generate new JWT, and update database
 
-    :param email: user email
-    :param code: strava code
-    :return: jwt_token
+    :param code: temporary authorization code
+    :return: UserAuthRow
     """
+    token = strava_client.exchange_code_for_token(
+        client_id=os.environ["STRAVA_CLIENT_ID"],
+        client_secret=os.environ["STRAVA_CLIENT_SECRET"],
+        code=code,
+    )
+    strava_client.access_token = token["access_token"]
+    strava_client.refresh_token = token["refresh_token"]
+    strava_client.token_expires_at = token["expires_at"]
+
+    athlete = strava_client.get_athlete()
+
+    jwt_token = generate_jwt(athlete_id=athlete.id, expires_at=token["expires_at"])
+
+    user_auth_row = UserAuthRow(
+        athlete_id=athlete.id,
+        access_token=strava_client.access_token,
+        refresh_token=strava_client.refresh_token,
+        expires_at=strava_client.token_expires_at,
+        jwt_token=jwt_token,
+    )
+    upsert_user_auth(user_auth_row)
+    return user_auth_row
+
+
+def signup(user_auth: UserAuthRow, email: Optional[str] = None) -> dict:
+    """ """
     preferences = (
-        "Looking for smart training recommendations to optimize my performance."
+        "I'm looking to improve my running performance while being smart and realistic."
     )
     send_alert_email(
         subject="TrackFlow Alert: New Signup Attempt",
         text_content=f"You have a new client {email=} attempting to signup with {preferences=}",
     )
+    upsert_user(UserRow(athlete_id=user_auth.athlete_id, preferences=preferences))
+    return {"success": True, "jwt_token": user_auth.jwt_token}
+
+
+def authenticate_on_signin(code: str, email: Optional[str] = None) -> dict:
+    """
+    Authenticate with Strava code, and sign up the user if they don't exist.
+
+    :param code: Strava authorization code
+    :param email: User's email (optional)
+    :return: Dictionary with success status and JWT token
+    """
     user_auth = authenticate_with_code(code)
-    upsert_user(
-        UserRow(
-            athlete_id=user_auth.athlete_id,
-            email=email,
-            preferences=preferences,
-        )
-    )
+
+    if not user_exists(user_auth.athlete_id):
+        return signup(user_auth, email)
+
     return {"success": True, "jwt_token": user_auth.jwt_token}
