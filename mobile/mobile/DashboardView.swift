@@ -32,6 +32,9 @@ struct DashboardView: View {
               }
             }
           }
+          .refreshable {
+            fetchData()
+          }
         }
         .background(ColorTheme.black.edgesIgnoringSafeArea(.all))
         .navigationBarHidden(true)
