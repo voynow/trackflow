@@ -7,6 +7,8 @@ struct ProfileView: View {
   @Binding var showProfile: Bool
   @State private var isSaving: Bool = false
   @State private var isLoading: Bool = true
+  @State private var lastFetchTime: Date?
+  private let cacheTimeout: TimeInterval = 300
 
   var body: some View {
     ZStack {
@@ -68,27 +70,41 @@ struct ProfileView: View {
           let preferencesString = String(data: preferencesJSON, encoding: .utf8)
         {
           profileData?.preferences = preferencesString
+          ProfileCache.updatePreferences(preferencesString)
         }
       }
     )
   }
 
+  private func shouldRefetchData() -> Bool {
+    guard let lastFetch = lastFetchTime else {
+        return true 
+    }
+    let timeSinceLastFetch = Date().timeIntervalSince(lastFetch)
+    let shouldRefetch = timeSinceLastFetch > cacheTimeout
+    return shouldRefetch
+  }
+
   private func fetchProfileData() {
     guard let token = appState.jwtToken else {
-      isLoading = false
-      return
+        isLoading = false
+        return
+    }
+    
+    if !ProfileCache.shouldRefetch() && ProfileCache.data != nil {
+        self.profileData = ProfileCache.data
+        isLoading = false
+        return
     }
 
     APIManager.shared.fetchProfileData(token: token) { result in
-      DispatchQueue.main.async {
-        self.isLoading = false
-        switch result {
-        case .success(let profile):
-          self.profileData = profile
-        case .failure(let error):
-          print("Error fetching profile data: \(error)")
+        DispatchQueue.main.async {
+            self.isLoading = false
+            if case .success(let profile) = result {
+                ProfileCache.update(profile)
+                self.profileData = profile
+            }
         }
-      }
     }
   }
 }
@@ -196,4 +212,29 @@ struct LoadingIcon: View {
         isRotating = true
       }
   }
+}
+
+private enum ProfileCache {
+    static var lastFetchTime: Date?
+    static var data: ProfileData?
+    static let timeout: TimeInterval = 300
+    
+    static func shouldRefetch() -> Bool {
+        guard let lastFetch = lastFetchTime else { return true }
+        return Date().timeIntervalSince(lastFetch) > timeout
+    }
+    
+    static func update(_ profile: ProfileData) {
+        data = profile
+        lastFetchTime = Date()
+    }
+    
+    static func updatePreferences(_ preferences: String) {
+        data?.preferences = preferences
+    }
+    
+    static func clear() {
+        data = nil
+        lastFetchTime = nil
+    }
 }
