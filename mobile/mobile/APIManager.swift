@@ -2,13 +2,24 @@ import Foundation
 
 class APIManager {
   static let shared = APIManager()
-  private init() {}
+  private init() {
+    // Configure session for connection reuse
+    let config = URLSessionConfiguration.default
+    config.timeoutIntervalForRequest = 30
+    config.timeoutIntervalForResource = 300
+    config.httpMaximumConnectionsPerHost = 6
+    config.waitsForConnectivity = true
+    session = URLSession(configuration: config)
+  }
 
+  private let session: URLSession
   private let baseURL = "https://lwg77yq7dd.execute-api.us-east-1.amazonaws.com/prod/signup"
 
   func fetchProfileData(token: String, completion: @escaping (Result<ProfileData, Error>) -> Void) {
+    let startTime = Date()
     let body: [String: Any] = ["jwt_token": token, "method": "get_profile"]
     performRequest(body: body, responseType: ProfileResponse.self) { result in
+      let totalTime = Date().timeIntervalSince(startTime)
       switch result {
       case .success(let response):
         if response.success, let profile = response.profile {
@@ -29,8 +40,11 @@ class APIManager {
   func fetchTrainingWeekData(
     token: String, completion: @escaping (Result<TrainingWeekData, Error>) -> Void
   ) {
+    let startTime = Date()
     let body: [String: Any] = ["jwt_token": token, "method": "get_training_week"]
+
     performRequest(body: body, responseType: TrainingWeekResponse.self) { result in
+      let totalTime = Date().timeIntervalSince(startTime)
       switch result {
       case .success(let response):
         if response.success, let trainingWeekString = response.trainingWeek,
@@ -118,8 +132,11 @@ class APIManager {
   func fetchWeeklySummaries(
     token: String, completion: @escaping (Result<[WeekSummary], Error>) -> Void
   ) {
+    let startTime = Date()
     let body: [String: Any] = ["jwt_token": token, "method": "get_weekly_summaries"]
+
     performRequest(body: body, responseType: WeeklySummariesResponse.self) { result in
+      let totalTime = Date().timeIntervalSince(startTime)
       switch result {
       case .success(let response):
         if response.success, let summariesStrings = response.weekly_summaries {
@@ -161,7 +178,8 @@ class APIManager {
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
     request.httpBody = try? JSONSerialization.data(withJSONObject: body)
 
-    URLSession.shared.dataTask(with: request) { data, response, error in
+    // Use shared session instead of URLSession.shared
+    session.dataTask(with: request) { data, response, error in
       if let error = error {
         completion(.failure(error))
         return
@@ -193,7 +211,9 @@ class APIManager {
           completion(.success(()))
         } else {
           let errorMessage = response.message ?? "Failed to start onboarding"
-          completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: errorMessage])))
+          completion(
+            .failure(
+              NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: errorMessage])))
         }
       case .failure(let error):
         completion(.failure(error))
@@ -203,6 +223,6 @@ class APIManager {
 }
 
 struct GenericResponse: Codable {
-    let success: Bool
-    let message: String?
+  let success: Bool
+  let message: String?
 }

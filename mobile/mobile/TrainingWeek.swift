@@ -1,13 +1,15 @@
 import SwiftUI
 
-
 struct TrainingWeekView: View {
   let trainingWeekData: TrainingWeekData
-  let weeklySummaries: [WeekSummary]
+  let weeklySummaries: [WeekSummary]?
 
   var body: some View {
     VStack(spacing: 16) {
-      WeeklyProgressView(sessions: trainingWeekData.sessions, weeklySummaries: weeklySummaries)
+      WeeklyProgressView(
+        sessions: trainingWeekData.sessions,
+        weeklySummaries: weeklySummaries
+      )
       SessionListView(sessions: trainingWeekData.sessions)
     }
     .padding(20)
@@ -18,7 +20,7 @@ struct TrainingWeekView: View {
 
 struct WeeklyProgressView: View {
   let sessions: [TrainingSession]
-  let weeklySummaries: [WeekSummary]
+  let weeklySummaries: [WeekSummary]?
   @State private var showingMultiWeek: Bool = false
 
   private var completedMileage: Double {
@@ -32,17 +34,24 @@ struct WeeklyProgressView: View {
   var body: some View {
     VStack {
       if showingMultiWeek {
-        MultiWeekProgressView(weeklySummaries: weeklySummaries, numberOfWeeks: 8)
-          .transition(.asymmetric(
-            insertion: .opacity.combined(with: .move(edge: .bottom)),
-            removal: .opacity.combined(with: .move(edge: .top))
-          ))
+        if let summaries = weeklySummaries {
+          MultiWeekProgressView(weeklySummaries: summaries, numberOfWeeks: 8)
+            .transition(
+              .asymmetric(
+                insertion: .opacity.combined(with: .move(edge: .bottom)),
+                removal: .opacity.combined(with: .move(edge: .top))
+              ))
+        } else {
+          MultiWeekProgressSkeletonView()
+            .transition(.opacity)
+        }
       } else {
         WeeklyProgressContent(completedMileage: completedMileage, totalMileage: totalMileage)
-          .transition(.asymmetric(
-            insertion: .opacity.combined(with: .move(edge: .bottom)),
-            removal: .opacity.combined(with: .move(edge: .top))
-          ))
+          .transition(
+            .asymmetric(
+              insertion: .opacity.combined(with: .move(edge: .bottom)),
+              removal: .opacity.combined(with: .move(edge: .top))
+            ))
       }
     }
     .animation(.easeInOut(duration: 0.3), value: showingMultiWeek)
@@ -90,39 +99,39 @@ struct WeeklyProgressContent: View {
 struct MultiWeekProgressView: View {
   let weeklySummaries: [WeekSummary]
   let numberOfWeeks: Int
-  
+
   private var displayedSummaries: [WeekSummary] {
     Array(weeklySummaries.prefix(numberOfWeeks).reversed())
   }
-  
+
   private var maxMileage: Double {
     displayedSummaries.map(\.totalDistance).max() ?? 1
   }
-  
+
   var body: some View {
     VStack(spacing: 12) {
       Text("Last \(numberOfWeeks) Weeks")
         .font(.headline)
         .foregroundColor(ColorTheme.white)
         .frame(maxWidth: .infinity, alignment: .leading)
-      
+
       ForEach(displayedSummaries, id: \.parsedWeekStartDate) { summary in
         HStack(spacing: 10) {
           Text(weekLabel(for: summary.parsedWeekStartDate))
             .font(.subheadline)
             .foregroundColor(ColorTheme.lightGrey)
             .frame(width: 50, alignment: .leading)
-          
+
           ProgressBar(progress: summary.totalDistance / maxMileage)
             .frame(height: 8)
-          
+
           Text(String(format: "%.1f mi", summary.totalDistance))
             .font(.subheadline)
             .foregroundColor(ColorTheme.white)
             .frame(width: 60, alignment: .trailing)
         }
       }
-      
+
       HStack {
         Spacer()
         Text("Total:")
@@ -135,7 +144,7 @@ struct MultiWeekProgressView: View {
       .padding(.top, 8)
     }
   }
-  
+
   private func weekLabel(for date: Date?) -> String {
     guard let date = date else { return "" }
     let formatter = DateFormatter()
@@ -236,5 +245,43 @@ struct SessionView: View {
         isExpanded.toggle()
       }
     }
+  }
+}
+
+struct MultiWeekProgressSkeletonView: View {
+  let numberOfWeeks: Int = 8
+
+  var body: some View {
+    VStack(spacing: 12) {
+      Text("Last \(numberOfWeeks) Weeks")
+        .font(.headline)
+        .foregroundColor(ColorTheme.white)
+        .frame(maxWidth: .infinity, alignment: .leading)
+
+      ForEach(0..<numberOfWeeks, id: \.self) { _ in
+        HStack(spacing: 10) {
+          Rectangle()
+            .fill(ColorTheme.darkGrey)
+            .frame(width: 50, height: 14)
+
+          Rectangle()
+            .fill(ColorTheme.darkGrey)
+            .frame(height: 8)
+
+          Rectangle()
+            .fill(ColorTheme.darkGrey)
+            .frame(width: 60, height: 14)
+        }
+      }
+
+      HStack {
+        Spacer()
+        Rectangle()
+          .fill(ColorTheme.darkGrey)
+          .frame(width: 120, height: 16)
+      }
+      .padding(.top, 8)
+    }
+    .dashboardShimmering()
   }
 }

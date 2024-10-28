@@ -18,7 +18,10 @@ from src.update_pipeline import training_week_update_executor
 
 def get_training_week_handler(athlete_id: str, payload: dict) -> dict:
     """Handle get_training_week request."""
+    start = time.time()
     training_week = get_training_week(athlete_id)
+    end = time.time()
+    print(f"get_training_week took {end - start} seconds")
     return {
         "success": True,
         "training_week": training_week.json(),
@@ -27,8 +30,11 @@ def get_training_week_handler(athlete_id: str, payload: dict) -> dict:
 
 def get_profile_handler(athlete_id: str, payload: dict) -> dict:
     """Handle get_profile request."""
+    start = time.time()
     user = get_user(athlete_id)
     athlete = auth_manager.get_strava_client(athlete_id).get_athlete()
+    end = time.time()
+    print(f"get_profile took {end - start} seconds")
     return {
         "success": True,
         "profile": {
@@ -58,11 +64,13 @@ def get_weekly_summaries_handler(athlete_id: str, payload: dict) -> dict:
     :param payload: unused payload
     :return: List of WeekSummary objects as JSON
     """
-
+    start = time.time()
     user = get_user(athlete_id)
     strava_client = get_strava_client(user.athlete_id)
     activities_df = get_activities_df(strava_client)
     weekly_summaries = get_weekly_summaries(activities_df)
+    end = time.time()
+    print(f"get_weekly_summaries took {end - start} seconds")
     return {
         "success": True,
         "weekly_summaries": [summary.json() for summary in weekly_summaries],
