@@ -3,9 +3,9 @@ import SwiftUI
 struct DashboardView: View {
   @EnvironmentObject var appState: AppState
   @State private var trainingWeekData: TrainingWeekData?
-  @State private var isLoadingTrainingWeek: Bool = true
-  @State private var showProfile: Bool = false
   @State private var weeklySummaries: [WeekSummary]?
+  @State private var isLoadingTrainingWeek = true
+  @State private var showProfile: Bool = false
   @State private var showOnboarding: Bool = false
   @State private var showErrorAlert: Bool = false
   @State private var errorMessage: String = ""
@@ -19,17 +19,18 @@ struct DashboardView: View {
             .zIndex(1)
 
           ScrollView {
-            if isLoadingTrainingWeek {
+            if let data = trainingWeekData {
+              // Show training week as soon as it's available
+              TrainingWeekView(
+                trainingWeekData: data,
+                weeklySummaries: weeklySummaries  // Can be nil
+              )
+            } else if isLoadingTrainingWeek {
               DashboardSkeletonView()
-            } else if let data = trainingWeekData, let summaries = weeklySummaries {
-              TrainingWeekView(trainingWeekData: data, weeklySummaries: summaries)
             } else {
               Text("No training data available")
                 .font(.headline)
                 .foregroundColor(ColorTheme.lightGrey)
-              Button(action: handleLogout) {
-                Text("Logout")
-              }
             }
           }
           .refreshable {
@@ -67,21 +68,12 @@ struct DashboardView: View {
 
   private func fetchData() {
     isLoadingTrainingWeek = true
-    let group = DispatchGroup()
 
-    group.enter()
-    fetchWeeklySummaries {
-      group.leave()
-    }
-
-    group.enter()
     fetchTrainingWeekData {
-      group.leave()
+      isLoadingTrainingWeek = false
     }
 
-    group.notify(queue: .main) {
-      self.isLoadingTrainingWeek = false
-    }
+    fetchWeeklySummaries {}
   }
 
   private func fetchTrainingWeekData(completion: @escaping () -> Void) {
