@@ -257,3 +257,15 @@ def user_exists(athlete_id: int) -> bool:
     table = client.table("user")
     response = table.select("*").eq("athlete_id", athlete_id).execute()
     return bool(response.data)
+
+
+def update_user_device_token(athlete_id: str, device_token: str) -> None:
+    """
+    Update the device token for a user in the database.
+
+    :param athlete_id: The athlete's ID
+    :param device_token: The device token for push notifications
+    """
+    client.table("user_auth").update({"device_token": device_token}).eq(
+        "athlete_id", athlete_id
+    ).execute()

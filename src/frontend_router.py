@@ -11,6 +11,7 @@ from src.supabase_client import (
     get_user,
     get_user_auth,
     update_preferences,
+    update_user_device_token,
 )
 from src.types.update_pipeline import ExeType
 from src.update_pipeline import training_week_update_executor
@@ -85,12 +86,24 @@ def start_onboarding(athlete_id: str, payload: dict) -> dict:
     return {"success": True}
 
 
+def update_device_token_handler(athlete_id: str, payload: dict) -> dict:
+    """Handle update_device_token request."""
+    if not payload or "device_token" not in payload:
+        return {"success": False, "error": "Missing device_token in payload"}
+    try:
+        update_user_device_token(athlete_id=athlete_id, device_token=payload["device_token"])
+        return {"success": True}
+    except Exception as e:
+        return {"success": False, "error": f"Failed to update device token: {str(e)}"}
+
+
 METHOD_HANDLERS: Dict[str, Callable[[str, Optional[dict]], dict]] = {
     "get_training_week": get_training_week_handler,
     "get_profile": get_profile_handler,
     "update_preferences": update_preferences_handler,
     "get_weekly_summaries": get_weekly_summaries_handler,
     "start_onboarding": start_onboarding,
+    "update_device_token": update_device_token_handler,
 }
 
 
