@@ -220,9 +220,27 @@ class APIManager {
       }
     }
   }
+
+  func updateDeviceToken(token: String, deviceToken: String, completion: @escaping (Result<Void, Error>) -> Void) {
+    let body: [String: Any] = [
+      "jwt_token": token,
+      "method": "update_device_token",
+      "device_token": deviceToken
+    ]
+    
+    performRequest(body: body, responseType: GenericResponse.self) { result in
+      switch result {
+      case .success(let response):
+        if response.success {
+          completion(.success(()))
+        } else {
+          let errorMessage = response.message ?? "Failed to update device token"
+          completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: errorMessage])))
+        }
+      case .failure(let error):
+        completion(.failure(error))
+      }
+    }
+  }
 }
 
-struct GenericResponse: Codable {
-  let success: Bool
-  let message: String?
-}
