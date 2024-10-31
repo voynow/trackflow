@@ -1,10 +1,10 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import Footer from './components/Footer';
 import Navbar from './components/Navbar';
-import Image from 'next/image';
 
 export default function Home(): JSX.Element {
   const router = useRouter();
@@ -17,18 +17,18 @@ export default function Home(): JSX.Element {
   ];
 
   const testimonials: Array<{ name: string; quote: string; image: string }> = [
-    { 
-      name: "Danny Lio", 
+    {
+      name: "Danny Lio",
       quote: "The training plan I found online was good, but it was missing the level of personalization that TrackFlow provides.",
       image: "/danny-lio.png"
     },
-    { 
-      name: "Jared Palek", 
+    {
+      name: "Jared Palek",
       quote: "I used to pay $50.00 per month to work with my coach, but TrackFlow is just as good and a whole lot cheaper!",
       image: "/jared-palek.png"
     },
-    { 
-      name: "Rachel Decker", 
+    {
+      name: "Rachel Decker",
       quote: "I love that my TrackFlow training plan is always up to date. It's like having a coach by my side for every activity!",
       image: "/rachel-decker.png"
     },
@@ -112,7 +112,7 @@ export default function Home(): JSX.Element {
             </ul>
             <button
               className="px-8 py-4 text-xl text-gray-200 bg-blue-600 font-bold rounded-full hover:bg-blue-700 hover:scale-105 transition duration-300 ease-in-out shadow-lg hover:shadow-blue-500/50"
-              onClick={() => router.push('/signup')}
+              onClick={() => router.push('/dashboard')}
             >
               Get Started for Free
             </button>
@@ -173,7 +173,7 @@ export default function Home(): JSX.Element {
           <h2 className="text-4xl font-bold mb-8">Ready to Transform Your Training?</h2>
           <motion.button
             className="px-10 py-5 text-2xl text-gray-200 bg-blue-600 font-bold rounded-full hover:bg-blue-700 transition duration-300 ease-in-out shadow-lg hover:shadow-blue-500/50"
-            onClick={() => router.push('/signup')}
+            onClick={() => router.push('/dashboard')}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >

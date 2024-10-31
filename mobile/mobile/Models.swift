@@ -180,3 +180,8 @@ enum AppStateStatus {
   case loggedIn
   case newUser
 }
+
+struct GenericResponse: Codable {
+  let success: Bool
+  let message: String?
+}

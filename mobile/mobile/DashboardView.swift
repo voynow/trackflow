@@ -50,7 +50,12 @@ struct DashboardView: View {
         }
       }
     }
-    .onAppear(perform: fetchData)
+    .onAppear {
+      fetchData()
+      if appState.notificationStatus == .notDetermined {
+        appState.requestNotificationPermission()
+      }
+    }
     .alert(isPresented: $showErrorAlert) {
       Alert(
         title: Text("Error"),

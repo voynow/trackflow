@@ -10,3 +10,4 @@ class UserAuthRow(BaseModel):
     refresh_token: str
     expires_at: datetime.datetime
     jwt_token: str
+    device_token: Optional[str] = None

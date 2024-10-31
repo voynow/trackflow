@@ -29,9 +29,8 @@ const DashboardPage = () => {
                             In the meantime...
                         </h3>
                         <ul className="list-disc list-inside mb-8 text-left sm:text-lg md:text-xl">
-                            <li className="mb-2">Our mobile app is the preferred interface</li>
-                            <li className="mb-2">Web dashboard will be ready in about a week</li>
-                            <li>Feel free to reach out with any questions</li>
+                            <li className="mb-2">Download our mobile app TrackFlowAI from <a href="https://apps.apple.com/us/app/trackflowai/id6737172627" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline">the App Store</a>.</li>
+                            <li>Have questions? Reach out to us.</li>
                         </ul>
                         <Link href="mailto:voynow99@gmail.com" className="px-8 py-4 text-xl text-gray-200 bg-blue-600 font-bold rounded-full hover:bg-blue-700 hover:scale-105 transition duration-300 ease-in-out shadow-lg hover:shadow-blue-500/50 inline-block">
                             Contact @jamievoynow
