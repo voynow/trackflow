@@ -5,12 +5,10 @@ struct ProfileData: Codable {
   var lastname: String
   var email: String?
   var profile: String
-  var isActive: Bool
   var preferences: String?
 
   enum CodingKeys: String, CodingKey {
     case firstname, lastname, email, profile, preferences
-    case isActive = "is_active"
   }
 }
 

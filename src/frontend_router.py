@@ -37,7 +37,6 @@ def get_profile_handler(athlete_id: str, payload: dict) -> dict:
             "profile": athlete.profile,
             "email": user.email,
             "preferences": user.preferences_json.json(),
-            "is_active": user.is_active,
         },
     }
 

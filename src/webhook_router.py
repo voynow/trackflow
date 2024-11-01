@@ -7,7 +7,7 @@ from src.supabase_client import (
 )
 from src.types.update_pipeline import ExeType
 from src.types.user_row import UserRow
-from src.update_pipeline import training_week_update_executor
+from src.update_pipeline import update_training_week
 
 
 def is_strava_webhook_event(event: dict) -> bool:
@@ -34,15 +34,14 @@ def is_strava_webhook_event(event: dict) -> bool:
     )
 
 
-def handle_activity_create(user: UserRow, event: dict, invocation_id: str) -> dict:
+def handle_activity_create(user: UserRow, event: dict) -> dict:
     strava_client = auth_manager.get_strava_client(user.athlete_id)
     activity = strava_client.get_activity(event.get("object_id"))
 
     if activity.sport_type == "Run":
-        return training_week_update_executor(
+        return update_training_week(
             user=user,
-            exetype=ExeType.MID_WEEK,
-            invocation_id=invocation_id,
+            exe_type=ExeType.MID_WEEK,
         )
 
     return {
@@ -51,7 +50,7 @@ def handle_activity_create(user: UserRow, event: dict, invocation_id: str) -> di
     }
 
 
-def _handle_request(event: dict, invocation_id: str) -> dict:
+def _handle_request(event: dict) -> dict:
     """
     Handle a single Strava webhook event
 
@@ -70,13 +69,7 @@ def _handle_request(event: dict, invocation_id: str) -> dict:
 
     if event_type == "activity":
         if aspect_type == "create":
-            if user.is_active:
-                return handle_activity_create(user, event, invocation_id)
-            else:
-                return {
-                    "success": True,
-                    "message": f"Activity {event.get('object_id')} created, but user is inactive",
-                }
+            return handle_activity_create(user, event)
         if aspect_type in {"update", "delete"}:
             return {
                 "success": True,
@@ -86,7 +79,7 @@ def _handle_request(event: dict, invocation_id: str) -> dict:
     return {"success": False, "error": f"Unknown event type: {event_type}"}
 
 
-def handle_request(event: dict, invocation_id: str) -> dict:
+def handle_request(event: dict) -> dict:
     """
     Handle Strava webhook events sent from SQS
 
@@ -98,12 +91,7 @@ def handle_request(event: dict, invocation_id: str) -> dict:
     responses = []
     for record in event.get("Records"):
         try:
-            responses.append(
-                _handle_request(
-                    event=json.loads(record.get("body")),
-                    invocation_id=invocation_id,
-                )
-            )
+            responses.append(_handle_request(json.loads(record.get("body"))))
         except Exception as e:
             responses.append({"success": False, "error": str(e)})
     return {"success": True, "responses": responses}
