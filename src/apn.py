@@ -28,7 +28,7 @@ def generate_jwt_token(key_id: str, team_id: str, private_key: str) -> str:
     return jwt.encode(payload, private_key, algorithm="ES256", headers=headers)
 
 
-def send_push_notification(device_token: str, title: str, body: str) -> dict:
+def send_push_notification(device_token: str, title: str, body: str):
     """
     Send a push notification to a user's device.
 
@@ -71,4 +71,4 @@ def send_push_notification(device_token: str, title: str, body: str) -> dict:
         logging.error(f"APNs error: {response.status_code}, {error_payload}")
         raise ValueError(f"APNs rejected the request: {error_payload}")
 
-    return response.json()
+    return response

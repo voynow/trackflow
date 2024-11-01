@@ -2,6 +2,7 @@ import datetime
 import json
 import os
 from datetime import timedelta, timezone
+from typing import Optional
 
 from dotenv import load_dotenv
 from postgrest.base_request_builder import APIResponse
@@ -269,3 +270,17 @@ def update_user_device_token(athlete_id: str, device_token: str) -> None:
     client.table("user_auth").update({"device_token": device_token}).eq(
         "athlete_id", athlete_id
     ).execute()
+
+
+def get_device_token(athlete_id: int) -> Optional[str]:
+    """
+    Get the device token for a user in the database.
+
+    :param athlete_id: The athlete's ID
+    :return: The device token for the user, or None if the user does not exist
+    """
+    try:
+        user_auth = get_user_auth(athlete_id)
+        return user_auth.device_token
+    except ValueError:
+        return None
