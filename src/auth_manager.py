@@ -9,6 +9,7 @@ from stravalib.client import Client
 
 from src.email_manager import send_alert_email
 from src.supabase_client import (
+    get_device_token,
     get_user_auth,
     upsert_user,
     upsert_user_auth,
@@ -79,12 +80,14 @@ def refresh_and_update_user_token(athlete_id: int, refresh_token: str) -> UserAu
     new_jwt_token = generate_jwt(
         athlete_id=athlete_id, expires_at=access_info["expires_at"]
     )
+
     user_auth = UserAuthRow(
         athlete_id=athlete_id,
         access_token=access_info["access_token"],
         refresh_token=access_info["refresh_token"],
         expires_at=access_info["expires_at"],
         jwt_token=new_jwt_token,
+        device_token=get_device_token(athlete_id),
     )
     upsert_user_auth(user_auth)
     return user_auth
@@ -136,6 +139,7 @@ def authenticate_with_code(code: str) -> UserAuthRow:
         refresh_token=strava_client.refresh_token,
         expires_at=strava_client.token_expires_at,
         jwt_token=jwt_token,
+        device_token=get_device_token(athlete.id),
     )
     upsert_user_auth(user_auth_row)
     return user_auth_row

@@ -78,7 +78,6 @@ def start_onboarding(athlete_id: str, payload: dict) -> dict:
 
 def update_device_token_handler(athlete_id: str, payload: dict) -> dict:
     """Handle update_device_token request."""
-    print(payload)
     if not payload or "device_token" not in payload:
         return {"success": False, "error": "Missing device_token in payload"}
     try:

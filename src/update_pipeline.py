@@ -1,7 +1,7 @@
 import logging
 import os
 import traceback
-from typing import Callable, Dict
+from typing import Callable
 
 from openai import APIResponse
 from stravalib.client import Client
@@ -12,9 +12,10 @@ from src.activities import (
     get_day_of_week_summaries,
     get_weekly_summaries,
 )
+from src.apn import send_push_notif_wrapper
 from src.auth_manager import get_strava_client
 from src.constants import COACH_ROLE
-from src.email_manager import send_alert_email, send_email, training_week_to_html
+from src.email_manager import send_alert_email
 from src.mid_week_update import generate_mid_week_update
 from src.new_training_week import generate_new_training_week
 from src.supabase_client import (
@@ -37,25 +38,15 @@ logger.setLevel(logging.INFO)
 def training_week_update_pipeline(
     user: UserRow,
     pipeline_function: Callable[[UserRow, Client], TrainingWeek],
-    email_subject: str = "TrackFlow 🏃‍♂️🎯",
     upsert_training_week: Callable[
         [int, TrainingWeek], APIResponse
     ] = upsert_training_week,
-    send_email: Callable[[Dict[str, str], str, str], None] = send_email,
 ) -> TrainingWeek:
     """General processing for training week updates."""
     strava_client = get_strava_client(user.athlete_id)
-    athlete = strava_client.get_athlete()
     training_week = pipeline_function(user=user, strava_client=strava_client)
-
     upsert_training_week(user.athlete_id, training_week)
-
-    if user.email:
-        send_email(
-            to={"email": user.email, "name": f"{athlete.firstname} {athlete.lastname}"},
-            subject=email_subject,
-            html_content=training_week_to_html(training_week),
-        )
+    send_push_notif_wrapper(user)
     return training_week
 
 
@@ -105,7 +96,6 @@ def webhook_executor(user: UserRow) -> dict:
     training_week_update_pipeline(
         user=user,
         pipeline_function=mid_week_update_pipeline,
-        email_subject="TrackFlow Update Inbound! 🏃‍♂️🎯",
     )
     return {"success": True}
 
@@ -122,13 +112,11 @@ def training_week_update_executor(
             training_week_update_pipeline(
                 user=user,
                 pipeline_function=new_training_week_pipeline,
-                email_subject="Training Schedule Just Dropped 🏃‍♂️🎯",
             )
         elif exetype == ExeType.MID_WEEK:
             training_week_update_pipeline(
                 user=user,
                 pipeline_function=mid_week_update_pipeline,
-                email_subject="TrackFlow Update Inbound! 🏃‍♂️🎯",
             )
     except Exception as e:
         error_msg = f"{invocation_id=} | Error processing user {user.athlete_id} | {str(e)}\nTraceback: {traceback.format_exc()}"

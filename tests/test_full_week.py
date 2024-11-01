@@ -26,7 +26,6 @@ def gen_helper(
             user=user,
             pipeline_function=func,
             upsert_training_week=upsert_training_week_test,
-            send_email=lambda *args, **kwargs: None,
         )
         return training_week
 
