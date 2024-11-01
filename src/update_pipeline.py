@@ -49,12 +49,16 @@ def training_week_update_pipeline(
     upsert_training_week(user.athlete_id, training_week)
 
     user_auth = get_user_auth(user.athlete_id)
+    logger.info(f"User auth: {user_auth}")
     if user_auth.device_token:
-        send_push_notification(
+        response = send_push_notification(
             device_token=user_auth.device_token,
             title="TrackFlow 🏃‍♂️🎯",
             body="Your training week has been updated!",
         )
+        logger.info(f"Push notification {response=}")
+    else:
+        logger.info(f"Skipping push notification for {user.athlete_id=}")
     return training_week
 
 
