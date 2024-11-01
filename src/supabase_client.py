@@ -141,32 +141,6 @@ def get_training_week(athlete_id: int) -> TrainingWeek:
     return TrainingWeek(**json.loads(response_data["training_week"]))
 
 
-def get_training_week_test(athlete_id: int) -> TrainingWeek:
-    """
-    Get the most recent training_week_test row by athlete_id
-
-    :param athlete_id: The ID of the athlete
-    :return: An instance of TrainingWeek
-    """
-    table = client.table("training_week_test")
-    response = (
-        table.select("training_week")
-        .eq("athlete_id", athlete_id)
-        .order("created_at", desc=True)
-        .limit(1)
-        .execute()
-    )
-
-    try:
-        response_data = response.data[0]
-    except Exception as e:
-        raise ValueError(
-            f"Could not find training_week_test row with {athlete_id=}"
-        ) from e
-
-    return TrainingWeek(**json.loads(response_data["training_week"]))
-
-
 def upsert_training_week(
     athlete_id: int,
     training_week: TrainingWeek,
@@ -181,20 +155,6 @@ def upsert_training_week(
     table = client.table("training_week")
     response = table.upsert(row_data).execute()
 
-    return response
-
-
-def upsert_training_week_test(
-    athlete_id: int,
-    training_week: TrainingWeek,
-) -> APIResponse:
-    """Upsert a row into the training_week_test table"""
-    row_data = {
-        "athlete_id": athlete_id,
-        "training_week": training_week.json(),
-    }
-    table = client.table("training_week_test")
-    response = table.upsert(row_data).execute()
     return response
 
 

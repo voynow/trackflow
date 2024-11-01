@@ -15,7 +15,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 
-def strategy_router(event: dict, invocation_id: str) -> dict:
+def strategy_router(event: dict) -> dict:
     """
     Route the event to the appropriate handler based on the event type
 
@@ -40,16 +40,13 @@ def strategy_router(event: dict, invocation_id: str) -> dict:
         )
 
     elif webhook_router.is_strava_webhook_event(event):
-        return webhook_router.handle_request(event, invocation_id)
+        return webhook_router.handle_request(event)
 
     elif (
         event.get("resources")
         and event.get("resources")[0] == os.environ["NIGHTLY_EMAIL_TRIGGER_ARN"]
     ):
-        return update_pipeline.nightly_trigger_orchestrator(invocation_id)
-
-    elif event.get("trigger_test_key") == os.environ["TRIGGER_TEST_KEY"]:
-        return update_pipeline.integration_test_executor(invocation_id)
+        return update_pipeline.nightly_trigger_orchestrator()
     else:
         return {"success": False, "error": f"Could not route event: {event}"}
 
@@ -64,10 +61,10 @@ def lambda_handler(event, context):
     :return: dict with {"success": bool}
     """
     invocation_id = str(uuid.uuid4())
-    logger.info(f"{invocation_id=} | {event=} | {context=}")
+    logger.info(f"{invocation_id=} | {event=}")
 
     try:
-        response = strategy_router(event, invocation_id)
+        response = strategy_router(event)
     except Exception as e:
         response = {
             "success": False,
