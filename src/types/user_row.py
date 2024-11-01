@@ -31,5 +31,4 @@ class UserRow(BaseModel):
     preferences: str
     email: Optional[str] = None
     preferences_json: Optional[Preferences] = {}
-    is_active: bool = True
     created_at: datetime = datetime.now()

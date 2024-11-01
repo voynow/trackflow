@@ -78,7 +78,7 @@ struct ProfileView: View {
 
   private func shouldRefetchData() -> Bool {
     guard let lastFetch = lastFetchTime else {
-        return true 
+      return true
     }
     let timeSinceLastFetch = Date().timeIntervalSince(lastFetch)
     let shouldRefetch = timeSinceLastFetch > cacheTimeout
@@ -87,24 +87,24 @@ struct ProfileView: View {
 
   private func fetchProfileData() {
     guard let token = appState.jwtToken else {
-        isLoading = false
-        return
+      isLoading = false
+      return
     }
-    
+
     if !ProfileCache.shouldRefetch() && ProfileCache.data != nil {
-        self.profileData = ProfileCache.data
-        isLoading = false
-        return
+      self.profileData = ProfileCache.data
+      isLoading = false
+      return
     }
 
     APIManager.shared.fetchProfileData(token: token) { result in
-        DispatchQueue.main.async {
-            self.isLoading = false
-            if case .success(let profile) = result {
-                ProfileCache.update(profile)
-                self.profileData = profile
-            }
+      DispatchQueue.main.async {
+        self.isLoading = false
+        if case .success(let profile) = result {
+          ProfileCache.update(profile)
+          self.profileData = profile
         }
+      }
     }
   }
 }
@@ -134,7 +134,6 @@ struct ProfileInfoCard: View {
           .frame(width: 80, height: 80)
           .clipShape(Circle())
           .overlay(Circle().stroke(ColorTheme.primary, lineWidth: 2))
-          StatusIndicator(isActive: profileData.isActive)
         }
         Spacer()
         VStack(alignment: .leading, spacing: 4) {
@@ -164,38 +163,23 @@ struct ProfileInfoCard: View {
   }
 }
 
-struct StatusIndicator: View {
-  let isActive: Bool
+struct SignOutButton: View {
+  let action: () -> Void
 
   var body: some View {
-    HStack(spacing: 8) {
-      Circle()
-        .fill(isActive ? ColorTheme.green : ColorTheme.darkGrey)
-        .frame(width: 10, height: 10)
-      Text(isActive ? "Active" : "Inactive")
-        .font(.system(size: 14, weight: .medium))
-        .foregroundColor(isActive ? ColorTheme.green : ColorTheme.darkGrey)
+    Button(action: action) {
+      Text("Sign Out")
+        .font(.system(size: 18, weight: .semibold))
+        .foregroundColor(ColorTheme.primaryDark)
+        .frame(maxWidth: .infinity)
+        .padding()
+        .background(ColorTheme.darkDarkGrey)
+        .overlay(
+          RoundedRectangle(cornerRadius: 12)
+            .stroke(ColorTheme.primaryDark, lineWidth: 2)
+        )
     }
   }
-}
-
-struct SignOutButton: View {
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            Text("Sign Out")
-                .font(.system(size: 18, weight: .semibold))
-                .foregroundColor(ColorTheme.primaryDark)
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(ColorTheme.darkDarkGrey)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(ColorTheme.primaryDark, lineWidth: 2)
-                )
-        }
-    }
 }
 
 struct LoadingIcon: View {
@@ -207,34 +191,36 @@ struct LoadingIcon: View {
       .stroke(ColorTheme.primaryDark, lineWidth: 2)
       .frame(width: 50, height: 50)
       .rotationEffect(Angle(degrees: isRotating ? 360 : 0))
-      .animation(Animation.linear(duration: 1).repeatForever(autoreverses: false), value: isRotating)
-      .onAppear() {
+      .animation(
+        Animation.linear(duration: 1).repeatForever(autoreverses: false), value: isRotating
+      )
+      .onAppear {
         isRotating = true
       }
   }
 }
 
 private enum ProfileCache {
-    static var lastFetchTime: Date?
-    static var data: ProfileData?
-    static let timeout: TimeInterval = 300
-    
-    static func shouldRefetch() -> Bool {
-        guard let lastFetch = lastFetchTime else { return true }
-        return Date().timeIntervalSince(lastFetch) > timeout
-    }
-    
-    static func update(_ profile: ProfileData) {
-        data = profile
-        lastFetchTime = Date()
-    }
-    
-    static func updatePreferences(_ preferences: String) {
-        data?.preferences = preferences
-    }
-    
-    static func clear() {
-        data = nil
-        lastFetchTime = nil
-    }
+  static var lastFetchTime: Date?
+  static var data: ProfileData?
+  static let timeout: TimeInterval = 300
+
+  static func shouldRefetch() -> Bool {
+    guard let lastFetch = lastFetchTime else { return true }
+    return Date().timeIntervalSince(lastFetch) > timeout
+  }
+
+  static func update(_ profile: ProfileData) {
+    data = profile
+    lastFetchTime = Date()
+  }
+
+  static func updatePreferences(_ preferences: String) {
+    data?.preferences = preferences
+  }
+
+  static func clear() {
+    data = nil
+    lastFetchTime = nil
+  }
 }

@@ -16,10 +16,8 @@ class APIManager {
   private let baseURL = "https://lwg77yq7dd.execute-api.us-east-1.amazonaws.com/prod/signup"
 
   func fetchProfileData(token: String, completion: @escaping (Result<ProfileData, Error>) -> Void) {
-    let startTime = Date()
     let body: [String: Any] = ["jwt_token": token, "method": "get_profile"]
     performRequest(body: body, responseType: ProfileResponse.self) { result in
-      let totalTime = Date().timeIntervalSince(startTime)
       switch result {
       case .success(let response):
         if response.success, let profile = response.profile {
@@ -40,11 +38,9 @@ class APIManager {
   func fetchTrainingWeekData(
     token: String, completion: @escaping (Result<TrainingWeekData, Error>) -> Void
   ) {
-    let startTime = Date()
     let body: [String: Any] = ["jwt_token": token, "method": "get_training_week"]
 
     performRequest(body: body, responseType: TrainingWeekResponse.self) { result in
-      let totalTime = Date().timeIntervalSince(startTime)
       switch result {
       case .success(let response):
         if response.success, let trainingWeekString = response.trainingWeek,
@@ -132,11 +128,9 @@ class APIManager {
   func fetchWeeklySummaries(
     token: String, completion: @escaping (Result<[WeekSummary], Error>) -> Void
   ) {
-    let startTime = Date()
     let body: [String: Any] = ["jwt_token": token, "method": "get_weekly_summaries"]
 
     performRequest(body: body, responseType: WeeklySummariesResponse.self) { result in
-      let totalTime = Date().timeIntervalSince(startTime)
       switch result {
       case .success(let response):
         if response.success, let summariesStrings = response.weekly_summaries {

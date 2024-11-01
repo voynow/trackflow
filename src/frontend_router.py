@@ -13,7 +13,7 @@ from src.supabase_client import (
     update_user_device_token,
 )
 from src.types.update_pipeline import ExeType
-from src.update_pipeline import training_week_update_executor
+from src.update_pipeline import update_training_week
 
 
 def get_training_week_handler(athlete_id: str, payload: dict) -> dict:
@@ -37,7 +37,6 @@ def get_profile_handler(athlete_id: str, payload: dict) -> dict:
             "profile": athlete.profile,
             "email": user.email,
             "preferences": user.preferences_json.json(),
-            "is_active": user.is_active,
         },
     }
 
@@ -71,8 +70,8 @@ def get_weekly_summaries_handler(athlete_id: str, payload: dict) -> dict:
 def start_onboarding(athlete_id: str, payload: dict) -> dict:
     """Handle start_onboarding request."""
     user = get_user(athlete_id)
-    training_week_update_executor(user, ExeType.NEW_WEEK, "onboarding-trigger")
-    training_week_update_executor(user, ExeType.MID_WEEK, "onboarding-trigger")
+    update_training_week(user, ExeType.NEW_WEEK)
+    update_training_week(user, ExeType.MID_WEEK)
     return {"success": True}
 
 
