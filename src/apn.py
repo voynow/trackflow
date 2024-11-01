@@ -7,6 +7,9 @@ import httpx
 import jwt
 from dotenv import load_dotenv
 
+from src.supabase_client import get_user_auth
+from src.types.user_row import UserRow
+
 load_dotenv()
 
 
@@ -72,3 +75,15 @@ def send_push_notification(device_token: str, title: str, body: str):
         raise ValueError(f"APNs rejected the request: {error_payload}")
 
     return response
+
+
+def send_push_notif_wrapper(user: UserRow):
+    user_auth = get_user_auth(user.athlete_id)
+    if user_auth.device_token:
+        send_push_notification(
+            device_token=user_auth.device_token,
+            title="TrackFlow 🏃‍♂️🎯",
+            body="Your training week has been updated!",
+        )
+    else:
+        logger.info(f"Skipping push notification for {user.athlete_id=}")

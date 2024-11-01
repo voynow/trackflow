@@ -1,7 +1,7 @@
 import logging
 import os
 import traceback
-from typing import Callable, Dict
+from typing import Callable
 
 from openai import APIResponse
 from stravalib.client import Client
@@ -12,7 +12,7 @@ from src.activities import (
     get_day_of_week_summaries,
     get_weekly_summaries,
 )
-from src.apn import send_push_notification
+from src.apn import send_push_notif_wrapper
 from src.auth_manager import get_strava_client
 from src.constants import COACH_ROLE
 from src.email_manager import send_alert_email
@@ -22,7 +22,6 @@ from src.supabase_client import (
     get_training_week,
     get_training_week_test,
     get_user,
-    get_user_auth,
     has_user_updated_today,
     list_users,
     upsert_training_week,
@@ -47,18 +46,7 @@ def training_week_update_pipeline(
     strava_client = get_strava_client(user.athlete_id)
     training_week = pipeline_function(user=user, strava_client=strava_client)
     upsert_training_week(user.athlete_id, training_week)
-
-    user_auth = get_user_auth(user.athlete_id)
-    logger.info(f"User auth: {user_auth}")
-    if user_auth.device_token:
-        response = send_push_notification(
-            device_token=user_auth.device_token,
-            title="TrackFlow 🏃‍♂️🎯",
-            body="Your training week has been updated!",
-        )
-        logger.info(f"Push notification {response=}")
-    else:
-        logger.info(f"Skipping push notification for {user.athlete_id=}")
+    send_push_notif_wrapper(user)
     return training_week
 
 
