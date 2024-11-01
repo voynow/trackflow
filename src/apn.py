@@ -1,4 +1,5 @@
 import base64
+import logging
 import os
 import time
 
@@ -7,6 +8,10 @@ import jwt
 from dotenv import load_dotenv
 
 load_dotenv()
+
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 
 def generate_jwt_token(key_id: str, team_id: str, private_key: str) -> str:
@@ -23,20 +28,21 @@ def generate_jwt_token(key_id: str, team_id: str, private_key: str) -> str:
     return jwt.encode(payload, private_key, algorithm="ES256", headers=headers)
 
 
-def send_push_notification(
-    device_token: str, payload: dict, auth_token: str, use_sandbox: bool = False
-) -> None:
+def send_push_notification(device_token: str, title: str, body: str) -> dict:
     """
-    Send a push notification to a device token.
+    Send a push notification to a user's device.
 
-    Args:
-        device_token: User's device token
-        payload: Notification payload
-        auth_token: APNs JWT token
-        use_sandbox: If True, uses sandbox environment
+    :param device_token: User's device token
+    :param title: Notification title
+    :param body: Notification body
     """
-    base_url = "api.sandbox.push.apple.com" if use_sandbox else "api.push.apple.com"
-    # URL encode the device token and ensure no spaces
+    auth_token = generate_jwt_token(
+        key_id=os.environ["APN_KEY_ID"],
+        team_id=os.environ["APN_TEAM_ID"],
+        private_key=base64.b64decode(os.environ["APN_PRIVATE_KEY"]).decode(),
+    )
+
+    base_url = "api.push.apple.com"
     clean_token = device_token.strip().replace(" ", "")
     url = f"https://{base_url}/3/device/{clean_token}"
     headers = {
@@ -44,34 +50,25 @@ def send_push_notification(
         "apns-topic": "voynow.mobile",
         "content-type": "application/json",
     }
+    payload = {
+        "aps": {
+            "alert": {"title": title, "body": body},
+            "sound": "default",
+        }
+    }
 
     try:
         client = httpx.Client(http2=True, verify=True, timeout=30.0)
         response = client.post(url, json=payload, headers=headers)
         response.raise_for_status()
-        print("Notification sent successfully")
         client.close()
 
     except httpx.RequestError as e:
-        print(f"Connection error: {e}")
+        logging.error(f"Connection error: {e}")
         raise
-    except httpx.HTTPStatusError as e:
+    except httpx.HTTPStatusError:
         error_payload = response.json() if response.content else "No error details"
-        print(f"APNs error: {response.status_code}, {error_payload}")
+        logging.error(f"APNs error: {response.status_code}, {error_payload}")
         raise ValueError(f"APNs rejected the request: {error_payload}")
 
-
-auth_token = generate_jwt_token(
-    key_id=os.environ["APN_KEY_ID"],
-    team_id=os.environ["APN_TEAM_ID"],
-    private_key=base64.b64decode(os.environ["APN_PRIVATE_KEY"]).decode(),
-)
-
-device_token = "..."
-payload = {
-    "aps": {
-        "alert": {"title": "Hello", "body": "This is a test notification"},
-        "sound": "default",
-    }
-}
-send_push_notification(device_token, payload, auth_token)
+    return response.json()
