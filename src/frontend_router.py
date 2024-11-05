@@ -3,7 +3,7 @@ from typing import Callable, Dict, Optional
 import jwt
 
 from src import auth_manager
-from src.activities import get_activities_df, get_weekly_summaries
+from src.activities import get_daily_activity, get_weekly_summaries
 from src.auth_manager import get_strava_client
 from src.supabase_client import (
     get_training_week,
@@ -59,8 +59,7 @@ def get_weekly_summaries_handler(athlete_id: str, payload: dict) -> dict:
     """
     user = get_user(athlete_id)
     strava_client = get_strava_client(user.athlete_id)
-    activities_df = get_activities_df(strava_client)
-    weekly_summaries = get_weekly_summaries(activities_df)
+    weekly_summaries = get_weekly_summaries(strava_client)
     return {
         "success": True,
         "weekly_summaries": [summary.json() for summary in weekly_summaries],

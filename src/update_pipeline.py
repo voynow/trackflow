@@ -1,15 +1,8 @@
 import logging
-import os
 import traceback
-from typing import Callable, Literal, TypeAlias
-
-from openai import APIResponse
-from stravalib.client import Client
 
 from src.activities import (
-    get_activities_df,
     get_activity_summaries,
-    get_day_of_week_summaries,
     get_weekly_summaries,
 )
 from src.apn import send_push_notif_wrapper
@@ -38,21 +31,18 @@ def update_training_week(user: UserRow, exe_type: ExeType) -> dict:
         strava_client = get_strava_client(user.athlete_id)
 
         if exe_type == ExeType.NEW_WEEK:
-            activities_df = get_activities_df(strava_client)
-            day_summaries = get_day_of_week_summaries(activities_df)
-            weekly_summaries = get_weekly_summaries(activities_df)
+            weekly_summaries = get_weekly_summaries(strava_client)
             training_week = generate_new_training_week(
                 sysmsg_base=f"{COACH_ROLE}\n{user.preferences}",
                 weekly_summaries=weekly_summaries,
-                day_of_week_summaries=day_summaries,
             )
         else:  # ExeType.MID_WEEK
             current_week = get_training_week(user.athlete_id)
-            activities = get_activity_summaries(strava_client, num_weeks=1)
+            activity_summaries = get_activity_summaries(strava_client, num_weeks=1)
             training_week = generate_mid_week_update(
                 sysmsg_base=f"{COACH_ROLE}\n{user.preferences}",
                 training_week=current_week,
-                completed_activities=activities,
+                completed_activities=activity_summaries,
             )
 
         upsert_training_week(user.athlete_id, training_week)
