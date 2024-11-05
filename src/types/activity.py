@@ -12,9 +12,9 @@ class Activity(BaseModel):
     comment_count: int = 0
     distance: float = 0.0
     elapsed_time: timedelta = timedelta(0)
-    elev_high: float = 0.0
-    elev_low: float = 0.0
-    external_id: str = ""
+    elev_high: Optional[float] = None
+    elev_low: Optional[float] = None
+    external_id: Optional[str] = None
     flagged: bool = False
     gear_id: Optional[str] = None
     has_kudoed: bool = False
@@ -30,15 +30,15 @@ class Activity(BaseModel):
     total_elevation_gain: float = 0.0
     total_photo_count: int = 0
     trainer: bool = False
-    upload_id: int = -1
-    workout_type: int = 0
+    upload_id: Optional[int] = None
+    workout_type: Optional[int] = None
     utc_offset: float = 0.0
     pr_count: int = 0
     has_heartrate: bool = False
-    average_heartrate: float = 0.0
-    max_heartrate: float = 0.0
-    average_cadence: float = 0.0
-    average_temp: float = 0.0
+    average_heartrate: Optional[float] = None
+    max_heartrate: Optional[float] = None
+    average_cadence: Optional[float] = None
+    average_temp: Optional[float] = None
 
 
 class DailyMetrics(BaseModel):
