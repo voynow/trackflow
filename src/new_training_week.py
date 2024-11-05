@@ -3,6 +3,7 @@ from typing import List
 
 from src.llm import get_completion, get_completion_json
 from src.training_week import standardize_training_week
+from src.types.activity import WeekSummary
 from src.types.day_of_week_summary import DayOfWeekSummary
 from src.types.training_week import (
     TrainingSession,
@@ -10,7 +11,6 @@ from src.types.training_week import (
     TrainingWeekGeneration,
     TrainingWeekWithPlanning,
 )
-from src.types.week_summary import WeekSummary
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -61,13 +61,11 @@ Build out their next week of training. Distribute volume and intensity evenly th
 
 def initial_week_generation(
     sysmsg_base: str,
-    typical_week_training_review: str,
     coaches_target: str,
 ) -> TrainingWeekGeneration:
-    message = f"""{sysmsg_base}\nHere is your review of your client's typical week:
-{typical_week_training_review}
+    message = f"""{sysmsg_base}
 
-Additionally, here is the weekly mileage target you provided:
+Some thoughts on your client's weekly mileage target:
 {coaches_target}
 
 Build out their next week of training. Distribute volume and intensity evenly throughout the week. You must adhere to the weekly mileage target and long run range."""
@@ -79,16 +77,14 @@ Build out their next week of training. Distribute volume and intensity evenly th
 
 def retry_week_generation(
     sysmsg_base: str,
-    typical_week_training_review: str,
     coaches_target: str,
     weekly_mileage_target: float,
     actual_mileage: float,
     previous_training_week: TrainingWeek,
 ) -> TrainingWeekGeneration:
-    message = f"""{sysmsg_base}\nHere is your review of your client's typical week:
-{typical_week_training_review}
+    message = f"""{sysmsg_base}
 
-Additionally, here is the weekly mileage target you provided:
+Some thoughts on your client's weekly mileage target:
 {coaches_target}
 
 The previous training week you generated had a total mileage of {actual_mileage}, which did not meet the target of {weekly_mileage_target} (within 5%).
@@ -121,7 +117,6 @@ def is_mileage_within_target(actual: float, target: float) -> bool:
 
 def generate_week(
     sysmsg_base: str,
-    typical_week_training_review: str,
     coaches_target: str,
 ) -> TrainingWeekGeneration:
     """
@@ -129,7 +124,6 @@ def generate_week(
     is not within acceptable range of the target. Returns the best attempt.
 
     :param sysmsg_base: Base system message for the LLM
-    :param typical_week_training_review: Review of the client's typical training week
     :param coaches_target: Coach's target for the week
     :return: TrainingWeekGeneration: The best generated training week
     """
@@ -141,13 +135,11 @@ def generate_week(
         if attempt == 0:
             training_week_generation = initial_week_generation(
                 sysmsg_base=sysmsg_base,
-                typical_week_training_review=typical_week_training_review,
                 coaches_target=coaches_target,
             )
         else:
             training_week_generation = retry_week_generation(
                 sysmsg_base=sysmsg_base,
-                typical_week_training_review=typical_week_training_review,
                 coaches_target=coaches_target,
                 weekly_mileage_target=training_week_generation.weekly_mileage_target,
                 actual_mileage=training_week_generation.training_week.total_mileage,
@@ -200,18 +192,13 @@ def ensure_completed_set_to_false(
 
 def generate_new_training_week(
     sysmsg_base: str,
-    day_of_week_summaries: List[DayOfWeekSummary],
     weekly_summaries: List[WeekSummary],
 ) -> TrainingWeek:
-    typical_week_training_review = get_typical_week_training_review(
-        sysmsg_base=sysmsg_base, day_of_week_summaries=day_of_week_summaries
-    )
     coaches_target = get_weekly_mileage_target(
         sysmsg_base=sysmsg_base, weekly_summaries=weekly_summaries
     )
     training_week_with_planning = generate_week(
         sysmsg_base=sysmsg_base,
-        typical_week_training_review=typical_week_training_review,
         coaches_target=coaches_target,
     )
 

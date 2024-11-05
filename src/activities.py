@@ -1,107 +1,92 @@
+from collections import defaultdict
 from datetime import datetime, timedelta
-from typing import Dict, List
+from typing import List
 
-import polars as pl
 from dotenv import load_dotenv
 from stravalib.client import Client
-from stravalib.model import Activity
 
-from src.types.activity_summary import ActivitySummary
-from src.types.day_of_week_summary import DayOfWeekSummary
-from src.types.week_summary import WeekSummary
+from src import constants
+from src.types.activity import Activity, ActivitySummary, DailyMetrics, WeekSummary
 from src.utils import datetime_now_est
 
 load_dotenv()
 
 
-def activities_to_df(activities: List[Activity]) -> pl.DataFrame:
-    """
-    Converts a list of activities into polars DataFrame
-
-    :param activities: List of activity objects to be converted to DataFrame
-    :return: A polars DataFrame with activities data
-    """
-    df_schema = {
-        "id": pl.UInt64,
-        "name": pl.Utf8,
-        "distance": pl.Float64,
-        "moving_time": pl.Duration,
-        "total_elevation_gain": pl.Float64,
-        "start_date_local": pl.Datetime,
-    }
-    df_builder: Dict[str, List] = {attribute: [] for attribute in df_schema}
-
-    for activity in activities:
-        if activity.sport_type == "Run":
-            for attribute in df_schema:
-                df_builder[attribute].append(getattr(activity, attribute))
-
-    return pl.DataFrame(
-        {col: pl.Series(df_builder[col], dtype=df_schema[col]) for col in df_schema}
-    )
-
-
 def add_missing_dates(
-    df: pl.DataFrame, start_date: datetime, end_date: datetime
-) -> pl.DataFrame:
+    activities: List[Activity], start_date: datetime, end_date: datetime
+) -> List[Activity]:
     """
-    Ensures that the DataFrame contains all dates between the start and end date
+    Ensures that the list of activities includes placeholder activities for all dates
+    between the start and end date.
 
-    :param df: The initial polars DataFrame containing activity data
-    :param start_date: The start date of the range
-    :param end_date: The end date of the range
+    :param activities: List of Activity Pydantic models.
+    :param start_date: The start date of the range.
+    :param end_date: The end date of the range.
+    :return: A list of Activity objects, with missing dates filled in as placeholder activities.
     """
-    df_with_date = df.with_columns(df["start_date_local"].dt.date().alias("date")).drop(
-        "start_date_local"
-    )
-    n_days = (end_date.date() - start_date.date()).days + 1
-    date_range_df = pl.DataFrame(
-        {"date": [start_date.date() + timedelta(days=i) for i in range(n_days)]}
-    )
-    return date_range_df.join(df_with_date, on="date", how="left", coalesce=True)
+    existing_dates = {activity.start_date_local.date() for activity in activities}
+    total_days = (end_date.date() - start_date.date()).days + 1
+    all_dates = {start_date.date() + timedelta(days=i) for i in range(total_days)}
+    missing_dates = all_dates - existing_dates
 
-
-def preprocess(df: pl.DataFrame) -> pl.DataFrame:
-    """
-    :param df: The initial polars DataFrame containing activity data
-    :return: A transformed polars DataFrame with cleansed data
-    """
-    METERS_PER_MILE = 1609.34
-    FEET_PER_METER = 3.28084
-    MICROSECONDS_PER_MINUTE = 1_000_000 * 60
-
-    # Define transformation operations for each column
-    col_operations = [
-        pl.col("date")
-        .dt.strftime("%a")
-        .str.to_lowercase()
-        .first()
-        .alias("day_of_week"),
-        pl.col("date").dt.week().first().alias("week_of_year"),
-        pl.col("date").dt.year().first().alias("year"),
-        pl.col("distance").sum().alias("distance_in_miles") / METERS_PER_MILE,
-        pl.col("total_elevation_gain").sum().alias("elevation_gain_in_feet")
-        * FEET_PER_METER,
-        (pl.col("moving_time").sum() / MICROSECONDS_PER_MINUTE).alias(
-            "moving_time_in_minutes"
-        ),
-        (
-            (pl.col("moving_time").sum() / MICROSECONDS_PER_MINUTE)
-            / (pl.col("distance").sum() / METERS_PER_MILE)
-        ).alias("pace_minutes_per_mile"),
+    placeholders = [
+        Activity(
+            start_date=datetime.combine(date, datetime.min.time()),
+            start_date_local=datetime.combine(date, datetime.min.time()),
+        )
+        for date in missing_dates
     ]
-
-    # Apply transformations, sorting, column removals, and filtering
-    return (
-        df.group_by("date")
-        .agg(col_operations)
-        .sort("date")
-        # drop incomplete first week
-        .filter(pl.col("week_of_year") != pl.col("week_of_year").min())
-    )
+    return sorted(activities + placeholders, key=lambda x: x.start_date_local)
 
 
-def get_activities_df(strava_client: Client, num_weeks: int = 8) -> pl.DataFrame:
+def aggregate_daily_metrics(activities: List[Activity]) -> List[DailyMetrics]:
+    """
+    Aggregates and transforms activity data to calculate daily and weekly metrics.
+
+    :param activities: List of Activity Pydantic models containing activity data
+    :return: A list of DailyMetrics objects with aggregated and transformed metrics
+    """
+
+    results = []
+    activities_by_date = defaultdict(list)
+    for activity in activities:
+        activities_by_date[activity.start_date_local.date()].append(activity)
+
+    for activity_date, daily_activities in activities_by_date.items():
+        total_distance = sum(a.distance for a in daily_activities)
+        total_elevation_gain = sum(a.total_elevation_gain for a in daily_activities)
+        total_moving_time = sum(a.moving_time.total_seconds() for a in daily_activities)
+        activity_count = len([a for a in daily_activities if a.id != -1])
+
+        if total_distance > 0:
+            pace_minutes_per_mile = (total_moving_time / 60) / (
+                total_distance / constants.METERS_PER_MILE
+            )
+        else:
+            pace_minutes_per_mile = None
+
+        results.append(
+            DailyMetrics(
+                date=activity_date,
+                day_of_week=activity_date.strftime("%a").lower(),
+                week_of_year=activity_date.isocalendar()[1],
+                year=activity_date.year,
+                distance_in_miles=total_distance / constants.METERS_PER_MILE,
+                elevation_gain_in_feet=total_elevation_gain * constants.FEET_PER_METER,
+                moving_time_in_minutes=total_moving_time / 60,
+                pace_minutes_per_mile=pace_minutes_per_mile,
+                activity_count=activity_count,
+            )
+        )
+
+    results = sorted(results, key=lambda x: x.date)
+    first_week = min(item.week_of_year for item in results)
+    results = [item for item in results if item.week_of_year != first_week]
+
+    return results
+
+
+def get_daily_activity(strava_client: Client, num_weeks: int = 8) -> List[DailyMetrics]:
     """
     Fetches activities for a given athlete ID and returns a DataFrame with daily aggregated activities
 
@@ -112,112 +97,91 @@ def get_activities_df(strava_client: Client, num_weeks: int = 8) -> pl.DataFrame
     end_date = datetime_now_est()
     start_date = end_date - timedelta(weeks=num_weeks)
 
-    activities = strava_client.get_activities(after=start_date, before=end_date)
-    raw_df = activities_to_df(activities)
-    all_dates_df = add_missing_dates(
-        df=raw_df, start_date=start_date, end_date=end_date
-    )
-    return preprocess(all_dates_df)
-
-
-def get_activity_summaries(strava_client, num_weeks=8) -> List[ActivitySummary]:
-    """
-    Fetches and returns activity summaries for a given athlete ID
-
-    :param athlete_id: The Strava athlete ID
-    :param num_weeks: The number of weeks to fetch activities for
-    :return: A list of ActivitySummary objects, lighter weight than the full get_activities_df DataFrame
-    """
-    df = get_activities_df(strava_client, num_weeks)
-    concise_activities_df = df.with_columns(
-        pl.col("date").map_elements(
-            lambda x: x.strftime("%A, %B %d, %Y"), return_dtype=pl.Utf8
-        ),
-        pl.col("distance_in_miles").map_elements(lambda x: round(x, 2)),
-        pl.col("elevation_gain_in_feet").map_elements(lambda x: round(x, 2)),
-        pl.col("pace_minutes_per_mile").map_elements(lambda x: round(x, 2)),
-    ).drop(
-        "id",
-        "name",
-        "day_of_week",
-        "week_of_year",
-        "year",
-        "moving_time_in_minutes",
-    )
-    return [ActivitySummary(**row) for row in concise_activities_df.rows(named=True)]
-
-
-def get_day_of_week_summaries(activities_df: pl.DataFrame) -> List[DayOfWeekSummary]:
-    """
-    Aggregate activities DataFrame by day of the week and calculate summary statistics
-    for each day. The resulting objects provide insights into the average week of
-    the athlete from a day-of-week perspective.
-
-    :param activities_df: The DataFrame containing activities data
-    :return: A list of DayOfWeekSummary objects with summary statistics
-    """
-    day_of_week_order = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
-
-    df = (
-        activities_df.group_by("day_of_week")
-        .agg(
-            [
-                pl.when(pl.col("distance_in_miles") > 0.25)
-                .then(pl.lit(1))
-                .otherwise(pl.lit(0))
-                .sum()
-                .alias("number_of_runs"),
-                pl.col("distance_in_miles").mean().alias("avg_miles"),
-                pl.col("pace_minutes_per_mile").drop_nans().mean().alias("avg_pace"),
-            ]
-        )
-        .with_columns(
-            pl.col("day_of_week")
-            .apply(lambda x: day_of_week_order.index(x))
-            .alias("day_order")
-        )
-        .sort("day_order")
-        .drop("day_order")
+    all_strava_activities = strava_client.get_activities(
+        after=start_date, before=end_date
     )
 
+    # filter and convert to our Activity type
+    activities = [
+        Activity(**activity.__dict__)
+        for activity in all_strava_activities
+        if activity.sport_type == "Run"
+    ]
+
+    # add empty activities for missing dates
+    all_dates_activities = add_missing_dates(
+        activities=activities, start_date=start_date, end_date=end_date
+    )
+
+    # aggregate metrics
+    return aggregate_daily_metrics(all_dates_activities)
+
+
+def get_activity_summaries(
+    strava_client: Client, num_weeks: int = 8
+) -> List[ActivitySummary]:
+    """
+    Fetches and returns activity summaries for a given athlete ID.
+
+    :param strava_client: The Strava client object to fetch data.
+    :param num_weeks: The number of weeks to fetch activities for.
+    :return: A list of ActivitySummary objects, lighter weight than Activity
+    """
+    daily_metrics = get_daily_activity(strava_client, num_weeks)
     return [
-        DayOfWeekSummary(
-            day_of_week=row["day_of_week"],
-            number_of_runs=row["number_of_runs"],
-            avg_miles=round(row["avg_miles"], 2),
-            avg_pace=round(row["avg_pace"], 2) if row["avg_pace"] is not None else 0,
+        ActivitySummary(
+            date=metrics.date.strftime("%A, %B %d, %Y"),
+            distance_in_miles=round(metrics.distance_in_miles, 2),
+            elevation_gain_in_feet=round(metrics.elevation_gain_in_feet, 2),
+            pace_minutes_per_mile=(
+                round(metrics.pace_minutes_per_mile, 2)
+                if metrics.pace_minutes_per_mile is not None
+                else None
+            ),
         )
-        for row in df.to_dicts()
+        for metrics in daily_metrics
     ]
 
 
-def get_weekly_summaries(activities_df: pl.DataFrame) -> List[WeekSummary]:
+def get_weekly_summaries(strava_client: Client) -> List[WeekSummary]:
     """
-    Aggregate activities DataFrame by week of the year and calculate
-    load for each week, anchored by the first date of the week.
+    Aggregate daily metrics by week of the year and calculate load for each week.
 
-    :param activities_df: The DataFrame containing activities data
+    :param strava_client: The Strava client object to fetch data.
     :return: A list of WeekSummary objects with summary statistics
     """
-    df = (
-        activities_df.group_by(["year", "week_of_year"])
-        .agg(
-            [
-                pl.col("distance_in_miles").sum().alias("total_distance"),
-                pl.col("distance_in_miles").max().alias("longest_run"),
-                pl.col("date").min().alias("start_of_week"),
-            ]
-        )
-        .sort(["year", "week_of_year"])
+    daily_metrics = get_daily_activity(strava_client)
+
+    weekly_aggregates = defaultdict(
+        lambda: {"total_distance": 0, "longest_run": 0, "start_of_week": None}
     )
 
-    return [
-        WeekSummary(
-            year=row["year"],
-            week_of_year=row["week_of_year"],
-            week_start_date=datetime.strptime(str(row["start_of_week"]), "%Y-%m-%d"),
-            longest_run=round(row["longest_run"], 2),
-            total_distance=round(row["total_distance"], 2),
+    for metrics in daily_metrics:
+        key = (metrics.year, metrics.week_of_year)
+
+        # calculate total distance and longest run
+        weekly_aggregates[key]["total_distance"] += metrics.distance_in_miles
+        weekly_aggregates[key]["longest_run"] = max(
+            weekly_aggregates[key]["longest_run"], metrics.distance_in_miles
         )
-        for row in df.to_dicts()
+
+        # update start of week
+        if (
+            weekly_aggregates[key]["start_of_week"] is None
+            or metrics.date < weekly_aggregates[key]["start_of_week"]
+        ):
+            weekly_aggregates[key]["start_of_week"] = metrics.date
+
+    weekly_summaries = [
+        WeekSummary(
+            year=year,
+            week_of_year=week,
+            week_start_date=start_of_week,
+            longest_run=round(aggregate["longest_run"], 2),
+            total_distance=round(aggregate["total_distance"], 2),
+        )
+        for (year, week), aggregate in sorted(weekly_aggregates.items())
+        for start_of_week in [aggregate["start_of_week"]]
     ]
+
+    return weekly_summaries

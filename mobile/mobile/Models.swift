@@ -157,8 +157,8 @@ struct WeekSummary: Codable {
 
   var parsedWeekStartDate: Date? {
     let formatter = DateFormatter()
-    formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
-    return formatter.date(from: weekStartDate)
+    formatter.dateFormat = "yyyy-MM-dd"
+    return formatter.date(from: weekStartDate.prefix(10).description)
   }
 }
 

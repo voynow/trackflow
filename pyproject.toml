@@ -3,7 +3,7 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
-name = "strava"
+name = "trackflow"
 version = "0.1.0"
 description = ""
 authors = ["voynow <voynow99@gmail.com>"]
@@ -14,7 +14,6 @@ python = "^3.10"
 stravalib = "^v1.7"
 supabase = "*"
 python-dotenv = "^1.0.1"
-polars = "^0.20.31"
 urllib3 = "2.2.2"
 openai = "1.39.0"
 sib-api-v3-sdk = "^7.6.0"
