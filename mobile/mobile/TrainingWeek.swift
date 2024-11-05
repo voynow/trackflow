@@ -101,7 +101,7 @@ struct MultiWeekProgressView: View {
   let numberOfWeeks: Int
 
   private var displayedSummaries: [WeekSummary] {
-    Array(weeklySummaries.prefix(numberOfWeeks).reversed())
+    Array(weeklySummaries.prefix(numberOfWeeks))
   }
 
   private var maxMileage: Double {
