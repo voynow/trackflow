@@ -3,7 +3,7 @@ from typing import Callable, Dict, Optional
 import jwt
 
 from src import auth_manager
-from src.activities import get_daily_activity, get_weekly_summaries
+from src.activities import get_weekly_summaries
 from src.auth_manager import get_strava_client
 from src.supabase_client import (
     get_training_week,
@@ -36,7 +36,7 @@ def get_profile_handler(athlete_id: str, payload: dict) -> dict:
             "lastname": athlete.lastname,
             "profile": athlete.profile,
             "email": user.email,
-            "preferences": user.preferences_json.json(),
+            "preferences": user.preferences.json(),
         },
     }
 
@@ -45,7 +45,7 @@ def update_preferences_handler(athlete_id: str, payload: dict) -> dict:
     """Handle update_preferences request."""
     if payload is None or "preferences" not in payload:
         return {"success": False, "error": "Missing preferences in payload"}
-    update_preferences(athlete_id=athlete_id, preferences_json=payload["preferences"])
+    update_preferences(athlete_id=athlete_id, preferences=payload["preferences"])
     return {"success": True}
 
 
