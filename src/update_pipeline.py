@@ -33,14 +33,14 @@ def update_training_week(user: UserRow, exe_type: ExeType) -> dict:
         if exe_type == ExeType.NEW_WEEK:
             weekly_summaries = get_weekly_summaries(strava_client)
             training_week = generate_new_training_week(
-                sysmsg_base=f"{COACH_ROLE}\n{user.preferences}",
+                sysmsg_base=f"{COACH_ROLE}\nClient Preferences: {user.preferences}",
                 weekly_summaries=weekly_summaries,
             )
         else:  # ExeType.MID_WEEK
             current_week = get_training_week(user.athlete_id)
             activity_summaries = get_activity_summaries(strava_client, num_weeks=1)
             training_week = generate_mid_week_update(
-                sysmsg_base=f"{COACH_ROLE}\n{user.preferences}",
+                sysmsg_base=f"{COACH_ROLE}\nClient Preferences: {user.preferences}",
                 training_week=current_week,
                 completed_activities=activity_summaries,
             )

@@ -38,7 +38,21 @@ def send_push_notification(device_token: str, title: str, body: str):
     :param device_token: User's device token
     :param title: Notification title
     :param body: Notification body
+    :raises ValueError: If device token is invalid
     """
+    # Validate device token format
+    clean_token = device_token.strip().replace(" ", "")
+    if (
+        not clean_token
+        or len(clean_token) != 64
+        or not all(c in "0123456789abcdefABCDEF" for c in clean_token)
+    ):
+        raise ValueError(f"Invalid device token format: {device_token}")
+
+    logging.info(
+        f"Sending push notification with token: {clean_token[:8]}..."
+    )  # Log first 8 chars for debugging
+
     auth_token = generate_jwt_token(
         key_id=os.environ["APN_KEY_ID"],
         team_id=os.environ["APN_TEAM_ID"],
@@ -46,7 +60,6 @@ def send_push_notification(device_token: str, title: str, body: str):
     )
 
     base_url = "api.push.apple.com"
-    clean_token = device_token.strip().replace(" ", "")
     url = f"https://{base_url}/3/device/{clean_token}"
     headers = {
         "Authorization": f"Bearer {auth_token}",
@@ -78,12 +91,19 @@ def send_push_notification(device_token: str, title: str, body: str):
 
 
 def send_push_notif_wrapper(user: UserRow):
+    """Send push notification to user if they have a valid device token."""
     user_auth = get_user_auth(user.athlete_id)
-    if user_auth.device_token:
+    if not user_auth.device_token:
+        logger.info(f"No device token for user {user.athlete_id}")
+        return
+
+    try:
         send_push_notification(
             device_token=user_auth.device_token,
             title="TrackFlow 🏃‍♂️🎯",
             body="Your training week has been updated!",
         )
-    else:
-        logger.info(f"Skipping push notification for {user.athlete_id=}")
+    except ValueError as e:
+        logger.error(f"Invalid device token for user {user.athlete_id}: {e}")
+    except Exception as e:
+        logger.error(f"Failed to send push notification to user {user.athlete_id}: {e}")

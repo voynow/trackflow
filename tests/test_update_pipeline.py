@@ -3,8 +3,7 @@ import sys
 sys.path.append(".")
 
 import os
-from unittest.mock import MagicMock, patch
-from unittest.mock import ANY
+from unittest.mock import ANY, patch
 
 import pytest
 
@@ -21,12 +20,7 @@ def test_update_training_week(exe_type):
         "src.update_pipeline.send_push_notif_wrapper"
     ) as mock_send_push:
 
-        # Run the function
         result = update_training_week(USER, exe_type)
-
-        # Assertions for function output and called mocks
         assert result == {"success": True}
-
         mock_upsert.assert_called_with(USER.athlete_id, ANY)
-
         mock_send_push.assert_called_once_with(USER)

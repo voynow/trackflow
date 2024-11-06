@@ -147,14 +147,11 @@ def authenticate_with_code(code: str) -> UserAuthRow:
 
 def signup(user_auth: UserAuthRow, email: Optional[str] = None) -> dict:
     """ """
-    preferences = (
-        "I'm looking to improve my running performance while being smart and realistic."
-    )
     send_alert_email(
         subject="TrackFlow Alert: New Signup Attempt",
-        text_content=f"You have a new client {email=} attempting to signup with {preferences=}",
+        text_content=f"You have a new client {email=} attempting to signup",
     )
-    upsert_user(UserRow(athlete_id=user_auth.athlete_id, preferences=preferences))
+    upsert_user(UserRow(athlete_id=user_auth.athlete_id))
     return {"success": True, "jwt_token": user_auth.jwt_token, "is_new_user": True}
 
 

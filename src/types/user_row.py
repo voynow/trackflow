@@ -23,12 +23,11 @@ class TheoreticalTrainingSession(BaseModel):
 
 class Preferences(BaseModel):
     race_distance: Optional[RaceDistance] = None
-    ideal_training_week: Optional[List[TheoreticalTrainingSession]] = None
+    ideal_training_week: Optional[List[TheoreticalTrainingSession]] = []
 
 
 class UserRow(BaseModel):
     athlete_id: int
-    preferences: str
+    preferences: Optional[Preferences] = Preferences()
     email: Optional[str] = None
-    preferences_json: Optional[Preferences] = {}
     created_at: datetime = datetime.now()

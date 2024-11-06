@@ -158,22 +158,22 @@ def upsert_training_week(
     return response
 
 
-def update_preferences(athlete_id: int, preferences_json: dict) -> APIResponse:
+def update_preferences(athlete_id: int, preferences: dict) -> APIResponse:
     """
     Update user's preferences
 
     :param athlete_id: The ID of the athlete
-    :param preferences: json string representing a Preferences object
+    :param preferences: A Preferences object as a dictionary
     :return: APIResponse
     """
     try:
-        Preferences(**preferences_json)
+        Preferences(**preferences)
     except Exception as e:
         raise ValueError("Invalid preferences") from e
 
     table = client.table("user")
     response = (
-        table.update({"preferences_json": preferences_json})
+        table.update({"preferences": preferences})
         .eq("athlete_id", athlete_id)
         .execute()
     )
