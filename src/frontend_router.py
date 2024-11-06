@@ -1,3 +1,4 @@
+import time
 from typing import Callable, Dict, Optional
 
 import jwt
@@ -18,7 +19,9 @@ from src.update_pipeline import update_training_week
 
 def get_training_week_handler(athlete_id: str, payload: dict) -> dict:
     """Handle get_training_week request."""
+    start_time = time.time()
     training_week = get_training_week(athlete_id)
+    print(f"get_training_week took {time.time() - start_time} seconds")
     return {
         "success": True,
         "training_week": training_week.json(),
@@ -27,8 +30,10 @@ def get_training_week_handler(athlete_id: str, payload: dict) -> dict:
 
 def get_profile_handler(athlete_id: str, payload: dict) -> dict:
     """Handle get_profile request."""
+    start_time = time.time()
     user = get_user(athlete_id)
     athlete = auth_manager.get_strava_client(athlete_id).get_athlete()
+    print(f"get_profile took {time.time() - start_time} seconds")
     return {
         "success": True,
         "profile": {
@@ -43,9 +48,11 @@ def get_profile_handler(athlete_id: str, payload: dict) -> dict:
 
 def update_preferences_handler(athlete_id: str, payload: dict) -> dict:
     """Handle update_preferences request."""
+    start_time = time.time()
     if payload is None or "preferences" not in payload:
         return {"success": False, "error": "Missing preferences in payload"}
     update_preferences(athlete_id=athlete_id, preferences=payload["preferences"])
+    print(f"update_preferences took {time.time() - start_time} seconds")
     return {"success": True}
 
 
@@ -57,9 +64,11 @@ def get_weekly_summaries_handler(athlete_id: str, payload: dict) -> dict:
     :param payload: unused payload
     :return: List of WeekSummary objects as JSON
     """
+    start_time = time.time()
     user = get_user(athlete_id)
     strava_client = get_strava_client(user.athlete_id)
     weekly_summaries = get_weekly_summaries(strava_client)
+    print(f"get_weekly_summaries took {time.time() - start_time} seconds")
     return {
         "success": True,
         "weekly_summaries": [summary.json() for summary in weekly_summaries],
@@ -68,22 +77,27 @@ def get_weekly_summaries_handler(athlete_id: str, payload: dict) -> dict:
 
 def start_onboarding(athlete_id: str, payload: dict) -> dict:
     """Handle start_onboarding request."""
+    start_time = time.time()
     user = get_user(athlete_id)
     update_training_week(user, ExeType.NEW_WEEK)
     update_training_week(user, ExeType.MID_WEEK)
+    print(f"start_onboarding took {time.time() - start_time} seconds")
     return {"success": True}
 
 
 def update_device_token_handler(athlete_id: str, payload: dict) -> dict:
     """Handle update_device_token request."""
+    start_time = time.time()
     if not payload or "device_token" not in payload:
         return {"success": False, "error": "Missing device_token in payload"}
     try:
         update_user_device_token(
             athlete_id=athlete_id, device_token=payload["device_token"]
         )
+        print(f"update_device_token took {time.time() - start_time} seconds")
         return {"success": True}
     except Exception as e:
+        print(f"update_device_token took {time.time() - start_time} seconds")
         return {"success": False, "error": f"Failed to update device token: {str(e)}"}
 
 
