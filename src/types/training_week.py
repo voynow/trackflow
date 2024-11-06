@@ -29,7 +29,7 @@ class TrainingSession(BaseModel):
     session_type: SessionType
     distance: float = Field(description="Distance in miles")
     notes: str = Field(
-        description="Concise notes about the session, e.g. '2x2mi @ 10k pace' or 'easy pace'"
+        description="Detailed yet concise notes about the session from the coach's perspective"
     )
     completed: bool = Field(description="Whether the session has been completed")
 
