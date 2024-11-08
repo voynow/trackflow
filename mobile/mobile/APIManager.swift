@@ -3,7 +3,6 @@ import Foundation
 class APIManager {
   static let shared = APIManager()
   private init() {
-    // Configure session for connection reuse
     let config = URLSessionConfiguration.default
     config.timeoutIntervalForRequest = 30
     config.timeoutIntervalForResource = 300
@@ -38,9 +37,12 @@ class APIManager {
   func fetchTrainingWeekData(
     token: String, completion: @escaping (Result<TrainingWeekData, Error>) -> Void
   ) {
+    let startTime = CFAbsoluteTimeGetCurrent()
     let body: [String: Any] = ["jwt_token": token, "method": "get_training_week"]
 
     performRequest(body: body, responseType: TrainingWeekResponse.self) { result in
+      let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime
+      print("fetchTrainingWeekData took \(timeElapsed) seconds")
       switch result {
       case .success(let response):
         if response.success, let trainingWeekString = response.trainingWeek,
