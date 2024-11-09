@@ -13,3 +13,5 @@ zip -r ../function.zip .
 cd ..
 
 zip -r function.zip src 
+
+mv function.zip ..
