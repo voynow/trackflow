@@ -1,12 +1,13 @@
 from fastapi import Depends, FastAPI, HTTPException
 from src.auth_manager import get_current_user
 from src.supabase_client import TrainingWeek, get_training_week
+from src.types.user import UserRow
 
 app = FastAPI()
 
 
-@app.get("/training_week/{athlete_id}", response_model=TrainingWeek)
-async def training_week_endpoint(athlete_id: int, _: dict = Depends(get_current_user)):
+@app.get("/training_week/", response_model=TrainingWeek)
+async def training_week_endpoint(user: UserRow = Depends(get_current_user)):
     """
     Retrieve the most recent training_week row by athlete_id
     curl -X GET "http://localhost:8000/training_week/{athlete_id}" \
@@ -16,6 +17,6 @@ async def training_week_endpoint(athlete_id: int, _: dict = Depends(get_current_
     :return: The most recent training_week row for the athlete
     """
     try:
-        return get_training_week(athlete_id)
+        return get_training_week(user.athlete_id)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
