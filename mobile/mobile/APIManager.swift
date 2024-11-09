@@ -189,10 +189,15 @@ class APIManager {
         return
       }
 
+      if let jsonString = String(data: data, encoding: .utf8) {
+        print("Raw API Response: \(jsonString)")
+      }
+
       do {
         let decodedResponse = try JSONDecoder().decode(T.self, from: data)
         completion(.success(decodedResponse))
       } catch {
+        print("Decoding error: \(error)")
         completion(.failure(error))
       }
     }.resume()
