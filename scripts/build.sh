@@ -1,5 +1,7 @@
 #!/bin/bash
 
+cd lambda
+
 rm -rf package
 rm -f function.zip
 
