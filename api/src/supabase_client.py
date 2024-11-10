@@ -7,7 +7,7 @@ from typing import Optional
 
 from dotenv import load_dotenv
 from src.types.training_week import TrainingWeek
-from src.types.user import UserAuthRow, UserRow
+from src.types.user import Preferences, UserAuthRow, UserRow
 from supabase import Client, create_client
 
 load_dotenv()
@@ -71,6 +71,9 @@ def get_user_auth(athlete_id: int) -> UserAuthRow:
 def get_training_week(athlete_id: int) -> TrainingWeek:
     """
     Get the most recent training_week row by athlete_id.
+
+    :param athlete_id: int
+    :return: TrainingWeek
     """
     table = client.table("training_week")
     response = (
@@ -96,7 +99,6 @@ def upsert_user_auth(user_auth_row: UserAuthRow) -> None:
     and upsert into user_auth table handling duplicates on athlete_id
 
     :param user_auth_row: A dictionary representation of UserAuthRow
-    :return: APIResponse
     """
     user_auth_row = user_auth_row.dict()
     if isinstance(user_auth_row["expires_at"], datetime.datetime):
@@ -116,3 +118,19 @@ def update_user_device_token(athlete_id: str, device_token: str) -> None:
     client.table("user_auth").update({"device_token": device_token}).eq(
         "athlete_id", athlete_id
     ).execute()
+
+
+def update_preferences(athlete_id: int, preferences: dict):
+    """
+    Update user's preferences
+
+    :param athlete_id: The ID of the athlete
+    :param preferences: A Preferences object as a dictionary
+    """
+    try:
+        Preferences(**preferences)
+    except Exception as e:
+        raise ValueError("Invalid preferences") from e
+
+    table = client.table("user")
+    table.update({"preferences": preferences}).eq("athlete_id", athlete_id).execute()
