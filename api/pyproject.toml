@@ -1,22 +1,35 @@
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
 [tool.poetry]
-name = "trackflow-api"
+name = "trackflow"
 version = "0.1.0"
 description = ""
 authors = ["voynow <voynow99@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.10"
+stravalib = "^v1.7"
+supabase = "*"
+python-dotenv = "^1.0.1"
+urllib3 = "2.2.2"
+openai = "1.39.0"
+sib-api-v3-sdk = "^7.6.0"
+pydantic = "1.10.16"
+postgrest = "^0.16.8"
+jinja2 = "^3.1.4"
+PyJWT = "^2.9.0"
+pyperclip = "^1.9.0"
+arrow = "^1.3.0"
+httpx = "^0.27.2"
+cryptography = "^43.0.3"
 fastapi = "^0.115.4"
 uvicorn = "^0.32.0"
-supabase = "^2.10.0"
-python-dotenv = "^1.0.1"
-pyjwt = "^2.9.0"
-stravalib = "^2.1"
 
 [tool.poetry.group.dev.dependencies]
-pytest = "^8.3.3"
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+ipykernel = "^6.29.4"
+freezegun = "^1.5.1"
+pytest = "^8.3.2"
+pytest-cov = "^6.0.0"
