@@ -1,4 +1,3 @@
-import time
 from typing import Callable, Dict, Optional
 
 import jwt
@@ -7,7 +6,6 @@ from src import auth_manager
 from src.activities import get_weekly_summaries
 from src.auth_manager import get_strava_client
 from src.supabase_client import (
-    get_training_week,
     get_user,
     get_user_auth,
     update_preferences,
@@ -15,15 +13,6 @@ from src.supabase_client import (
 )
 from src.types.update_pipeline import ExeType
 from src.update_pipeline import update_training_week
-
-
-def get_training_week_handler(athlete_id: str, payload: dict) -> dict:
-    """Handle get_training_week request."""
-    training_week = get_training_week(athlete_id)
-    return {
-        "success": True,
-        "training_week": training_week.json(),
-    }
 
 
 def get_profile_handler(athlete_id: str, payload: dict) -> dict:
@@ -89,7 +78,6 @@ def update_device_token_handler(athlete_id: str, payload: dict) -> dict:
 
 
 METHOD_HANDLERS: Dict[str, Callable[[str, Optional[dict]], dict]] = {
-    "get_training_week": get_training_week_handler,
     "get_profile": get_profile_handler,
     "update_preferences": update_preferences_handler,
     "get_weekly_summaries": get_weekly_summaries_handler,

@@ -16,8 +16,12 @@ class APIManager {
   private let apiURL = "http://trackflow-alb-499532887.us-east-1.elb.amazonaws.com"
 
   func fetchProfileData(token: String, completion: @escaping (Result<ProfileData, Error>) -> Void) {
+    let startTime = CFAbsoluteTimeGetCurrent()
     let body: [String: Any] = ["jwt_token": token, "method": "get_profile"]
     performRequest(body: body, responseType: ProfileResponse.self) { result in
+      let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime
+      print("APIManager: fetchProfileData took \(timeElapsed) seconds")
+
       switch result {
       case .success(let response):
         if response.success, let profile = response.profile {
@@ -53,52 +57,24 @@ class APIManager {
 
     session.dataTask(with: request) { data, response, error in
       let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime
-      print("fetchTrainingWeekData took \(timeElapsed) seconds")
+      print("APIManager: fetchTrainingWeekData took \(timeElapsed) seconds")
 
-      if let httpResponse = response as? HTTPURLResponse {
+      if let httpResponse = response as? HTTPURLResponse,
+        !(200..<300).contains(httpResponse.statusCode)
+      {
+        let message: String
         switch httpResponse.statusCode {
-        case 401:
-          completion(
-            .failure(
-              NSError(
-                domain: "",
-                code: 401,
-                userInfo: [NSLocalizedDescriptionKey: "Invalid or expired token"]
-              )))
-          return
-        case 403:
-          completion(
-            .failure(
-              NSError(
-                domain: "",
-                code: 403,
-                userInfo: [
-                  NSLocalizedDescriptionKey:
-                    "Access forbidden - you don't have permission to access this resource"
-                ]
-              )))
-          return
-        case 404:
-          completion(
-            .failure(
-              NSError(
-                domain: "",
-                code: 404,
-                userInfo: [NSLocalizedDescriptionKey: "Training week not found"]
-              )))
-          return
-        case 200..<300:
-          break
-        default:
-          completion(
-            .failure(
-              NSError(
-                domain: "",
-                code: httpResponse.statusCode,
-                userInfo: [NSLocalizedDescriptionKey: "Server error"]
-              )))
-          return
+        case 401: message = "Invalid or expired token"
+        case 403: message = "Access forbidden - you don't have permission to access this resource"
+        case 404: message = "Training week not found"
+        default: message = "Server error"
         }
+        completion(
+          .failure(
+            NSError(
+              domain: "", code: httpResponse.statusCode,
+              userInfo: [NSLocalizedDescriptionKey: message])))
+        return
       }
 
       if let error = error {
@@ -119,9 +95,6 @@ class APIManager {
         completion(.success(trainingWeek))
       } catch {
         print("Decoding error: \(error)")
-        if let json = try? JSONSerialization.jsonObject(with: data, options: []) {
-          print("JSON: \(json)")
-        }
         completion(.failure(error))
       }
     }.resume()
@@ -130,6 +103,7 @@ class APIManager {
   func savePreferences(
     token: String, preferences: Preferences, completion: @escaping (Result<Void, Error>) -> Void
   ) {
+    let startTime = CFAbsoluteTimeGetCurrent()
     let idealTrainingWeek = preferences.idealTrainingWeek?.map { day in
       return [
         "day": day.day.rawValue,
@@ -151,6 +125,9 @@ class APIManager {
     ]
 
     performRequest(body: body, responseType: SavePreferencesResponse.self) { result in
+      let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime
+      print("APIManager: savePreferences took \(timeElapsed) seconds")
+
       switch result {
       case .success(let response):
         if response.success {
@@ -168,8 +145,12 @@ class APIManager {
   }
 
   func refreshToken(token: String, completion: @escaping (Result<String, Error>) -> Void) {
+    let startTime = CFAbsoluteTimeGetCurrent()
     let body: [String: Any] = ["jwt_token": token, "method": "refresh_token"]
     performRequest(body: body, responseType: RefreshTokenResponse.self) { result in
+      let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime
+      print("APIManager: refreshToken took \(timeElapsed) seconds")
+
       switch result {
       case .success(let response):
         if response.success, let newToken = response.jwt_token {
@@ -190,9 +171,13 @@ class APIManager {
   func fetchWeeklySummaries(
     token: String, completion: @escaping (Result<[WeekSummary], Error>) -> Void
   ) {
+    let startTime = CFAbsoluteTimeGetCurrent()
     let body: [String: Any] = ["jwt_token": token, "method": "get_weekly_summaries"]
 
     performRequest(body: body, responseType: WeeklySummariesResponse.self) { result in
+      let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime
+      print("APIManager: fetchWeeklySummaries took \(timeElapsed) seconds")
+
       switch result {
       case .success(let response):
         if response.success, let summariesStrings = response.weekly_summaries {
@@ -260,8 +245,12 @@ class APIManager {
   }
 
   func startOnboarding(token: String, completion: @escaping (Result<Void, Error>) -> Void) {
+    let startTime = CFAbsoluteTimeGetCurrent()
     let body: [String: Any] = ["jwt_token": token, "method": "start_onboarding"]
     performRequest(body: body, responseType: GenericResponse.self) { result in
+      let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime
+      print("APIManager: startOnboarding took \(timeElapsed) seconds")
+
       switch result {
       case .success(let response):
         if response.success {
@@ -281,6 +270,7 @@ class APIManager {
   func updateDeviceToken(
     token: String, deviceToken: String, completion: @escaping (Result<Void, Error>) -> Void
   ) {
+    let startTime = CFAbsoluteTimeGetCurrent()
     let body: [String: Any] = [
       "jwt_token": token,
       "payload": ["device_token": deviceToken],
@@ -288,6 +278,9 @@ class APIManager {
     ]
 
     performRequest(body: body, responseType: GenericResponse.self) { result in
+      let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime
+      print("APIManager: updateDeviceToken took \(timeElapsed) seconds")
+
       switch result {
       case .success(let response):
         if response.success {
