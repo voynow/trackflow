@@ -30,3 +30,12 @@ class UserRow(BaseModel):
     preferences: Optional[Preferences] = Preferences()
     email: Optional[str] = None
     created_at: datetime = datetime.now()
+
+
+class UserAuthRow(BaseModel):
+    athlete_id: int
+    access_token: str
+    refresh_token: str
+    expires_at: datetime
+    jwt_token: str
+    device_token: Optional[str] = None

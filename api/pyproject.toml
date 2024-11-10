@@ -12,6 +12,10 @@ uvicorn = "^0.32.0"
 supabase = "^2.10.0"
 python-dotenv = "^1.0.1"
 pyjwt = "^2.9.0"
+stravalib = "^2.1"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.3"
 
 [build-system]
 requires = ["poetry-core"]
