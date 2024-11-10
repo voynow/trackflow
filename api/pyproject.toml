@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "trackflow-api"
+version = "0.1.0"
+description = ""
+authors = ["voynow <voynow99@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.115.4"
+uvicorn = "^0.32.0"
+supabase = "^2.10.0"
+python-dotenv = "^1.0.1"
+pyjwt = "^2.9.0"
+stravalib = "^2.1"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.3"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

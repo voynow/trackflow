@@ -19,9 +19,7 @@ from src.update_pipeline import update_training_week
 
 def get_training_week_handler(athlete_id: str, payload: dict) -> dict:
     """Handle get_training_week request."""
-    start_time = time.time()
     training_week = get_training_week(athlete_id)
-    print(f"get_training_week took {time.time() - start_time} seconds")
     return {
         "success": True,
         "training_week": training_week.json(),

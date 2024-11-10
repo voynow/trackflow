@@ -1,5 +1,7 @@
 #!/bin/bash
 
+cd lambda
+
 rm -rf package
 rm -f function.zip
 
@@ -11,3 +13,5 @@ zip -r ../function.zip .
 cd ..
 
 zip -r function.zip src 
+
+mv function.zip ..

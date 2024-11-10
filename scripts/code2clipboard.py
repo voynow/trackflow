@@ -7,7 +7,7 @@ import pyperclip
 def get_code_files(directory: str, extensions: List[str]) -> List[str]:
     """
     Recursively finds all code files in the given directory with specified extensions,
-    strictly ignoring any path containing 'node_modules'.
+    strictly ignoring any path containing 'node_modules', '.next', or '.venv'.
 
     :param directory: Directory to search for code files.
     :param extensions: List of file extensions to include.
@@ -15,7 +15,7 @@ def get_code_files(directory: str, extensions: List[str]) -> List[str]:
     """
     code_files = []
     for root, _, files in os.walk(directory):
-        if "node_modules" in root or ".next" in root:
+        if "node_modules" in root or ".next" in root or ".venv" in root:
             continue
 
         code_files.extend(
@@ -58,7 +58,9 @@ def copy_code_to_clipboard() -> None:
         ".jsx",
         ".swift",
         ".plist",
-        ".xcbkptlist"
+        ".xcbkptlist",
+        ".toml",
+        ".tf",
     ]
     directory = os.getcwd()
     code_files = get_code_files(directory, extensions)
