@@ -18,10 +18,6 @@ variable "public_subnet_ids" {
   description = "IDs of public subnets where the ALB will be attached to."
   type        = list(string)
 }
-variable "private_subnet_ids" {
-  description = "IDs of private subnets where the ECS service will be deployed to."
-  type        = list(string)
-}
 variable "supabase_url" {
   type        = string
   description = "Supabase URL for the application"

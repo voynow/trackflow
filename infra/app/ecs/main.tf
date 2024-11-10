@@ -2,12 +2,16 @@
 resource "aws_security_group" "alb" {
   name   = "${var.app_name}-alb-sg"
   vpc_id = var.vpc_id
+
+  # Egress rules (allow all outbound traffic)
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  # Ingress rules (allow HTTP and HTTPS from anywhere)
   ingress {
     from_port   = 80
     to_port     = 80
@@ -21,6 +25,7 @@ resource "aws_security_group" "alb" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
+
 resource "aws_lb" "this" {
   name               = "${var.app_name}-alb"
   load_balancer_type = "application"
@@ -163,28 +168,43 @@ resource "aws_ecs_cluster" "this" {
 resource "aws_security_group" "ecs" {
   name   = "${var.app_name}-ecs-sg"
   vpc_id = var.vpc_id
+
+  # Egress rules (allow all outbound traffic)
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  # Ingress rules (allow traffic only from ALB)
   ingress {
     from_port       = 80
     to_port         = 80
     protocol        = "tcp"
     security_groups = [aws_security_group.alb.id]
   }
+
+  # Optional: Restrict SSH access (if needed)
+  # ingress {
+  #   from_port       = 22
+  #   to_port         = 22
+  #   protocol        = "tcp"
+  #   cidr_blocks     = ["your_ip_address/32"]
+  # }
 }
+
+
 resource "aws_ecs_service" "api" {
   name            = "${var.app_name}-ecs-service"
   cluster         = aws_ecs_cluster.this.name
   launch_type     = "FARGATE"
-  desired_count   = length(var.private_subnet_ids)
+  desired_count   = length(var.public_subnet_ids)
   task_definition = aws_ecs_task_definition.api.arn
   network_configuration {
-    subnets         = var.private_subnet_ids
+    subnets         = var.public_subnet_ids  # Use public subnets
     security_groups = [aws_security_group.ecs.id]
+    assign_public_ip = true  # Assign public IP to the ECS tasks
   }
   load_balancer {
     target_group_arn = aws_lb_target_group.this.arn

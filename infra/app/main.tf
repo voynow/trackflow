@@ -22,7 +22,6 @@ module "ecs" {
   supabase_key       = var.supabase_key
   vpc_id             = module.network.vpc.id
   public_subnet_ids  = [for s in module.network.public_subnets : s.id]
-  private_subnet_ids = [for s in module.network.private_subnets : s.id]
   depends_on         = [module.network]
 }
 
