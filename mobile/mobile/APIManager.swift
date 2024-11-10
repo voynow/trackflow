@@ -268,32 +268,48 @@ class APIManager {
   }
 
   func updateDeviceToken(
-    token: String, deviceToken: String, completion: @escaping (Result<Void, Error>) -> Void
+    token: String,
+    deviceToken: String,
+    completion: @escaping (Result<Void, Error>) -> Void
   ) {
     let startTime = CFAbsoluteTimeGetCurrent()
-    let body: [String: Any] = [
-      "jwt_token": token,
-      "payload": ["device_token": deviceToken],
-      "method": "update_device_token",
-    ]
+    guard let url = URL(string: "\(apiURL)/device_token/") else {
+      completion(
+        .failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"]))
+      )
+      return
+    }
 
-    performRequest(body: body, responseType: GenericResponse.self) { result in
+    var request = URLRequest(url: url)
+    request.httpMethod = "POST"
+    request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+    let payload = ["device_token": deviceToken]
+    request.httpBody = try? JSONSerialization.data(withJSONObject: payload)
+
+    session.dataTask(with: request) { data, response, error in
       let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime
       print("APIManager: updateDeviceToken took \(timeElapsed) seconds")
 
-      switch result {
-      case .success(let response):
-        if response.success {
-          completion(.success(()))
-        } else {
-          let errorMessage = response.message ?? "Failed to update device token"
-          completion(
-            .failure(
-              NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: errorMessage])))
-        }
-      case .failure(let error):
-        completion(.failure(error))
+      if let httpResponse = response as? HTTPURLResponse,
+        !(200..<300).contains(httpResponse.statusCode)
+      {
+        let message = "Failed to update device token"
+        completion(
+          .failure(
+            NSError(
+              domain: "", code: httpResponse.statusCode,
+              userInfo: [NSLocalizedDescriptionKey: message])))
+        return
       }
-    }
+
+      if let error = error {
+        completion(.failure(error))
+        return
+      }
+
+      completion(.success(()))
+    }.resume()
   }
 }

@@ -82,7 +82,6 @@ METHOD_HANDLERS: Dict[str, Callable[[str, Optional[dict]], dict]] = {
     "update_preferences": update_preferences_handler,
     "get_weekly_summaries": get_weekly_summaries_handler,
     "start_onboarding": start_onboarding,
-    "update_device_token": update_device_token_handler,
 }
 
 

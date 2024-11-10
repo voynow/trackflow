@@ -1,6 +1,6 @@
 import logging
 
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Body, Depends, FastAPI, HTTPException
 from src import supabase_client
 from src.auth_manager import validate_user
 from src.types.training_week import TrainingWeek
@@ -27,3 +27,24 @@ async def training_week(user: UserRow = Depends(validate_user)):
     except ValueError as e:
         logger.error(f"Error retrieving training week: {e}", exc_info=True)
         raise HTTPException(status_code=404, detail=str(e))
+
+
+@app.post("/device_token/")
+async def update_device_token(
+    device_token: str = Body(..., embed=True), user: UserRow = Depends(validate_user)
+) -> dict:
+    """
+    Update device token for push notifications
+
+    :param device_token: The device token to register
+    :param user: The authenticated user
+    :return: Success status
+    """
+    try:
+        supabase_client.update_user_device_token(
+            athlete_id=user.athlete_id, device_token=device_token
+        )
+        return {"success": True}
+    except Exception as e:
+        logger.error(f"Failed to update device token: {e}", exc_info=True)
+        raise HTTPException(status_code=400, detail=str(e))

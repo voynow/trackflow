@@ -104,3 +104,15 @@ def upsert_user_auth(user_auth_row: UserAuthRow) -> None:
 
     table = client.table("user_auth")
     table.upsert(user_auth_row, on_conflict="athlete_id").execute()
+
+
+def update_user_device_token(athlete_id: str, device_token: str) -> None:
+    """
+    Update the device token for a user in the database.
+
+    :param athlete_id: The athlete's ID
+    :param device_token: The device token for push notifications
+    """
+    client.table("user_auth").update({"device_token": device_token}).eq(
+        "athlete_id", athlete_id
+    ).execute()
