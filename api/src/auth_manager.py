@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Optional
+from datetime import datetime, timezone
 
 import jwt
 from fastapi import HTTPException, Security
@@ -133,3 +133,29 @@ async def validate_user(
             status_code=401, detail="Invalid authentication credentials"
         )
     return supabase_client.get_user(athlete_id)
+
+
+def authenticate_athlete(athlete_id: int) -> UserAuthRow:
+    """
+    Authenticate athlete with valid token, refresh if necessary
+
+    :param athlete_id: strava internal identifier
+    :return: UserAuthRow
+    """
+    user_auth = supabase_client.get_user_auth(athlete_id)
+    if datetime.now(timezone.utc) < user_auth.expires_at:
+        return user_auth
+    return refresh_and_update_user_token(athlete_id, user_auth.refresh_token)
+
+
+def get_configured_strava_client(user_auth: UserAuthRow) -> Client:
+    strava_client.access_token = user_auth.access_token
+    strava_client.refresh_token = user_auth.refresh_token
+    strava_client.token_expires_at = user_auth.expires_at
+    return strava_client
+
+
+def get_strava_client(athlete_id: int) -> Client:
+    """Interface for retrieving a Strava client with valid authentication"""
+    user_auth = authenticate_athlete(athlete_id)
+    return get_configured_strava_client(user_auth)

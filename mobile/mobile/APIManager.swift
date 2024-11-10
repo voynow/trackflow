@@ -15,28 +15,72 @@ class APIManager {
   private let baseURL = "https://lwg77yq7dd.execute-api.us-east-1.amazonaws.com/prod/signup"
   private let apiURL = "http://trackflow-alb-499532887.us-east-1.elb.amazonaws.com"
 
+  // new request functions
+
   func fetchProfileData(token: String, completion: @escaping (Result<ProfileData, Error>) -> Void) {
     let startTime = CFAbsoluteTimeGetCurrent()
-    let body: [String: Any] = ["jwt_token": token, "method": "get_profile"]
-    performRequest(body: body, responseType: ProfileResponse.self) { result in
+    guard let url = URL(string: "\(apiURL)/profile/") else {
+      completion(
+        .failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"]))
+      )
+      return
+    }
+
+    var request = URLRequest(url: url)
+    request.httpMethod = "GET"
+    request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+
+    session.dataTask(with: request) { data, response, error in
       let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime
       print("APIManager: fetchProfileData took \(timeElapsed) seconds")
 
-      switch result {
-      case .success(let response):
-        if response.success, let profile = response.profile {
-          completion(.success(profile))
-        } else {
-          completion(
-            .failure(
-              NSError(
-                domain: "", code: 0,
-                userInfo: [NSLocalizedDescriptionKey: response.message ?? "Unknown error"])))
+      if let httpResponse = response as? HTTPURLResponse,
+        !(200..<300).contains(httpResponse.statusCode)
+      {
+        completion(
+          .failure(
+            NSError(
+              domain: "",
+              code: httpResponse.statusCode,
+              userInfo: [NSLocalizedDescriptionKey: "Failed to fetch profile"]
+            )))
+        return
+      }
+
+      if let error = error {
+        completion(.failure(error))
+        return
+      }
+
+      guard let data = data else {
+        completion(
+          .failure(
+            NSError(
+              domain: "",
+              code: 0,
+              userInfo: [NSLocalizedDescriptionKey: "No data received"]
+            )))
+        return
+      }
+
+      do {
+        if let jsonString = String(data: data, encoding: .utf8) {
+          print("Raw Profile JSON response: \(jsonString)")
         }
-      case .failure(let error):
+
+        // Create a container struct for the response
+        struct ProfileResponse: Decodable {
+          let success: Bool
+          let profile: ProfileData
+        }
+
+        let response = try JSONDecoder().decode(ProfileResponse.self, from: data)
+        completion(.success(response.profile))
+      } catch {
+        print("Decoding error: \(error)")
         completion(.failure(error))
       }
-    }
+    }.resume()
   }
 
   func fetchTrainingWeekData(
@@ -101,9 +145,23 @@ class APIManager {
   }
 
   func savePreferences(
-    token: String, preferences: Preferences, completion: @escaping (Result<Void, Error>) -> Void
+    token: String,
+    preferences: Preferences,
+    completion: @escaping (Result<Void, Error>) -> Void
   ) {
     let startTime = CFAbsoluteTimeGetCurrent()
+    guard let url = URL(string: "\(apiURL)/preferences/") else {
+      completion(
+        .failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"]))
+      )
+      return
+    }
+
+    var request = URLRequest(url: url)
+    request.httpMethod = "POST"
+    request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
     let idealTrainingWeek = preferences.idealTrainingWeek?.map { day in
       return [
         "day": day.day.rawValue,
@@ -111,89 +169,192 @@ class APIManager {
       ]
     }
 
-    let preferencesPayload: [String: Any] = [
+    let payload: [String: Any] = [
       "race_distance": preferences.raceDistance ?? NSNull(),
       "ideal_training_week": idealTrainingWeek ?? [],
     ]
 
-    let body: [String: Any] = [
-      "jwt_token": token,
-      "method": "update_preferences",
-      "payload": [
-        "preferences": preferencesPayload
-      ],
-    ]
+    request.httpBody = try? JSONSerialization.data(withJSONObject: payload)
 
-    performRequest(body: body, responseType: SavePreferencesResponse.self) { result in
+    session.dataTask(with: request) { data, response, error in
       let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime
       print("APIManager: savePreferences took \(timeElapsed) seconds")
 
-      switch result {
-      case .success(let response):
-        if response.success {
-          completion(.success(()))
-        } else {
-          let errorMessage = response.error ?? "Failed to save preferences"
-          completion(
-            .failure(
-              NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: errorMessage])))
-        }
-      case .failure(let error):
-        completion(.failure(error))
+      if let httpResponse = response as? HTTPURLResponse,
+        !(200..<300).contains(httpResponse.statusCode)
+      {
+        completion(
+          .failure(
+            NSError(
+              domain: "",
+              code: httpResponse.statusCode,
+              userInfo: [NSLocalizedDescriptionKey: "Failed to save preferences"]
+            )))
+        return
       }
-    }
+
+      if let error = error {
+        completion(.failure(error))
+        return
+      }
+
+      completion(.success(()))
+    }.resume()
   }
 
   func refreshToken(token: String, completion: @escaping (Result<String, Error>) -> Void) {
     let startTime = CFAbsoluteTimeGetCurrent()
-    let body: [String: Any] = ["jwt_token": token, "method": "refresh_token"]
-    performRequest(body: body, responseType: RefreshTokenResponse.self) { result in
+    guard let url = URL(string: "\(apiURL)/refresh_token/") else {
+      completion(
+        .failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"]))
+      )
+      return
+    }
+
+    var request = URLRequest(url: url)
+    request.httpMethod = "POST"
+    request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+    session.dataTask(with: request) { data, response, error in
       let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime
       print("APIManager: refreshToken took \(timeElapsed) seconds")
 
-      switch result {
-      case .success(let response):
-        if response.success, let newToken = response.jwt_token {
+      if let httpResponse = response as? HTTPURLResponse,
+        !(200..<300).contains(httpResponse.statusCode)
+      {
+        completion(
+          .failure(
+            NSError(
+              domain: "",
+              code: httpResponse.statusCode,
+              userInfo: [NSLocalizedDescriptionKey: "Failed to refresh token"]
+            )))
+        return
+      }
+
+      if let error = error {
+        completion(.failure(error))
+        return
+      }
+
+      guard let data = data else {
+        completion(
+          .failure(
+            NSError(
+              domain: "",
+              code: 0,
+              userInfo: [NSLocalizedDescriptionKey: "No data received"]
+            )))
+        return
+      }
+
+      do {
+        let response = try JSONDecoder().decode(RefreshTokenResponse.self, from: data)
+        if let newToken = response.jwt_token {
           completion(.success(newToken))
         } else {
           completion(
             .failure(
               NSError(
-                domain: "", code: 0,
-                userInfo: [NSLocalizedDescriptionKey: response.message ?? "Token refresh failed"])))
+                domain: "",
+                code: 0,
+                userInfo: [NSLocalizedDescriptionKey: response.message ?? "Token refresh failed"]
+              )))
         }
-      case .failure(let error):
+      } catch {
+        print("Decoding error: \(error)")
         completion(.failure(error))
       }
-    }
+    }.resume()
   }
 
   func fetchWeeklySummaries(
     token: String, completion: @escaping (Result<[WeekSummary], Error>) -> Void
   ) {
     let startTime = CFAbsoluteTimeGetCurrent()
-    let body: [String: Any] = ["jwt_token": token, "method": "get_weekly_summaries"]
+    guard let url = URL(string: "\(apiURL)/weekly_summaries/") else {
+      completion(
+        .failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"]))
+      )
+      return
+    }
 
-    performRequest(body: body, responseType: WeeklySummariesResponse.self) { result in
+    var request = URLRequest(url: url)
+    request.httpMethod = "GET"
+    request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+
+    session.dataTask(with: request) { data, response, error in
       let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime
       print("APIManager: fetchWeeklySummaries took \(timeElapsed) seconds")
 
+      if let httpResponse = response as? HTTPURLResponse,
+        !(200..<300).contains(httpResponse.statusCode)
+      {
+        completion(
+          .failure(
+            NSError(
+              domain: "",
+              code: httpResponse.statusCode,
+              userInfo: [NSLocalizedDescriptionKey: "Failed to fetch weekly summaries"]
+            )))
+        return
+      }
+
+      if let error = error {
+        completion(.failure(error))
+        return
+      }
+
+      guard let data = data else {
+        completion(
+          .failure(
+            NSError(
+              domain: "",
+              code: 0,
+              userInfo: [NSLocalizedDescriptionKey: "No data received"]
+            )))
+        return
+      }
+
+      do {
+        struct WeeklySummariesResponse: Decodable {
+          let success: Bool
+          let weekly_summaries: [String]
+        }
+
+        let response = try JSONDecoder().decode(WeeklySummariesResponse.self, from: data)
+
+        // Then parse each string into a WeekSummary
+        let summaries = try response.weekly_summaries.map { summaryString in
+          guard let summaryData = summaryString.data(using: .utf8) else {
+            throw NSError(
+              domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid summary string"])
+          }
+          return try JSONDecoder().decode(WeekSummary.self, from: summaryData)
+        }
+
+        completion(.success(summaries))
+      } catch {
+        print("Decoding error: \(error)")
+        completion(.failure(error))
+      }
+    }.resume()
+  }
+
+  func startOnboarding(token: String, completion: @escaping (Result<Void, Error>) -> Void) {
+    let startTime = CFAbsoluteTimeGetCurrent()
+    let body: [String: Any] = ["jwt_token": token, "method": "start_onboarding"]
+    performRequest(body: body, responseType: GenericResponse.self) { result in
+      let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime
+      print("APIManager: startOnboarding took \(timeElapsed) seconds")
+
       switch result {
       case .success(let response):
-        if response.success, let summariesStrings = response.weekly_summaries {
-          let summaries = summariesStrings.compactMap { summaryString -> WeekSummary? in
-            guard let data = summaryString.data(using: .utf8) else { return nil }
-            do {
-              let summary = try JSONDecoder().decode(WeekSummary.self, from: data)
-              return summary
-            } catch {
-              print("Failed to decode summary. Error: \(error)")
-              return nil
-            }
-          }
-          completion(.success(summaries))
+        if response.success {
+          completion(.success(()))
         } else {
-          let errorMessage = response.message ?? "Unknown error"
+          let errorMessage = response.message ?? "Failed to start onboarding"
           completion(
             .failure(
               NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: errorMessage])))
@@ -203,6 +364,54 @@ class APIManager {
       }
     }
   }
+
+  func updateDeviceToken(
+    token: String,
+    deviceToken: String,
+    completion: @escaping (Result<Void, Error>) -> Void
+  ) {
+    let startTime = CFAbsoluteTimeGetCurrent()
+    guard let url = URL(string: "\(apiURL)/device_token/") else {
+      completion(
+        .failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"]))
+      )
+      return
+    }
+
+    var request = URLRequest(url: url)
+    request.httpMethod = "POST"
+    request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+    let payload = ["device_token": deviceToken]
+    request.httpBody = try? JSONSerialization.data(withJSONObject: payload)
+
+    session.dataTask(with: request) { data, response, error in
+      let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime
+      print("APIManager: updateDeviceToken took \(timeElapsed) seconds")
+
+      if let httpResponse = response as? HTTPURLResponse,
+        !(200..<300).contains(httpResponse.statusCode)
+      {
+        let message = "Failed to update device token"
+        completion(
+          .failure(
+            NSError(
+              domain: "", code: httpResponse.statusCode,
+              userInfo: [NSLocalizedDescriptionKey: message])))
+        return
+      }
+
+      if let error = error {
+        completion(.failure(error))
+        return
+      }
+
+      completion(.success(()))
+    }.resume()
+  }
+
+  // older request functions
 
   private func performRequest<T: Decodable>(
     body: [String: Any], responseType: T.Type, completion: @escaping (Result<T, Error>) -> Void
@@ -244,56 +453,4 @@ class APIManager {
     }.resume()
   }
 
-  func startOnboarding(token: String, completion: @escaping (Result<Void, Error>) -> Void) {
-    let startTime = CFAbsoluteTimeGetCurrent()
-    let body: [String: Any] = ["jwt_token": token, "method": "start_onboarding"]
-    performRequest(body: body, responseType: GenericResponse.self) { result in
-      let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime
-      print("APIManager: startOnboarding took \(timeElapsed) seconds")
-
-      switch result {
-      case .success(let response):
-        if response.success {
-          completion(.success(()))
-        } else {
-          let errorMessage = response.message ?? "Failed to start onboarding"
-          completion(
-            .failure(
-              NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: errorMessage])))
-        }
-      case .failure(let error):
-        completion(.failure(error))
-      }
-    }
-  }
-
-  func updateDeviceToken(
-    token: String, deviceToken: String, completion: @escaping (Result<Void, Error>) -> Void
-  ) {
-    let startTime = CFAbsoluteTimeGetCurrent()
-    let body: [String: Any] = [
-      "jwt_token": token,
-      "payload": ["device_token": deviceToken],
-      "method": "update_device_token",
-    ]
-
-    performRequest(body: body, responseType: GenericResponse.self) { result in
-      let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime
-      print("APIManager: updateDeviceToken took \(timeElapsed) seconds")
-
-      switch result {
-      case .success(let response):
-        if response.success {
-          completion(.success(()))
-        } else {
-          let errorMessage = response.message ?? "Failed to update device token"
-          completion(
-            .failure(
-              NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: errorMessage])))
-        }
-      case .failure(let error):
-        completion(.failure(error))
-      }
-    }
-  }
 }
