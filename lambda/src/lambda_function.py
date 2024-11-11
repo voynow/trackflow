@@ -27,12 +27,7 @@ def strategy_router(event: dict) -> dict:
              only present if success is False
     """
 
-    if event.get("code"):
-        return auth_manager.authenticate_on_signin(
-            code=event["code"], email=event.get("email")
-        )
-
-    elif event.get("jwt_token") and event.get("method"):
+    if event.get("jwt_token") and event.get("method"):
         return frontend_router.handle_request(
             jwt_token=event["jwt_token"],
             method=event["method"],
