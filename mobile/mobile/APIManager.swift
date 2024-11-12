@@ -11,9 +11,9 @@ class APIManager {
     session = URLSession(configuration: config)
   }
 
-  private let session: URLSession
+  internal let session: URLSession
   private let baseURL = "https://lwg77yq7dd.execute-api.us-east-1.amazonaws.com/prod/signup"
-  private let apiURL = "http://trackflow-alb-499532887.us-east-1.elb.amazonaws.com"
+  internal let apiURL = "http://trackflow-alb-499532887.us-east-1.elb.amazonaws.com"
 
   // new request functions
 

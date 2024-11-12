@@ -1,4 +1,5 @@
 import logging
+from typing import Optional
 
 from fastapi import Body, Depends, FastAPI, HTTPException
 from src import activities, auth_manager, supabase_client
@@ -117,4 +118,20 @@ async def get_weekly_summaries(
         }
     except Exception as e:
         logger.error(f"Failed to get weekly summaries: {e}", exc_info=True)
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.post("/authenticate/")
+async def authenticate(code: str, email: Optional[str] = None) -> dict:
+    """
+    Authenticate with Strava code and sign up new users
+    
+    :param code: Strava authorization code
+    :param email: User's email (optional)
+    :return: Dictionary with success status, JWT token and new user flag
+    """
+    try:
+        return auth_manager.authenticate_on_signin(code=code, email=email)
+    except Exception as e:
+        logger.error(f"Authentication failed: {e}", exc_info=True)
         raise HTTPException(status_code=400, detail=str(e))

@@ -41,7 +41,11 @@ class StravaAuthManager: ObservableObject {
 
     Task {
       do {
-        let url = URL(string: "https://lwg77yq7dd.execute-api.us-east-1.amazonaws.com/prod/signup")!
+        guard let url = URL(string: "\(APIManager.shared.apiURL)/authenticate/") else {
+          throw NSError(
+            domain: "AuthError", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])
+        }
+
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -49,14 +53,25 @@ class StravaAuthManager: ObservableObject {
         let payload = ["code": code]
         request.httpBody = try JSONSerialization.data(withJSONObject: payload)
 
-        let (data, _) = try await URLSession.shared.data(for: request)
-        let response = try JSONDecoder().decode(SignupResponse.self, from: data)
+        let (data, response) = try await APIManager.shared.session.data(for: request)
 
-        if response.success {
-          UserDefaults.standard.set(response.jwt_token, forKey: "jwt_token")
+        if let httpResponse = response as? HTTPURLResponse,
+          !(200..<300).contains(httpResponse.statusCode)
+        {
+          throw NSError(
+            domain: "AuthError",
+            code: httpResponse.statusCode,
+            userInfo: [NSLocalizedDescriptionKey: "Authentication failed"]
+          )
+        }
+
+        let authResponse = try JSONDecoder().decode(SignupResponse.self, from: data)
+
+        if authResponse.success {
+          UserDefaults.standard.set(authResponse.jwt_token, forKey: "jwt_token")
           DispatchQueue.main.async {
-            self.appState.jwtToken = response.jwt_token
-            if let isNewUser = response.is_new_user, isNewUser {
+            self.appState.jwtToken = authResponse.jwt_token
+            if let isNewUser = authResponse.is_new_user, isNewUser {
               self.appState.status = .newUser
             } else {
               self.appState.status = .loggedIn
@@ -64,12 +79,16 @@ class StravaAuthManager: ObservableObject {
           }
         } else {
           throw NSError(
-            domain: "AuthError", code: 0,
-            userInfo: [NSLocalizedDescriptionKey: "Verification failed"]
+            domain: "AuthError",
+            code: 0,
+            userInfo: [NSLocalizedDescriptionKey: "Authentication failed"]
           )
         }
       } catch {
-        print("Error during verification: \(error.localizedDescription)")
+        print("Error during authentication: \(error.localizedDescription)")
+        DispatchQueue.main.async {
+          self.appState.status = .loggedOut
+        }
       }
     }
   }
