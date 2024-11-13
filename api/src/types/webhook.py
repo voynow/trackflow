@@ -7,3 +7,5 @@ class StravaEvent(BaseModel):
     object_type: str
     object_id: int
     owner_id: int
+    event_time: int
+    updates: dict

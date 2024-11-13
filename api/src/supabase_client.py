@@ -134,3 +134,29 @@ def update_preferences(athlete_id: int, preferences: dict):
 
     table = client.table("user")
     table.update({"preferences": preferences}).eq("athlete_id", athlete_id).execute()
+
+
+def upsert_user(user_row: UserRow):
+    """
+    Upsert a row into the user table
+
+    :param user_row: An instance of UserRow
+    """
+    row_data = user_row.dict()
+    if isinstance(row_data["created_at"], datetime.datetime):
+        row_data["created_at"] = row_data["created_at"].isoformat()
+
+    table = client.table("user")
+    table.upsert(row_data, on_conflict="athlete_id").execute()
+
+
+def does_user_exist(athlete_id: int) -> bool:
+    """
+    Check if a user exists in the user table
+
+    :param athlete_id: The ID of the athlete
+    :return: True if the user exists, False otherwise
+    """
+    table = client.table("user")
+    response = table.select("*").eq("athlete_id", athlete_id).execute()
+    return bool(response.data)

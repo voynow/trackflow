@@ -48,10 +48,8 @@ class StravaAuthManager: ObservableObject {
 
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
-        let payload = ["code": code]
-        request.httpBody = try JSONSerialization.data(withJSONObject: payload)
+        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        request.httpBody = "code=\(code)".data(using: .utf8)
 
         let (data, response) = try await APIManager.shared.session.data(for: request)
 

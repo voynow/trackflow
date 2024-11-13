@@ -1,16 +1,22 @@
 import logging
 from typing import Optional
 
-from fastapi import BackgroundTasks, Body, Depends, FastAPI, HTTPException, Request
-from src import activities, auth_manager, supabase_client
+from fastapi import BackgroundTasks, Body, Depends, FastAPI, HTTPException, Request, Form
+from src import activities, auth_manager, supabase_client, webhook
 from src.types.training_week import TrainingWeek
 from src.types.user import UserRow
 from src.types.webhook import StravaEvent
 
 app = FastAPI()
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger = logging.getLogger("uvicorn.error")
+
+
+# health check
+@app.get("/health")
+async def health():
+    logger.info("Healthy ✅")
+    return {"status": "healthy"}
 
 
 @app.get("/training_week/", response_model=TrainingWeek)
@@ -121,39 +127,31 @@ async def get_weekly_summaries(
 
 
 @app.post("/authenticate/")
-async def authenticate(code: str, email: Optional[str] = None) -> dict:
+async def authenticate(code: str = Form(...)) -> dict:
     """
     Authenticate with Strava code and sign up new users
 
-    :param code: Strava authorization code
-    :param email: User's email (optional)
+    :param code: Strava authorization code from form data
     :return: Dictionary with success status, JWT token and new user flag
     """
     try:
-        return auth_manager.authenticate_on_signin(code=code, email=email)
+        logger.info(f"Authenticating with Strava code: {code}")
+        return auth_manager.authenticate_on_signin(code=code)
     except Exception as e:
         logger.error(f"Authentication failed: {e}", exc_info=True)
         raise HTTPException(status_code=400, detail=str(e))
 
 
-def process_strava_event(event: StravaEvent):
-    """
-    Process the Strava webhook event. Perform any updates based on the event data.
-    """
-    # Replace this with your Strava-specific logic (e.g., updating training week)
-    logger.info(f"Processing event: {event}")
-    # Simulate some processing or call any required functions
-    # For example, handle_activity_create(user, event)
-
-
 @app.post("/strava-webhook/")
-async def strava_webhook(request: Request, background_tasks: BackgroundTasks):
+async def strava_webhook(request: Request, background_tasks: BackgroundTasks) -> dict:
+    """
+    Handle Strava webhook events
+
+    :param request: Webhook request from Strava
+    :param background_tasks: FastAPI background tasks
+    :return: Success status
+    """
     event = await request.json()
-    logger.info(f"Received Strava webhook event: {event}")
-
-    # Validate event and start processing in background
     strava_event = StravaEvent(**event)
-    background_tasks.add_task(process_strava_event, strava_event)
-
-    # Immediate response to Strava
-    return {"status": "received"}
+    background_tasks.add_task(webhook.maybe_process_strava_event, strava_event)
+    return {"success": True}

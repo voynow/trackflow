@@ -1,11 +1,12 @@
 import logging
 import os
 from datetime import datetime, timezone
+from typing import Optional
 
 import jwt
 from fastapi import HTTPException, Security
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from src import supabase_client
+from src import email_manager, supabase_client
 from src.types.user import UserAuthRow, UserRow
 from stravalib.client import Client
 
@@ -159,3 +160,66 @@ def get_strava_client(athlete_id: int) -> Client:
     """Interface for retrieving a Strava client with valid authentication"""
     user_auth = authenticate_athlete(athlete_id)
     return get_configured_strava_client(user_auth)
+
+
+def authenticate_with_code(code: str) -> UserAuthRow:
+    """
+    Authenticate athlete with code, exchange with strava client for token,
+    generate new JWT, and update database
+
+    :param code: temporary authorization code
+    :return: UserAuthRow
+    """
+    token = strava_client.exchange_code_for_token(
+        client_id=os.environ["STRAVA_CLIENT_ID"],
+        client_secret=os.environ["STRAVA_CLIENT_SECRET"],
+        code=code,
+    )
+    strava_client.access_token = token["access_token"]
+    strava_client.refresh_token = token["refresh_token"]
+    strava_client.token_expires_at = token["expires_at"]
+
+    athlete = strava_client.get_athlete()
+
+    jwt_token = generate_jwt(athlete_id=athlete.id, expires_at=token["expires_at"])
+
+    user_auth_row = UserAuthRow(
+        athlete_id=athlete.id,
+        access_token=strava_client.access_token,
+        refresh_token=strava_client.refresh_token,
+        expires_at=strava_client.token_expires_at,
+        jwt_token=jwt_token,
+        device_token=supabase_client.get_device_token(athlete.id),
+    )
+    supabase_client.upsert_user_auth(user_auth_row)
+    return user_auth_row
+
+
+def signup(user_auth: UserAuthRow, email: Optional[str] = None) -> dict:
+    """ """
+    email_manager.send_alert_email(
+        subject="TrackFlow Alert: New Signup Attempt",
+        text_content=f"You have a new client {email=} attempting to signup",
+    )
+    supabase_client.upsert_user(UserRow(athlete_id=user_auth.athlete_id))
+    return {"success": True, "jwt_token": user_auth.jwt_token, "is_new_user": True}
+
+
+def authenticate_on_signin(code: str, email: Optional[str] = None) -> dict:
+    """
+    Authenticate with Strava code, and sign up the user if they don't exist.
+
+    :param code: Strava authorization code
+    :param email: User's email (optional)
+    :return: Dictionary with success status and JWT token
+    """
+    user_auth = authenticate_with_code(code)
+
+    if not supabase_client.does_user_exist(user_auth.athlete_id):
+        return signup(user_auth, email)
+
+    return {
+        "success": True,
+        "jwt_token": user_auth.jwt_token,
+        "is_new_user": False,
+    }

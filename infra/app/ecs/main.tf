@@ -149,6 +149,14 @@ resource "aws_ecs_task_definition" "api" {
         { 
           name = "SUPABASE_KEY", 
           value = var.supabase_key 
+        },
+        { 
+          name = "EMAIL_API_KEY", 
+          value = var.email_api_key 
+        },
+        { 
+          name = "OPENAI_API_KEY", 
+          value = var.openai_api_key 
         }
       ]
     }
