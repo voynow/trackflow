@@ -136,9 +136,6 @@ async def authenticate(code: str, email: Optional[str] = None) -> dict:
         raise HTTPException(status_code=400, detail=str(e))
 
 
-
-
-
 def process_strava_event(event: StravaEvent):
     """
     Process the Strava webhook event. Perform any updates based on the event data.
@@ -149,7 +146,7 @@ def process_strava_event(event: StravaEvent):
     # For example, handle_activity_create(user, event)
 
 
-@app.post("/strava/webhook")
+@app.post("/strava-webhook/")
 async def strava_webhook(request: Request, background_tasks: BackgroundTasks):
     event = await request.json()
     logger.info(f"Received Strava webhook event: {event}")

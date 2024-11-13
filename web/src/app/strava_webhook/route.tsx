@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     console.log(`Received POST request with event: ${JSON.stringify(event)}`);
 
     try {
-        const response = await fetch('http://trackflow-alb-499532887.us-east-1.elb.amazonaws.com/strava-webhook', {
+        const response = await fetch('http://trackflow-alb-499532887.us-east-1.elb.amazonaws.com/strava-webhook/', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(event),
