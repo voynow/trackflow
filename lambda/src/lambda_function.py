@@ -3,7 +3,7 @@ import os
 import traceback
 import uuid
 
-from src import auth_manager, frontend_router, update_pipeline, webhook_router
+from src import frontend_router, update_pipeline
 from src.email_manager import send_alert_email
 
 logging.getLogger("openai").setLevel(logging.ERROR)
@@ -33,10 +33,6 @@ def strategy_router(event: dict) -> dict:
             method=event["method"],
             payload=event.get("payload"),
         )
-
-    elif webhook_router.is_strava_webhook_event(event):
-        return webhook_router.handle_request(event)
-
     elif (
         event.get("resources")
         and event.get("resources")[0] == os.environ["NIGHTLY_EMAIL_TRIGGER_ARN"]
