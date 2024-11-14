@@ -196,7 +196,13 @@ def authenticate_with_code(code: str) -> UserAuthRow:
 
 
 def signup(user_auth: UserAuthRow, email: Optional[str] = None) -> dict:
-    """ """
+    """
+    Sign up a new user
+
+    :param user_auth: UserAuthRow
+    :param email: User's email (optional)
+    :return: Dictionary with success status and JWT token
+    """
     email_manager.send_alert_email(
         subject="TrackFlow Alert: New Signup Attempt",
         text_content=f"You have a new client {email=} attempting to signup",

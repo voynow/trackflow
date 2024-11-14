@@ -8,7 +8,6 @@ from src.types.training_week import (
     TrainingSession,
     TrainingWeek,
     TrainingWeekGeneration,
-    TrainingWeekWithPlanning,
 )
 
 logger = logging.getLogger()
@@ -25,24 +24,6 @@ def get_weekly_mileage_target(
 As the coach, prescribe your client a target weekly mileage and long run range for next week. Be specific and refer to the data provided. Write 3-4 sentences while being as concise as possible."""
     return get_completion(
         [{"role": "assistant", "content": sysmsg}, {"role": "user", "content": usermsg}]
-    )
-
-
-def get_training_week_with_planning(
-    sysmsg_base: str,
-    typical_week_training_review: str,
-    weekly_mileage_target: str,
-) -> TrainingWeekWithPlanning:
-    message = f"""{sysmsg_base}\nHere is your review of your client's typical week:
-{typical_week_training_review}
-
-Additionally, here is the weekly mileage target you provided:
-{weekly_mileage_target}
-
-Build out their next week of training. Distribute volume and intensity evenly throughout the week. You must adhere to the weekly mileage target and long run range."""
-    return get_completion_json(
-        message=message,
-        response_model=TrainingWeekWithPlanning,
     )
 
 

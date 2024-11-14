@@ -1,8 +1,7 @@
 from src import auth_manager, supabase_client
+from src.types.update_pipeline import ExeType
 from src.types.webhook import StravaEvent
-
-# from src.training_week import update_training_week
-# from src.types.exe_type import ExeType
+from src.update_pipeline import update_training_week
 
 
 def handle_activity_create(event: StravaEvent) -> dict:
@@ -11,20 +10,19 @@ def handle_activity_create(event: StravaEvent) -> dict:
 
     :param event: Strava webhook event
     """
-    pass
-    # user = supabase_client.get_user(event.owner_id)
-    # strava_client = auth_manager.get_strava_client(user.athlete_id)
-    # activity = strava_client.get_activity(event.object_id)
+    user = supabase_client.get_user(event.owner_id)
+    strava_client = auth_manager.get_strava_client(user.athlete_id)
+    activity = strava_client.get_activity(event.object_id)
 
-    # if activity.sport_type == "Run":
-    #     return update_training_week(
-    #         user=user,
-    #         exe_type=ExeType.MID_WEEK,
-    #     )
-    # return {
-    #     "success": False,
-    #     "error": f"Unsupported activity type: {activity.sport_type}",
-    # }
+    if activity.sport_type == "Run":
+        return update_training_week(
+            user=user,
+            exe_type=ExeType.MID_WEEK,
+        )
+    return {
+        "success": False,
+        "error": f"Unsupported activity type: {activity.sport_type}",
+    }
 
 
 def maybe_process_strava_event(event: StravaEvent) -> dict:

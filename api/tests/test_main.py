@@ -58,3 +58,24 @@ def test_get_weekly_summaries():
         "/weekly_summaries/", headers={"Authorization": f"Bearer {user_auth.jwt_token}"}
     )
     assert response.status_code == 200
+
+
+def test_authenticate():
+    """Test successful authentication, only covering does_user_exist"""
+    user = supabase_client.get_user(os.environ["JAMIES_ATHLETE_ID"])
+    assert supabase_client.does_user_exist(user.athlete_id)
+
+
+def test_strava_webhook():
+    """Test successful Strava webhook"""
+    event = {
+        "subscription_id": 288883,
+        "aspect_type": "update",
+        "object_type": "activity",
+        "object_id": 18888888889,
+        "owner_id": 98888886,
+        "event_time": 1731515699,
+        "updates": {"title": "Best running weather ❄️"},
+    }
+    response = client.post("/strava-webhook/", json=event)
+    assert response.status_code == 200

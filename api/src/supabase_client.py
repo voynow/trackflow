@@ -52,6 +52,18 @@ def get_user(athlete_id: int) -> UserRow:
     return UserRow(**response.data[0])
 
 
+def list_users() -> list[UserRow]:
+    """
+    List all users in the user_auth table
+
+    :return: list of UserAuthRow
+    """
+    table = client.table("user")
+    response = table.select("*").execute()
+
+    return [UserRow(**row) for row in response.data]
+
+
 def get_user_auth(athlete_id: int) -> UserAuthRow:
     """
     Get user_auth row by athlete_id
@@ -160,3 +172,16 @@ def does_user_exist(athlete_id: int) -> bool:
     table = client.table("user")
     response = table.select("*").eq("athlete_id", athlete_id).execute()
     return bool(response.data)
+
+
+def upsert_training_week(
+    athlete_id: int,
+    training_week: TrainingWeek,
+):
+    """Upsert a row into the training_week table"""
+    row_data = {
+        "athlete_id": athlete_id,
+        "training_week": training_week.json(),
+    }
+    table = client.table("training_week")
+    table.upsert(row_data).execute()

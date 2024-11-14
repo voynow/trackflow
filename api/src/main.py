@@ -135,7 +135,6 @@ async def authenticate(code: str = Form(...)) -> dict:
     :return: Dictionary with success status, JWT token and new user flag
     """
     try:
-        logger.info(f"Authenticating with Strava code: {code}")
         return auth_manager.authenticate_on_signin(code=code)
     except Exception as e:
         logger.error(f"Authentication failed: {e}", exc_info=True)
