@@ -52,6 +52,18 @@ def get_user(athlete_id: int) -> UserRow:
     return UserRow(**response.data[0])
 
 
+def list_users() -> list[UserRow]:
+    """
+    List all users in the user_auth table
+
+    :return: list of UserAuthRow
+    """
+    table = client.table("user")
+    response = table.select("*").execute()
+
+    return [UserRow(**row) for row in response.data]
+
+
 def get_user_auth(athlete_id: int) -> UserAuthRow:
     """
     Get user_auth row by athlete_id
@@ -134,3 +146,70 @@ def update_preferences(athlete_id: int, preferences: dict):
 
     table = client.table("user")
     table.update({"preferences": preferences}).eq("athlete_id", athlete_id).execute()
+
+
+def upsert_user(user_row: UserRow):
+    """
+    Upsert a row into the user table
+
+    :param user_row: An instance of UserRow
+    """
+    row_data = user_row.dict()
+    if isinstance(row_data["created_at"], datetime.datetime):
+        row_data["created_at"] = row_data["created_at"].isoformat()
+
+    table = client.table("user")
+    table.upsert(row_data, on_conflict="athlete_id").execute()
+
+
+def does_user_exist(athlete_id: int) -> bool:
+    """
+    Check if a user exists in the user table
+
+    :param athlete_id: The ID of the athlete
+    :return: True if the user exists, False otherwise
+    """
+    table = client.table("user")
+    response = table.select("*").eq("athlete_id", athlete_id).execute()
+    return bool(response.data)
+
+
+def upsert_training_week(
+    athlete_id: int,
+    training_week: TrainingWeek,
+):
+    """Upsert a row into the training_week table"""
+    row_data = {
+        "athlete_id": athlete_id,
+        "training_week": training_week.json(),
+    }
+    table = client.table("training_week")
+    table.upsert(row_data).execute()
+
+
+def has_user_updated_today(athlete_id: int) -> bool:
+    """
+    Check if the user has received an update today. Where "today" is defined as
+    within the past 23 hours and 30 minutes (to account for any delays in
+    yesterday's evening update).
+
+    :param athlete_id: The ID of the athlete
+    :return: True if the user has received an update today, False otherwise
+    """
+    table = client.table("training_week")
+    response = (
+        table.select("*")
+        .eq("athlete_id", athlete_id)
+        .order("created_at", desc=True)
+        .limit(1)
+        .execute()
+    )
+
+    if not response.data:
+        return False
+
+    # "Has this user posted an activity in the last 23 hours and 30 minutes?"
+    time_diff = datetime.datetime.now(
+        datetime.timezone.utc
+    ) - datetime.datetime.fromisoformat(response.data[0]["created_at"])
+    return time_diff < datetime.timedelta(hours=23, minutes=30)

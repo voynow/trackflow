@@ -26,16 +26,6 @@ class StravaAuthManager: ObservableObject {
     }
   }
 
-  func handleURL(_ url: URL) {
-    if url.scheme == "trackflow" && url.host == "www.trackflow.xyz" {
-      if let queryItems = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems,
-        let code = queryItems.first(where: { $0.name == "code" })?.value
-      {
-        handleAuthorizationCode(code)
-      }
-    }
-  }
-
   private func handleAuthorizationCode(_ code: String) {
     appState.status = .loading
 
@@ -48,10 +38,8 @@ class StravaAuthManager: ObservableObject {
 
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
-        let payload = ["code": code]
-        request.httpBody = try JSONSerialization.data(withJSONObject: payload)
+        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        request.httpBody = "code=\(code)".data(using: .utf8)
 
         let (data, response) = try await APIManager.shared.session.data(for: request)
 

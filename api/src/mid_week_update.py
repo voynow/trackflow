@@ -1,7 +1,7 @@
 from src.llm import get_completion_json
 from src.training_week import standardize_training_week
 from src.types.activity import ActivitySummary
-from src.types.mid_week_analysis import MidWeekAnalysis
+from src.types.training_week import MidWeekAnalysis
 from src.types.training_week import (
     TrainingSession,
     TrainingWeek,

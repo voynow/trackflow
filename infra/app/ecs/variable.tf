@@ -28,3 +28,23 @@ variable "supabase_key" {
   description = "Supabase API key"
   sensitive   = true
 }
+variable "email_api_key" {
+  type        = string
+  description = "API key for the email service"
+  sensitive   = true
+}
+variable "openai_api_key" {
+  type        = string
+  description = "API key for the OpenAI service"
+  sensitive   = true
+}
+variable "api_key" {
+  description = "API key for authentication"
+  type        = string
+  sensitive   = true
+}
+variable "certificate_arn" {
+  type        = string
+  description = "ARN of the ACM certificate for HTTPS"
+}
+

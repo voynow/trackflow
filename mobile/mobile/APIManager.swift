@@ -12,7 +12,6 @@ class APIManager {
   }
 
   internal let session: URLSession
-  private let baseURL = "https://lwg77yq7dd.execute-api.us-east-1.amazonaws.com/prod/signup"
   internal let apiURL = "http://trackflow-alb-499532887.us-east-1.elb.amazonaws.com"
 
   // new request functions
@@ -344,25 +343,42 @@ class APIManager {
 
   func startOnboarding(token: String, completion: @escaping (Result<Void, Error>) -> Void) {
     let startTime = CFAbsoluteTimeGetCurrent()
-    let body: [String: Any] = ["jwt_token": token, "method": "start_onboarding"]
-    performRequest(body: body, responseType: GenericResponse.self) { result in
+    guard let url = URL(string: "\(apiURL)/onboarding/") else {
+      completion(
+        .failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"]))
+      )
+      return
+    }
+
+    var request = URLRequest(url: url)
+    request.httpMethod = "POST"
+    request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+    session.dataTask(with: request) { data, response, error in
       let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime
       print("APIManager: startOnboarding took \(timeElapsed) seconds")
 
-      switch result {
-      case .success(let response):
-        if response.success {
-          completion(.success(()))
-        } else {
-          let errorMessage = response.message ?? "Failed to start onboarding"
-          completion(
-            .failure(
-              NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: errorMessage])))
-        }
-      case .failure(let error):
-        completion(.failure(error))
+      if let httpResponse = response as? HTTPURLResponse,
+        !(200..<300).contains(httpResponse.statusCode)
+      {
+        completion(
+          .failure(
+            NSError(
+              domain: "",
+              code: httpResponse.statusCode,
+              userInfo: [NSLocalizedDescriptionKey: "Failed to start onboarding"]
+            )))
+        return
       }
-    }
+
+      if let error = error {
+        completion(.failure(error))
+        return
+      }
+
+      completion(.success(()))
+    }.resume()
   }
 
   func updateDeviceToken(
@@ -408,48 +424,6 @@ class APIManager {
       }
 
       completion(.success(()))
-    }.resume()
-  }
-
-  // older request functions
-
-  private func performRequest<T: Decodable>(
-    body: [String: Any], responseType: T.Type, completion: @escaping (Result<T, Error>) -> Void
-  ) {
-    guard let url = URL(string: baseURL) else {
-      completion(
-        .failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"]))
-      )
-      return
-    }
-
-    var request = URLRequest(url: url)
-    request.httpMethod = "POST"
-    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-    request.httpBody = try? JSONSerialization.data(withJSONObject: body)
-
-    // Use shared session instead of URLSession.shared
-    session.dataTask(with: request) { data, response, error in
-      if let error = error {
-        completion(.failure(error))
-        return
-      }
-
-      guard let data = data else {
-        completion(
-          .failure(
-            NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "No data received"]))
-        )
-        return
-      }
-
-      do {
-        let decodedResponse = try JSONDecoder().decode(T.self, from: data)
-        completion(.success(decodedResponse))
-      } catch {
-        print("Decoding error: \(error)")
-        completion(.failure(error))
-      }
     }.resume()
   }
 

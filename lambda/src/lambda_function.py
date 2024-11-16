@@ -1,15 +1,8 @@
 import logging
-import os
 import traceback
 import uuid
 
-from src import auth_manager, frontend_router, update_pipeline, webhook_router
 from src.email_manager import send_alert_email
-
-logging.getLogger("openai").setLevel(logging.ERROR)
-logging.getLogger("httpx").setLevel(logging.ERROR)
-logging.getLogger("stravalib").setLevel(logging.ERROR)
-logging.getLogger("supabase").setLevel(logging.ERROR)
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -26,24 +19,7 @@ def strategy_router(event: dict) -> dict:
     :return: {"success": bool, other_metadata: dict} where the error key is
              only present if success is False
     """
-
-    if event.get("jwt_token") and event.get("method"):
-        return frontend_router.handle_request(
-            jwt_token=event["jwt_token"],
-            method=event["method"],
-            payload=event.get("payload"),
-        )
-
-    elif webhook_router.is_strava_webhook_event(event):
-        return webhook_router.handle_request(event)
-
-    elif (
-        event.get("resources")
-        and event.get("resources")[0] == os.environ["NIGHTLY_EMAIL_TRIGGER_ARN"]
-    ):
-        return update_pipeline.nightly_trigger_orchestrator()
-    else:
-        return {"success": False, "error": f"Could not route event: {event}"}
+    return {"success": False, "error": f"Could not route event: {event}"}
 
 
 def lambda_handler(event, context):

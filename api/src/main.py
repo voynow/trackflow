@@ -1,15 +1,32 @@
 import logging
-from typing import Optional
+import os
 
-from fastapi import Body, Depends, FastAPI, HTTPException
-from src import activities, auth_manager, supabase_client
+from fastapi import (
+    BackgroundTasks,
+    Body,
+    Depends,
+    FastAPI,
+    Form,
+    HTTPException,
+    Request,
+)
+from src import activities, auth_manager, supabase_client, webhook
 from src.types.training_week import TrainingWeek
+from src.types.update_pipeline import ExeType
 from src.types.user import UserRow
+from src.types.webhook import StravaEvent
+from src.update_pipeline import update_all_users, update_training_week
 
 app = FastAPI()
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger = logging.getLogger("uvicorn.error")
+
+
+# health check
+@app.get("/health")
+async def health():
+    logger.info("Healthy ✅")
+    return {"status": "healthy"}
 
 
 @app.get("/training_week/", response_model=TrainingWeek)
@@ -112,9 +129,7 @@ async def get_weekly_summaries(
         weekly_summaries = activities.get_weekly_summaries(strava_client)
         return {
             "success": True,
-            "weekly_summaries": [
-                summary.json() for summary in weekly_summaries
-            ],
+            "weekly_summaries": [summary.json() for summary in weekly_summaries],
         }
     except Exception as e:
         logger.error(f"Failed to get weekly summaries: {e}", exc_info=True)
@@ -122,16 +137,63 @@ async def get_weekly_summaries(
 
 
 @app.post("/authenticate/")
-async def authenticate(code: str, email: Optional[str] = None) -> dict:
+async def authenticate(code: str = Form(...)) -> dict:
     """
     Authenticate with Strava code and sign up new users
-    
-    :param code: Strava authorization code
-    :param email: User's email (optional)
+
+    :param code: Strava authorization code from form data
     :return: Dictionary with success status, JWT token and new user flag
     """
     try:
-        return auth_manager.authenticate_on_signin(code=code, email=email)
+        return auth_manager.authenticate_on_signin(code=code)
     except Exception as e:
         logger.error(f"Authentication failed: {e}", exc_info=True)
         raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.post("/strava-webhook/")
+async def strava_webhook(request: Request, background_tasks: BackgroundTasks) -> dict:
+    """
+    Handle Strava webhook events
+
+    :param request: Webhook request from Strava
+    :param background_tasks: FastAPI background tasks
+    :return: Success status
+    """
+    event = await request.json()
+    strava_event = StravaEvent(**event)
+    background_tasks.add_task(webhook.maybe_process_strava_event, strava_event)
+    return {"success": True}
+
+
+@app.post("/onboarding/")
+async def trigger_new_user_onboarding(
+    user: UserRow = Depends(auth_manager.validate_user),
+) -> dict:
+    """
+    Initialize training weeks for new user onboarding
+
+    :param user: The authenticated user
+    :return: Success status
+    """
+    try:
+        update_training_week(user, ExeType.NEW_WEEK)
+        update_training_week(user, ExeType.MID_WEEK)
+        return {"success": True}
+    except Exception as e:
+        logger.error(f"Failed to start onboarding: {e}", exc_info=True)
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.post("/update-all-users/")
+async def update_all_users_trigger(request: Request) -> dict:
+    """
+    Trigger nightly updates for all users
+    Protected by API key authentication
+    """
+    api_key = request.headers.get("x-api-key")
+    if api_key != os.environ["API_KEY"]:
+        raise HTTPException(status_code=403, detail="Invalid API key")
+
+    update_all_users()
+    return {"success": True}

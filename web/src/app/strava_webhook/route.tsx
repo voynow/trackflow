@@ -1,11 +1,4 @@
-import AWS from 'aws-sdk';
 import { NextRequest, NextResponse } from 'next/server';
-
-const sqs = new AWS.SQS({
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-    region: 'us-east-1',
-});
 
 export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
@@ -28,17 +21,24 @@ export async function POST(request: NextRequest) {
     const event = await request.json();
     console.log(`Received POST request with event: ${JSON.stringify(event)}`);
 
-    const params = {
-        QueueUrl: 'https://sqs.us-east-1.amazonaws.com/498969721544/trackflow-webhook-msg-queue',
-        MessageBody: JSON.stringify(event),
-    };
-
     try {
-        const data = await sqs.sendMessage(params).promise();
-        console.log(`Message sent to SQS with ID: ${data.MessageId}`);
+        const response = await fetch('http://trackflow-alb-499532887.us-east-1.elb.amazonaws.com/strava-webhook/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(event),
+        });
+
+        if (!response.ok) {
+            console.error(`Error sending event to FastAPI: ${response.statusText}`);
+            return new NextResponse(`Error sending event to FastAPI: ${response.statusText}`, { status: 500 });
+        }
+
+        console.log(`Event successfully sent to FastAPI.`);
     } catch (err) {
-        console.error(`Error sending message to SQS: ${err}`);
+        console.error(`Error sending event to FastAPI: ${err}`);
+        return new NextResponse(`Error: ${err}`, { status: 500 });
     }
 
+    // Immediate response to Strava
     return NextResponse.json({}, { status: 200 });
 }

@@ -58,6 +58,18 @@ resource "aws_lb_listener" "http" {
   }
   depends_on = [aws_lb_target_group.this]
 }
+resource "aws_lb_listener" "https" {
+  load_balancer_arn = aws_lb.this.arn
+  port              = "443"
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  certificate_arn   = var.certificate_arn
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.this.arn
+  }
+}
 resource "aws_lb_listener_rule" "this" {
   listener_arn = aws_lb_listener.http.arn
   action {
@@ -149,6 +161,18 @@ resource "aws_ecs_task_definition" "api" {
         { 
           name = "SUPABASE_KEY", 
           value = var.supabase_key 
+        },
+        { 
+          name = "EMAIL_API_KEY", 
+          value = var.email_api_key 
+        },
+        { 
+          name = "OPENAI_API_KEY", 
+          value = var.openai_api_key 
+        },
+        { 
+          name = "API_KEY", 
+          value = var.api_key 
         }
       ]
     }
