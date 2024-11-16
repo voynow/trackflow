@@ -1,11 +1,21 @@
 import logging
-from typing import Optional
+import os
 
-from fastapi import BackgroundTasks, Body, Depends, FastAPI, HTTPException, Request, Form
+from fastapi import (
+    BackgroundTasks,
+    Body,
+    Depends,
+    FastAPI,
+    Form,
+    HTTPException,
+    Request,
+)
 from src import activities, auth_manager, supabase_client, webhook
 from src.types.training_week import TrainingWeek
+from src.types.update_pipeline import ExeType
 from src.types.user import UserRow
 from src.types.webhook import StravaEvent
+from src.update_pipeline import update_all_users, update_training_week
 
 app = FastAPI()
 
@@ -153,4 +163,37 @@ async def strava_webhook(request: Request, background_tasks: BackgroundTasks) ->
     event = await request.json()
     strava_event = StravaEvent(**event)
     background_tasks.add_task(webhook.maybe_process_strava_event, strava_event)
+    return {"success": True}
+
+
+@app.post("/onboarding/")
+async def trigger_new_user_onboarding(
+    user: UserRow = Depends(auth_manager.validate_user),
+) -> dict:
+    """
+    Initialize training weeks for new user onboarding
+
+    :param user: The authenticated user
+    :return: Success status
+    """
+    try:
+        update_training_week(user, ExeType.NEW_WEEK)
+        update_training_week(user, ExeType.MID_WEEK)
+        return {"success": True}
+    except Exception as e:
+        logger.error(f"Failed to start onboarding: {e}", exc_info=True)
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.post("/update-all-users/")
+async def update_all_users_trigger(request: Request) -> dict:
+    """
+    Trigger nightly updates for all users
+    Protected by API key authentication
+    """
+    api_key = request.headers.get("x-api-key")
+    if api_key != os.environ["API_KEY"]:
+        raise HTTPException(status_code=403, detail="Invalid API key")
+
+    update_all_users()
     return {"success": True}

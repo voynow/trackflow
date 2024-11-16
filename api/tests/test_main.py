@@ -1,11 +1,19 @@
 import os
+from unittest.mock import patch
 
+import pytest
 from fastapi.testclient import TestClient
-from src import supabase_client
+from src import auth_manager, supabase_client
 from src.main import app
 from src.types.training_week import TrainingWeek
+from src.types.update_pipeline import ExeType
 
 client = TestClient(app)
+
+
+@pytest.fixture(autouse=True, scope="session")
+def setup_test_environment():
+    auth_manager.authenticate_athlete(os.environ["JAMIES_ATHLETE_ID"])
 
 
 def test_get_training_week():
@@ -79,3 +87,15 @@ def test_strava_webhook():
     }
     response = client.post("/strava-webhook/", json=event)
     assert response.status_code == 200
+
+
+def test_trigger_new_user_onboarding():
+    """Test successful onboarding initialization"""
+
+    user_auth = supabase_client.get_user_auth(os.environ["JAMIES_ATHLETE_ID"])
+    response = client.post(
+        "/onboarding/", headers={"Authorization": f"Bearer {user_auth.jwt_token}"}
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {"success": True}

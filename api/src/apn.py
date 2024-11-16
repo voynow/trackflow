@@ -2,11 +2,11 @@ import base64
 import logging
 import os
 import time
+import traceback
 
 import httpx
 import jwt
 from dotenv import load_dotenv
-
 from src.supabase_client import get_user_auth
 from src.types.user import UserRow
 
@@ -103,7 +103,7 @@ def send_push_notif_wrapper(user: UserRow):
             title="TrackFlow 🏃‍♂️🎯",
             body="Your training week has been updated!",
         )
-    except ValueError as e:
-        logger.error(f"Invalid device token for user {user.athlete_id}: {e}")
     except Exception as e:
         logger.error(f"Failed to send push notification to user {user.athlete_id}: {e}")
+        logger.error(traceback.format_exc())
+        raise

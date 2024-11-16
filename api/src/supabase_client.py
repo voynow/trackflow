@@ -185,3 +185,31 @@ def upsert_training_week(
     }
     table = client.table("training_week")
     table.upsert(row_data).execute()
+
+
+def has_user_updated_today(athlete_id: int) -> bool:
+    """
+    Check if the user has received an update today. Where "today" is defined as
+    within the past 23 hours and 30 minutes (to account for any delays in
+    yesterday's evening update).
+
+    :param athlete_id: The ID of the athlete
+    :return: True if the user has received an update today, False otherwise
+    """
+    table = client.table("training_week")
+    response = (
+        table.select("*")
+        .eq("athlete_id", athlete_id)
+        .order("created_at", desc=True)
+        .limit(1)
+        .execute()
+    )
+
+    if not response.data:
+        return False
+
+    # "Has this user posted an activity in the last 23 hours and 30 minutes?"
+    time_diff = datetime.datetime.now(
+        datetime.timezone.utc
+    ) - datetime.datetime.fromisoformat(response.data[0]["created_at"])
+    return time_diff < datetime.timedelta(hours=23, minutes=30)

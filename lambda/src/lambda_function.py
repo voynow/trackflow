@@ -26,14 +26,7 @@ def strategy_router(event: dict) -> dict:
     :return: {"success": bool, other_metadata: dict} where the error key is
              only present if success is False
     """
-
-    if event.get("jwt_token") and event.get("method"):
-        return frontend_router.handle_request(
-            jwt_token=event["jwt_token"],
-            method=event["method"],
-            payload=event.get("payload"),
-        )
-    elif (
+    if (
         event.get("resources")
         and event.get("resources")[0] == os.environ["NIGHTLY_EMAIL_TRIGGER_ARN"]
     ):
