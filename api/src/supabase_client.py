@@ -6,6 +6,7 @@ import os
 from typing import Optional
 
 from dotenv import load_dotenv
+from src.types.mileage_recommendation import MileageRecommendation
 from src.types.training_week import TrainingWeek
 from src.types.user import Preferences, UserAuthRow, UserRow
 from supabase import Client, create_client
@@ -213,3 +214,25 @@ def has_user_updated_today(athlete_id: int) -> bool:
         datetime.timezone.utc
     ) - datetime.datetime.fromisoformat(response.data[0]["created_at"])
     return time_diff < datetime.timedelta(hours=23, minutes=30)
+
+
+def insert_mileage_recommendation(
+    athlete_id: int,
+    mileage_recommendation: MileageRecommendation,
+    year: int,
+    week_of_year: int,
+):
+    """
+    Insert a row into the mileage_recommendations table
+
+    :param mileage_recommendation: A MileageRecommendation object
+    """
+    row_data = {
+        "athlete_id": athlete_id,
+        "year": year,
+        "week_of_year": week_of_year,
+        **mileage_recommendation.dict(),
+    }
+    print(row_data)
+    table = client.table("mileage_recommendation")
+    table.upsert(row_data).execute()

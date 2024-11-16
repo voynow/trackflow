@@ -13,7 +13,7 @@ client = OpenAI()
 
 def get_completion(
     messages: List[ChatCompletionMessage],
-    model: str = "gpt-4o-2024-08-06",
+    model: str = "gpt-4o",
     response_format: Optional[Dict] = None,
 ):
     response = client.chat.completions.create(
@@ -25,7 +25,7 @@ def get_completion(
 def get_completion_json(
     message: str,
     response_model: Type[BaseModel],
-    model: str = "gpt-4o-2024-08-06",
+    model: str = "gpt-4o",
     max_retries: int = 3,
     retry_delay: float = 1.0,
 ) -> BaseModel:
