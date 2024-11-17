@@ -1,10 +1,10 @@
 from collections import defaultdict
 from datetime import datetime, timedelta
-from typing import List
+from typing import List, Optional
 
 from src import constants
 from src.types.activity import Activity, ActivitySummary, DailyMetrics, WeekSummary
-from src.utils import datetime_now_est
+from src.utils import datetime_now_est, round_all_floats
 from stravalib.client import Client
 
 
@@ -62,16 +62,19 @@ def aggregate_daily_metrics(activities: List[Activity]) -> List[DailyMetrics]:
             pace_minutes_per_mile = None
 
         results.append(
-            DailyMetrics(
-                date=activity_date,
-                day_of_week=activity_date.strftime("%a").lower(),
-                week_of_year=activity_date.isocalendar()[1],
-                year=activity_date.year,
-                distance_in_miles=total_distance / constants.METERS_PER_MILE,
-                elevation_gain_in_feet=total_elevation_gain * constants.FEET_PER_METER,
-                moving_time_in_minutes=total_moving_time / 60,
-                pace_minutes_per_mile=pace_minutes_per_mile,
-                activity_count=activity_count,
+            round_all_floats(
+                DailyMetrics(
+                    date=activity_date,
+                    day_of_week=activity_date.strftime("%a").lower(),
+                    week_of_year=activity_date.isocalendar()[1],
+                    year=activity_date.year,
+                    distance_in_miles=total_distance / constants.METERS_PER_MILE,
+                    elevation_gain_in_feet=total_elevation_gain
+                    * constants.FEET_PER_METER,
+                    moving_time_in_minutes=total_moving_time / 60,
+                    pace_minutes_per_mile=pace_minutes_per_mile,
+                    activity_count=activity_count,
+                )
             )
         )
 
@@ -113,14 +116,17 @@ def get_daily_activity(strava_client: Client, num_weeks: int = 8) -> List[DailyM
     return aggregate_daily_metrics(all_dates_activities)
 
 
-def get_weekly_summaries(strava_client: Client) -> List[WeekSummary]:
+def get_weekly_summaries(
+    strava_client: Client, daily_metrics: Optional[List[DailyMetrics]] = None
+) -> List[WeekSummary]:
     """
     Aggregate daily metrics by week of the year and calculate load for each week.
 
     :param strava_client: The Strava client object to fetch data.
     :return: A list of WeekSummary objects with summary statistics
     """
-    daily_metrics = get_daily_activity(strava_client)
+    if daily_metrics is None:
+        daily_metrics = get_daily_activity(strava_client)
 
     weekly_aggregates = defaultdict(
         lambda: {"total_distance": 0, "longest_run": 0, "start_of_week": None}
@@ -155,29 +161,3 @@ def get_weekly_summaries(strava_client: Client) -> List[WeekSummary]:
     ]
 
     return weekly_summaries
-
-
-def get_activity_summaries(
-    strava_client: Client, num_weeks: int = 8
-) -> List[ActivitySummary]:
-    """
-    Fetches and returns activity summaries for a given athlete ID.
-
-    :param strava_client: The Strava client object to fetch data.
-    :param num_weeks: The number of weeks to fetch activities for.
-    :return: A list of ActivitySummary objects, lighter weight than Activity
-    """
-    daily_metrics = get_daily_activity(strava_client, num_weeks)
-    return [
-        ActivitySummary(
-            date=metrics.date.strftime("%A, %B %d, %Y"),
-            distance_in_miles=round(metrics.distance_in_miles, 2),
-            elevation_gain_in_feet=round(metrics.elevation_gain_in_feet, 2),
-            pace_minutes_per_mile=(
-                round(metrics.pace_minutes_per_mile, 2)
-                if metrics.pace_minutes_per_mile is not None
-                else None
-            ),
-        )
-        for metrics in daily_metrics
-    ]

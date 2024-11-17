@@ -2,7 +2,7 @@ import SwiftUI
 
 struct DashboardView: View {
   @EnvironmentObject var appState: AppState
-  @State private var trainingWeekData: TrainingWeekData?
+  @State private var trainingWeekData: FullTrainingWeek?
   @State private var weeklySummaries: [WeekSummary]?
   @State private var isLoadingTrainingWeek = true
   @State private var showProfile: Bool = false

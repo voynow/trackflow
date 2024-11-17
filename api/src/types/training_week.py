@@ -1,10 +1,8 @@
-from __future__ import annotations
-
 from enum import StrEnum
 from typing import List
 
 from pydantic import BaseModel, Field
-from src.utils import datetime_now_est
+from src.types.activity import DailyMetrics
 
 
 class Day(StrEnum):
@@ -17,109 +15,45 @@ class Day(StrEnum):
     SUN = "Sun"
 
 
+class PseudoTrainingDay(BaseModel):
+    day: Day
+    number_of_miles: float
+
+
+class PseudoTrainingWeek(BaseModel):
+    days: List[PseudoTrainingDay]
+
+    @property
+    def total_mileage(self) -> float:
+        return sum(day.number_of_miles for day in self.days)
+
+
 class SessionType(StrEnum):
     EASY = "easy run"
     LONG = "long run"
     SPEED = "speed workout"
     REST = "rest day"
-    MODERATE = "moderate run"
 
 
 class TrainingSession(BaseModel):
     day: Day
     session_type: SessionType
-    distance: float = Field(description="Distance in miles")
+    distance: float = Field(
+        description="Distance in miles, rounded to the nearest 1/2 mile"
+    )
     notes: str = Field(
         description="Detailed yet concise notes about the session from the coach's perspective"
     )
-    completed: bool = Field(description="Whether the session has been completed")
 
 
 class TrainingWeek(BaseModel):
-    sessions: List[TrainingSession]
+    sessions: List[TrainingSession] = Field(default_factory=list)
 
     @property
     def total_mileage(self) -> float:
         return sum(session.distance for session in self.sessions)
 
-    @property
-    def progress(self) -> float:
-        return (self.completed_sessions.total_mileage / self.total_mileage) * 100
 
-    @property
-    def completed_sessions(self) -> TrainingWeek:
-        return TrainingWeek(
-            sessions=[session for session in self.sessions if session.completed is True]
-        )
-
-
-class TrainingWeekGeneration(BaseModel):
-    """Specifically used for structured LLM generation"""
-
-    weekly_mileage_target: float
-    training_week: TrainingWeek
-
-
-class MidWeekAnalysis(BaseModel):
-    completed_training_week: TrainingWeek
-    original_training_week: TrainingWeek
-
-    @property
-    def training_week_future(self):
-        return TrainingWeek(
-            sessions=self.original_training_week.sessions[
-                datetime_now_est().weekday() + 1 :
-            ]
-        )
-
-    @property
-    def miles_ran(self):
-        return self.completed_training_week.total_mileage
-
-    @property
-    def miles_target(self):
-        return self.original_training_week.total_mileage
-
-    @property
-    def miles_remaining(self):
-        return self.miles_target - self.miles_ran
-
-    @property
-    def future_miles_planned(self):
-        return self.training_week_future.total_mileage
-
-
-class Planning(BaseModel):
-    weekly_mileage_target: str = Field(
-        description="String representation of the weekly mileage target"
-    )
-    long_run_distance: float = Field(
-        description="The distance and day of the long run for the week"
-    )
-    remaining_weekly_mileage: str = Field(
-        description="Write out the math (target - long run distance) to calculate the remaining weekly mileage"
-    )
-    remaining_weekly_mileage_planning: str = Field(
-        description="Walk through, step by step (with math), a practical distribution of the remaining weekly mileage across the week. Ex: Given 42 miles total - 17 mile long run = 25 miles remaining, lets distribute 25 miles over the remaining 6 days: One session of 10 miles (25 - 10 = 15 miles remaining). Two sessions of 6 miles (15 - 12 = 3 miles remaining). One sessions of 3 miles (3 - 3 = 0 miles remaining). Plus 2 rest days."
-    )
-
-    def __str__(self):
-        return f"Planning(weekly_mileage_target={self.weekly_mileage_target}, long_run_distance={self.long_run_distance}, remaining_weekly_mileage={self.remaining_weekly_mileage}, remaining_weekly_mileage_planning={self.remaining_weekly_mileage_planning})"
-
-    def __repr__(self):
-        return self.__str__()
-
-
-class TrainingWeekWithPlanning(BaseModel):
-    planning: Planning
-    training_week: TrainingWeek
-
-    @property
-    def total_weekly_mileage(self) -> float:
-        return sum(session.distance for session in self.training_week)
-
-    def __str__(self):
-        return f"TrainingWeekWithPlanning(planning={self.planning}, training_week={self.training_week})"
-
-    def __repr__(self):
-        return self.__str__()
+class FullTrainingWeek(BaseModel):
+    past_training_week: List[DailyMetrics]
+    future_training_week: TrainingWeek

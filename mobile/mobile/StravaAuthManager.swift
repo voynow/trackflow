@@ -26,6 +26,16 @@ class StravaAuthManager: ObservableObject {
     }
   }
 
+  func handleURL(_ url: URL) {
+    if url.scheme == "trackflow" && url.host == "www.trackflow.xyz" {
+      if let queryItems = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems,
+        let code = queryItems.first(where: { $0.name == "code" })?.value
+      {
+        handleAuthorizationCode(code)
+      }
+    }
+  }
+
   private func handleAuthorizationCode(_ code: String) {
     appState.status = .loading
 
