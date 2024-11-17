@@ -159,7 +159,11 @@ def update_training_week(user: UserRow, exe_type: ExeType) -> dict:
         future_training_week=training_week,
         past_training_week=this_weeks_activity,
     )
-    send_push_notif_wrapper(user)
+    try:
+        send_push_notif_wrapper(user)
+    except Exception as e:
+        logger.error(f"Error sending push notification: {e}")
+        return {"success": False}
     return {"success": True}
 
 
