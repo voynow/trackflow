@@ -11,7 +11,7 @@ from fastapi import (
     Request,
 )
 from src import activities, auth_manager, supabase_client, webhook
-from src.types.training_week import TrainingWeek
+from src.types.training_week import FullTrainingWeek
 from src.types.update_pipeline import ExeType
 from src.types.user import UserRow
 from src.types.webhook import StravaEvent
@@ -29,7 +29,7 @@ async def health():
     return {"status": "healthy"}
 
 
-@app.get("/training_week/", response_model=TrainingWeek)
+@app.get("/training_week/", response_model=FullTrainingWeek)
 async def training_week(user: UserRow = Depends(auth_manager.validate_user)):
     """
     Retrieve the most recent training_week row by athlete_id

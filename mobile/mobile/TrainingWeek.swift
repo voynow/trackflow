@@ -1,16 +1,31 @@
 import SwiftUI
 
 struct TrainingWeekView: View {
-  let trainingWeekData: TrainingWeekData
+  let trainingWeekData: FullTrainingWeek
   let weeklySummaries: [WeekSummary]?
 
   var body: some View {
     VStack(spacing: 16) {
       WeeklyProgressView(
-        sessions: trainingWeekData.sessions,
+        pastSessions: trainingWeekData.pastTrainingWeek,
+        futureSessions: trainingWeekData.futureTrainingWeek.sessions,
         weeklySummaries: weeklySummaries
       )
-      SessionListView(sessions: trainingWeekData.sessions)
+      SessionListView(
+        sessions: trainingWeekData.pastTrainingWeek.map { metrics in
+          TrainingSession(
+            day: metrics.dayOfWeek,
+            sessionType: .easy,
+            distance: metrics.distanceInMiles,
+            notes: ""
+          )
+        },
+        isCompleted: true
+      )
+      SessionListView(
+        sessions: trainingWeekData.futureTrainingWeek.sessions,
+        isCompleted: false
+      )
     }
     .padding(20)
     .background(ColorTheme.black)
@@ -19,16 +34,18 @@ struct TrainingWeekView: View {
 }
 
 struct WeeklyProgressView: View {
-  let sessions: [TrainingSession]
+  let pastSessions: [DailyMetrics]
+  let futureSessions: [TrainingSession]
   let weeklySummaries: [WeekSummary]?
   @State private var showingMultiWeek: Bool = false
 
   private var completedMileage: Double {
-    sessions.reduce(0) { $0 + ($1.completed ? $1.distance : 0) }
+    pastSessions.reduce(0) { $0 + $1.distanceInMiles }
   }
 
   private var totalMileage: Double {
-    sessions.reduce(0) { $0 + $1.distance }
+    pastSessions.reduce(0) { $0 + $1.distanceInMiles }
+      + futureSessions.reduce(0) { $0 + $1.distance }
   }
 
   var body: some View {
@@ -72,6 +89,7 @@ struct WeeklyProgressContent: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: 12) {
+
       Text("Weekly Progress")
         .font(.headline)
         .foregroundColor(ColorTheme.white)
@@ -180,11 +198,12 @@ struct ProgressBar: View {
 
 struct SessionListView: View {
   let sessions: [TrainingSession]
+  let isCompleted: Bool
 
   var body: some View {
     VStack(spacing: 16) {
       ForEach(sessions) { session in
-        SessionView(session: session)
+        SessionView(session: session, isCompleted: isCompleted)
       }
     }
   }
@@ -192,18 +211,19 @@ struct SessionListView: View {
 
 struct SessionView: View {
   let session: TrainingSession
+  let isCompleted: Bool
   @State private var isExpanded: Bool = false
 
   var body: some View {
     VStack(alignment: .leading, spacing: 24) {
       HStack(alignment: .center, spacing: 16) {
-        Text(session.day.prefix(3).uppercased())
+        Text(session.day.displayText)
           .font(.system(size: 14, weight: .bold))
           .foregroundColor(ColorTheme.primaryLight)
           .frame(width: 40, alignment: .leading)
 
         VStack(alignment: .leading, spacing: 4) {
-          Text(session.sessionType)
+          Text(session.sessionType.rawValue)
             .font(.system(size: 18, weight: .semibold))
             .foregroundColor(ColorTheme.white)
           Text(String(format: "%.1f mi", session.distance))
@@ -214,15 +234,15 @@ struct SessionView: View {
         Spacer()
 
         Circle()
-          .fill(session.completed ? ColorTheme.green : ColorTheme.darkGrey)
+          .fill(isCompleted ? ColorTheme.green : ColorTheme.darkGrey)
           .frame(width: 16, height: 16)
       }
 
       if isExpanded {
         VStack(alignment: .leading, spacing: 4) {
-          Text("\(session.completed ? "Completed" : "Upcoming")")
+          Text(isCompleted ? "Completed" : "Upcoming")
             .font(.system(size: 14, weight: .medium))
-            .foregroundColor(session.completed ? ColorTheme.green : ColorTheme.yellow)
+            .foregroundColor(isCompleted ? ColorTheme.green : ColorTheme.yellow)
 
           if !session.notes.isEmpty {
             Text(session.notes)

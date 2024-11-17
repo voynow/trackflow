@@ -2,6 +2,7 @@ from enum import StrEnum
 from typing import List
 
 from pydantic import BaseModel, Field
+from src.types.activity import DailyMetrics
 
 
 class Day(StrEnum):
@@ -46,8 +47,13 @@ class TrainingSession(BaseModel):
 
 
 class TrainingWeek(BaseModel):
-    sessions: List[TrainingSession]
+    sessions: List[TrainingSession] = Field(default_factory=list)
 
     @property
     def total_mileage(self) -> float:
         return sum(session.distance for session in self.sessions)
+
+
+class FullTrainingWeek(BaseModel):
+    past_training_week: List[DailyMetrics]
+    future_training_week: TrainingWeek

@@ -154,7 +154,11 @@ def update_training_week(user: UserRow, exe_type: ExeType) -> dict:
         mileage_recommendation=mileage_recommendation,
     )
 
-    supabase_client.upsert_training_week(user.athlete_id, training_week)
+    supabase_client.upsert_training_week(
+        athlete_id=user.athlete_id,
+        future_training_week=training_week,
+        past_training_week=this_weeks_activity,
+    )
     send_push_notif_wrapper(user)
     return {"success": True}
 

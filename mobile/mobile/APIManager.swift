@@ -84,7 +84,7 @@ class APIManager {
 
   func fetchTrainingWeekData(
     token: String,
-    completion: @escaping (Result<TrainingWeekData, Error>) -> Void
+    completion: @escaping (Result<FullTrainingWeek, Error>) -> Void
   ) {
     let startTime = CFAbsoluteTimeGetCurrent()
     guard let url = URL(string: "\(apiURL)/training_week/") else {
@@ -108,7 +108,7 @@ class APIManager {
         let message: String
         switch httpResponse.statusCode {
         case 401: message = "Invalid or expired token"
-        case 403: message = "Access forbidden - you don't have permission to access this resource"
+        case 403: message = "Access forbidden"
         case 404: message = "Training week not found"
         default: message = "Server error"
         }
@@ -134,7 +134,7 @@ class APIManager {
       }
 
       do {
-        let trainingWeek = try JSONDecoder().decode(TrainingWeekData.self, from: data)
+        let trainingWeek = try JSONDecoder().decode(FullTrainingWeek.self, from: data)
         completion(.success(trainingWeek))
       } catch {
         print("Decoding error: \(error)")

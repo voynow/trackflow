@@ -3,14 +3,16 @@ from __future__ import annotations
 import datetime
 import json
 import os
-from typing import Optional
+from typing import List, Optional
 
+import orjson
 from dotenv import load_dotenv
+from src.types.activity import DailyMetrics
 from src.types.mileage_recommendation import (
     MileageRecommendation,
     MileageRecommendationRow,
 )
-from src.types.training_week import TrainingWeek
+from src.types.training_week import FullTrainingWeek, TrainingSession, TrainingWeek
 from src.types.user import Preferences, UserAuthRow, UserRow
 from supabase import Client, create_client
 
@@ -84,16 +86,16 @@ def get_user_auth(athlete_id: int) -> UserAuthRow:
     return UserAuthRow(**response.data[0])
 
 
-def get_training_week(athlete_id: int) -> TrainingWeek:
+def get_training_week(athlete_id: int) -> FullTrainingWeek:
     """
     Get the most recent training_week row by athlete_id.
 
     :param athlete_id: int
-    :return: TrainingWeek
+    :return: FullTrainingWeek
     """
     table = client.table("training_week")
     response = (
-        table.select("training_week")
+        table.select("future_training_week, past_training_week")
         .eq("athlete_id", athlete_id)
         .order("created_at", desc=True)
         .limit(1)
@@ -106,16 +108,24 @@ def get_training_week(athlete_id: int) -> TrainingWeek:
         )
 
     try:
-        json_data = json.loads(response.data[0]["training_week"])
+        future_json_data = orjson.loads(response.data[0]["future_training_week"])
+        past_json_data = orjson.loads(response.data[0]["past_training_week"])
 
         # temp requirement to remove legacy moderate run
-        sessions = []
-        for session in json_data["sessions"]:
+        future_json_data_cleansed = []
+        for session in future_json_data:
             if session["session_type"] == "moderate run":
                 session["session_type"] = "easy run"
-            sessions.append(session)
+            future_json_data_cleansed.append(session)
 
-        return TrainingWeek(sessions=sessions)
+        return FullTrainingWeek(
+            past_training_week=[DailyMetrics(**obj) for obj in past_json_data],
+            future_training_week=TrainingWeek(
+                sessions=[
+                    TrainingSession(**session) for session in future_json_data_cleansed
+                ]
+            ),
+        )
     except IndexError:
         raise ValueError(
             f"Could not find training_week row for athlete_id {athlete_id}"
@@ -193,12 +203,22 @@ def does_user_exist(athlete_id: int) -> bool:
 
 def upsert_training_week(
     athlete_id: int,
-    training_week: TrainingWeek,
+    future_training_week: TrainingWeek,
+    past_training_week: List[DailyMetrics],
 ):
-    """Upsert a row into the training_week table"""
+    """
+    Upsert a row into the training_week table
+
+    :param athlete_id: The athlete's ID
+    :param future_training_week: Training week data for future sessions
+    :param past_training_week: List of daily metrics from past training
+    """
+    future_sessions = [session.dict() for session in future_training_week.sessions]
+    past_sessions = [obj.dict() for obj in past_training_week]
     row_data = {
         "athlete_id": athlete_id,
-        "training_week": training_week.json(),
+        "future_training_week": orjson.dumps(future_sessions).decode("utf-8"),
+        "past_training_week": orjson.dumps(past_sessions).decode("utf-8"),
     }
     table = client.table("training_week")
     table.upsert(row_data).execute()
@@ -249,7 +269,6 @@ def insert_mileage_recommendation(
         "week_of_year": week_of_year,
         **mileage_recommendation.dict(),
     }
-    print(row_data)
     table = client.table("mileage_recommendation")
     table.upsert(row_data).execute()
 

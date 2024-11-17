@@ -1,4 +1,3 @@
-from pprint import pprint
 from typing import List
 
 from src.constants import COACH_ROLE

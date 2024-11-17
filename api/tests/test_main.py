@@ -5,7 +5,7 @@ import pytest
 from fastapi.testclient import TestClient
 from src import auth_manager, supabase_client
 from src.main import app
-from src.types.training_week import TrainingWeek
+from src.types.training_week import FullTrainingWeek
 from src.types.update_pipeline import ExeType
 
 client = TestClient(app)
@@ -23,7 +23,7 @@ def test_get_training_week():
     response = client.get(
         "/training_week/", headers={"Authorization": f"Bearer {user_auth.jwt_token}"}
     )
-    assert TrainingWeek(**response.json())
+    assert FullTrainingWeek(**response.json())
     assert response.status_code == 200
 
 
