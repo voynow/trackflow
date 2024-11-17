@@ -6,7 +6,10 @@ import os
 from typing import Optional
 
 from dotenv import load_dotenv
-from src.types.mileage_recommendation import MileageRecommendation
+from src.types.mileage_recommendation import (
+    MileageRecommendation,
+    MileageRecommendationRow,
+)
 from src.types.training_week import TrainingWeek
 from src.types.user import Preferences, UserAuthRow, UserRow
 from supabase import Client, create_client
@@ -97,9 +100,22 @@ def get_training_week(athlete_id: int) -> TrainingWeek:
         .execute()
     )
 
+    if not response.data:
+        raise ValueError(
+            f"Could not find training_week row for athlete_id {athlete_id}"
+        )
+
     try:
-        response_data = response.data[0]
-        return TrainingWeek(**json.loads(response_data["training_week"]))
+        json_data = json.loads(response.data[0]["training_week"])
+
+        # temp requirement to remove legacy moderate run
+        sessions = []
+        for session in json_data["sessions"]:
+            if session["session_type"] == "moderate run":
+                session["session_type"] = "easy run"
+            sessions.append(session)
+
+        return TrainingWeek(sessions=sessions)
     except IndexError:
         raise ValueError(
             f"Could not find training_week row for athlete_id {athlete_id}"
@@ -236,3 +252,35 @@ def insert_mileage_recommendation(
     print(row_data)
     table = client.table("mileage_recommendation")
     table.upsert(row_data).execute()
+
+
+def get_mileage_recommendation(
+    athlete_id: int, year: int, week_of_year: int
+) -> MileageRecommendation:
+    """
+    Get the most recent mileage recommendation for the given year and week of year
+
+    :param athlete_id: The ID of the athlete
+    :param year: The year of the recommendation
+    :param week_of_year: The week of the year of the recommendation
+    :return: A MileageRecommendation object
+    """
+    table = client.table("mileage_recommendation")
+    response = (
+        table.select("*")
+        .eq("athlete_id", athlete_id)
+        .eq("year", year)
+        .eq("week_of_year", week_of_year)
+        .order("created_at", desc=True)
+        .limit(1)
+        .execute()
+    )
+
+    if not response.data:
+        raise ValueError(
+            f"Could not find mileage recommendation for {athlete_id=} {year=} {week_of_year=}"
+        )
+    data = MileageRecommendationRow(**response.data[0])
+    return MileageRecommendation(
+        thoughts=data.thoughts, total_volume=data.total_volume, long_run=data.long_run
+    )

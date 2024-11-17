@@ -161,29 +161,3 @@ def get_weekly_summaries(
     ]
 
     return weekly_summaries
-
-
-def get_activity_summaries(
-    strava_client: Client, num_weeks: int = 8
-) -> List[ActivitySummary]:
-    """
-    Fetches and returns activity summaries for a given athlete ID.
-
-    :param strava_client: The Strava client object to fetch data.
-    :param num_weeks: The number of weeks to fetch activities for.
-    :return: A list of ActivitySummary objects, lighter weight than Activity
-    """
-    daily_metrics = get_daily_activity(strava_client, num_weeks)
-    return [
-        ActivitySummary(
-            date=metrics.date.strftime("%A, %B %d, %Y"),
-            distance_in_miles=round(metrics.distance_in_miles, 2),
-            elevation_gain_in_feet=round(metrics.elevation_gain_in_feet, 2),
-            pace_minutes_per_mile=(
-                round(metrics.pace_minutes_per_mile, 2)
-                if metrics.pace_minutes_per_mile is not None
-                else None
-            ),
-        )
-        for metrics in daily_metrics
-    ]
