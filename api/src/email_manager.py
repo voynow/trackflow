@@ -33,7 +33,6 @@ def send_alert_email(
     html_content = f"""
     <html>
     <body>
-        <h1>{subject}</h1>
         <p>{text_content}</p>
     </body>
     </html>
