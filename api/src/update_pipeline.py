@@ -162,8 +162,7 @@ def update_training_week(user: UserRow, exe_type: ExeType) -> dict:
     try:
         send_push_notif_wrapper(user)
     except Exception as e:
-        logger.error(f"Error sending push notification: {e}")
-        return {"success": False}
+        logger.error(f"Error sending push notification: {e}", exc_info=True)
     return {"success": True}
 
 

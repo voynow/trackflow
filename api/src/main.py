@@ -1,5 +1,6 @@
 import logging
 import os
+import traceback
 
 from fastapi import (
     BackgroundTasks,
@@ -10,7 +11,9 @@ from fastapi import (
     HTTPException,
     Request,
 )
+from fastapi.responses import JSONResponse
 from src import activities, auth_manager, supabase_client, webhook
+from src.email_manager import send_alert_email
 from src.types.training_week import FullTrainingWeek
 from src.types.update_pipeline import ExeType
 from src.types.user import UserRow
@@ -22,7 +25,33 @@ app = FastAPI()
 logger = logging.getLogger("uvicorn.error")
 
 
-# health check
+@app.middleware("http")
+async def log_and_handle_errors(request: Request, call_next):
+    """
+    Log full request and response details, and send alerts on errors
+
+    :param request: The incoming HTTP request
+    :param call_next: Function to call the next middleware or endpoint
+    :return: Response or error message
+    """
+    try:
+        logger.info(f"Request: {request}")
+        response = await call_next(request)
+        logger.info(f"Response: {response}")
+        return response
+
+    except Exception as e:
+        error_message = (
+            f"Error for {request.method} {request.url}: {e}\n{traceback.format_exc()}"
+        )
+        logger.error(error_message)
+        send_alert_email(
+            subject="TrackFlow API Error 😵‍💫",
+            text_content=error_message,
+        )
+        return {"success": False, "error": error_message}
+
+
 @app.get("/health")
 async def health():
     logger.info("Healthy ✅")
