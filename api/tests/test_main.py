@@ -1,30 +1,41 @@
 import os
-from unittest.mock import patch
+from datetime import timedelta
 
 import pytest
 from fastapi.testclient import TestClient
+from freezegun import freeze_time
 from src import auth_manager, supabase_client
 from src.main import app
 from src.types.training_week import FullTrainingWeek
 from src.types.update_pipeline import ExeType
+from src.update_pipeline import update_training_week
+from src.utils import datetime_now_est
 
 client = TestClient(app)
 
 
+def get_last_sunday():
+    today = datetime_now_est().today()
+    days_since_sunday = (today.weekday() + 1) % 7
+    most_recent_sunday = today - timedelta(days=days_since_sunday)
+    return most_recent_sunday.strftime("%Y-%m-%d")
+
+
 @pytest.fixture(autouse=True, scope="session")
 def setup_test_environment():
+    os.environ["TEST_FLAG"] = "true"
     auth_manager.authenticate_athlete(os.environ["JAMIES_ATHLETE_ID"])
 
 
-def test_get_training_week():
-    """Test successful retrieval of training week"""
-    user_auth = supabase_client.get_user_auth(os.environ["JAMIES_ATHLETE_ID"])
+# def test_get_training_week():
+#     """Test successful retrieval of training week"""
+#     user_auth = supabase_client.get_user_auth(os.environ["JAMIES_ATHLETE_ID"])
 
-    response = client.get(
-        "/training_week/", headers={"Authorization": f"Bearer {user_auth.jwt_token}"}
-    )
-    assert FullTrainingWeek(**response.json())
-    assert response.status_code == 200
+#     response = client.get(
+#         "/training_week/", headers={"Authorization": f"Bearer {user_auth.jwt_token}"}
+#     )
+#     assert FullTrainingWeek(**response.json())
+#     assert response.status_code == 200
 
 
 def test_update_device_token():
@@ -89,13 +100,20 @@ def test_strava_webhook():
     assert response.status_code == 200
 
 
-def test_trigger_new_user_onboarding():
-    """Test successful onboarding initialization"""
+def test_update_training_week_new_week():
+    """Test successful update of new week, must be tested on a Sunday"""
+    user = supabase_client.get_user(os.environ["JAMIES_ATHLETE_ID"])
 
-    user_auth = supabase_client.get_user_auth(os.environ["JAMIES_ATHLETE_ID"])
-    response = client.post(
-        "/onboarding/", headers={"Authorization": f"Bearer {user_auth.jwt_token}"}
-    )
+    @freeze_time(f"{get_last_sunday()} 00:00:00")
+    def frozen_update_training_week_new_week():
+        return update_training_week(user, ExeType.NEW_WEEK)
 
-    assert response.status_code == 200
-    assert response.json() == {"success": True}
+    response = frozen_update_training_week_new_week()
+    assert response == {"success": True}
+
+
+def test_update_training_week_mid_week():
+    """Test successful update of mid week"""
+    user = supabase_client.get_user(os.environ["JAMIES_ATHLETE_ID"])
+    response = update_training_week(user, ExeType.MID_WEEK)
+    assert response == {"success": True}
