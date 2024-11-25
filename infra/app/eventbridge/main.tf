@@ -20,8 +20,8 @@ resource "aws_cloudwatch_event_api_destination" "trackflow_daily_destination" {
 
 resource "aws_cloudwatch_event_rule" "trackflow_daily" {
   name                = "trackflow-daily"
-  description         = "Trigger daily TrackFlow updates at 8:30 PM EST"
-  schedule_expression = "cron(30 1 * * ? *)"
+  description         = "Trigger daily TrackFlow updates at 11:00 AM EST"
+  schedule_expression = "cron(0 16 * * ? *)"
 }
 
 resource "aws_iam_role" "eventbridge_api_destination" {
