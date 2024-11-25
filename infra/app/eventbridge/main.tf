@@ -14,7 +14,7 @@ resource "aws_cloudwatch_event_api_destination" "trackflow_daily_destination" {
   name                             = "trackflow-daily-destination"
   connection_arn                   = aws_cloudwatch_event_connection.trackflow_api_connection.arn
   http_method                      = "POST"
-  invocation_endpoint             = "${var.api_endpoint}/update-all-users/"
+  invocation_endpoint             = "${var.api_base_url}/update-all-users/"
   invocation_rate_limit_per_second = 1
 }
 
