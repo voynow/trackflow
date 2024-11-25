@@ -179,43 +179,43 @@ def slice_and_gen_weekly_activity(
     return enriched_activities
 
 
-# def update_training_week(user: UserRow, exe_type: ExeType) -> dict:
-#     """Single function to handle all training week updates"""
-#     strava_client = get_strava_client(user.athlete_id)
-#     daily_activity = get_daily_activity(strava_client)
-#     weekly_summaries = get_weekly_summaries(
-#         strava_client=strava_client, daily_metrics=daily_activity
-#     )
-#     mileage_rec = get_or_gen_mileage_recommendation(
-#         user=user, weekly_summaries=weekly_summaries, exe_type=exe_type
-#     )
-#     rest_of_week = get_remaining_days_of_week(daily_activity[-1], exe_type)
-#     this_weeks_activity = slice_and_gen_weekly_activity(daily_activity, rest_of_week)
-#     miles_completed_this_week = sum(
-#         [obj.distance_in_miles for obj in this_weeks_activity]
-#     )
-#     miles_remaining_this_week = mileage_rec.total_volume - miles_completed_this_week
-#     pseudo_training_week = gen_pseudo_training_week(
-#         last_n_days_of_activity=daily_activity[-14:],
-#         mileage_recommendation=mileage_rec,
-#         miles_completed_this_week=miles_completed_this_week,
-#         miles_remaining_this_week=miles_remaining_this_week,
-#         rest_of_week=rest_of_week,
-#         user_preferences=user.preferences,
-#     )
-#     training_week = gen_training_week(
-#         user=user,
-#         pseudo_training_week=pseudo_training_week,
-#         mileage_recommendation=mileage_rec,
-#     )
+def update_training_week(user: UserRow, exe_type: ExeType) -> dict:
+    """Single function to handle all training week updates"""
+    strava_client = get_strava_client(user.athlete_id)
+    daily_activity = get_daily_activity(strava_client)
+    weekly_summaries = get_weekly_summaries(
+        strava_client=strava_client, daily_metrics=daily_activity
+    )
+    mileage_rec = get_or_gen_mileage_recommendation(
+        user=user, weekly_summaries=weekly_summaries, exe_type=exe_type
+    )
+    rest_of_week = get_remaining_days_of_week(daily_activity[-1], exe_type)
+    this_weeks_activity = slice_and_gen_weekly_activity(daily_activity, rest_of_week)
+    miles_completed_this_week = sum(
+        [obj.distance_in_miles for obj in this_weeks_activity]
+    )
+    miles_remaining_this_week = mileage_rec.total_volume - miles_completed_this_week
+    pseudo_training_week = gen_pseudo_training_week(
+        last_n_days_of_activity=daily_activity[-14:],
+        mileage_recommendation=mileage_rec,
+        miles_completed_this_week=miles_completed_this_week,
+        miles_remaining_this_week=miles_remaining_this_week,
+        rest_of_week=rest_of_week,
+        user_preferences=user.preferences,
+    )
+    training_week = gen_training_week(
+        user=user,
+        pseudo_training_week=pseudo_training_week,
+        mileage_recommendation=mileage_rec,
+    )
 
-#     supabase_client.upsert_training_week(
-#         athlete_id=user.athlete_id,
-#         future_training_week=training_week,
-#         past_training_week=this_weeks_activity,
-#     )
-#     send_push_notif_wrapper(user)
-#     return {"success": True}
+    supabase_client.upsert_training_week(
+        athlete_id=user.athlete_id,
+        future_training_week=training_week,
+        past_training_week=this_weeks_activity,
+    )
+    send_push_notif_wrapper(user)
+    return {"success": True}
 
 
 def update_training_week_wrapper(user: UserRow, exe_type: ExeType) -> dict:
@@ -238,11 +238,11 @@ def update_all_users() -> dict:
     Sunday evening: Send new training week to all active users
     """
     if datetime_now_est().weekday() != 6:
-        for user in supabase_client.list_users():
+        for user in supabase_client.list_users(debug=True):
             if not supabase_client.has_user_updated_today(user.athlete_id):
                 update_training_week(user, ExeType.MID_WEEK)
     else:
         # all users get a new training week on Sunday night
-        for user in supabase_client.list_users():
+        for user in supabase_client.list_users(debug=True):
             update_training_week(user, ExeType.NEW_WEEK)
     return {"success": True}

@@ -5,6 +5,7 @@ from src.llm import get_completion_json
 from src.types.activity import WeekSummary
 from src.types.mileage_recommendation import MileageRecommendation
 from src.types.user import Preferences
+from src.utils import datetime_now_est
 
 
 def gen_mileage_recommendation(
@@ -20,6 +21,11 @@ def gen_mileage_recommendation(
     :param weekly_summaries: The athlete's weekly summaries
     :return: A MileageRecommendation
     """
+    if datetime_now_est().weekday() != 6:
+        raise ValueError(
+            "Mileage recommendation can only be generated on Sunday (night) when the week is complete"
+        )
+
     weekly_summaries_str = "\n".join([str(week) for week in weekly_summaries])
 
     message = f"""{COACH_ROLE}
