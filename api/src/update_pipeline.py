@@ -16,7 +16,12 @@ from src.llm import get_completion, get_completion_json
 from src.mileage_recommendation import gen_mileage_recommendation
 from src.types.activity import DailyMetrics, WeekSummary
 from src.types.mileage_recommendation import MileageRecommendation
-from src.types.training_week import EnrichedActivity, PseudoTrainingWeek, TrainingWeek
+from src.types.training_week import (
+    EnrichedActivity,
+    FullTrainingWeek,
+    PseudoTrainingWeek,
+    TrainingWeek,
+)
 from src.types.update_pipeline import ExeType
 from src.types.user import Preferences, UserRow
 from src.utils import datetime_now_est
@@ -107,21 +112,40 @@ Please create a proper training week for the next {len(pseudo_training_week.days
     )
 
 
+def create_new_mileage_recommendation(
+    user: UserRow, weekly_summaries: List[WeekSummary]
+) -> MileageRecommendation:
+    mileage_recommendation = gen_mileage_recommendation(
+        user_preferences=user.preferences,
+        weekly_summaries=weekly_summaries,
+    )
+    past_week = weekly_summaries[-1].week_of_year
+    past_year = weekly_summaries[-1].year
+
+    if past_week == 52:
+        next_week = 1
+        next_year = past_year + 1
+    else:
+        next_week = past_week + 1
+        next_year = past_year
+
+    supabase_client.insert_mileage_recommendation(
+        athlete_id=user.athlete_id,
+        mileage_recommendation=mileage_recommendation,
+        year=next_year,
+        week_of_year=next_week,
+    )
+    return mileage_recommendation
+
+
 def get_or_gen_mileage_recommendation(
     user: UserRow,
     weekly_summaries: List[WeekSummary],
     exe_type: ExeType,
 ) -> MileageRecommendation:
     if exe_type == ExeType.NEW_WEEK:
-        mileage_recommendation = gen_mileage_recommendation(
-            user_preferences=user.preferences,
-            weekly_summaries=weekly_summaries,
-        )
-        supabase_client.insert_mileage_recommendation(
-            athlete_id=user.athlete_id,
-            mileage_recommendation=mileage_recommendation,
-            year=weekly_summaries[-1].year,
-            week_of_year=weekly_summaries[-1].week_of_year,
+        mileage_recommendation = create_new_mileage_recommendation(
+            user=user, weekly_summaries=weekly_summaries
         )
     else:
         mileage_recommendation = supabase_client.get_mileage_recommendation(
@@ -132,14 +156,16 @@ def get_or_gen_mileage_recommendation(
     return mileage_recommendation
 
 
-def gen_coaches_notes(activity: DailyMetrics, past_7_days: List[DailyMetrics]) -> str:
+def gen_coaches_notes(
+    activity_of_interest: DailyMetrics, past_7_days: List[DailyMetrics]
+) -> str:
     message = f"""{COACH_ROLE}
 
 Here is the activity for the past 7 days:
 {past_7_days}
 
 Here is the activity for the day:
-{activity}
+{activity_of_interest}
 
 Please write some notes about the activity from the coach's perspective. These notes should provide interesting insights for the athlete.
 """
@@ -179,8 +205,14 @@ def slice_and_gen_weekly_activity(
     return enriched_activities
 
 
-def update_training_week(user: UserRow, exe_type: ExeType) -> dict:
-    """Single function to handle all training week updates"""
+def _update_training_week(user: UserRow, exe_type: ExeType) -> FullTrainingWeek:
+    """
+    Single function to handle all training week updates
+
+    :param user: UserRow object
+    :param exe_type: ExeType object
+    :return: FullTrainingWeek object
+    """
     strava_client = get_strava_client(user.athlete_id)
     daily_activity = get_daily_activity(strava_client)
     weekly_summaries = get_weekly_summaries(
@@ -192,7 +224,7 @@ def update_training_week(user: UserRow, exe_type: ExeType) -> dict:
     rest_of_week = get_remaining_days_of_week(daily_activity[-1], exe_type)
     this_weeks_activity = slice_and_gen_weekly_activity(daily_activity, rest_of_week)
     miles_completed_this_week = sum(
-        [obj.distance_in_miles for obj in this_weeks_activity]
+        [obj.activity.distance_in_miles for obj in this_weeks_activity]
     )
     miles_remaining_this_week = mileage_rec.total_volume - miles_completed_this_week
     pseudo_training_week = gen_pseudo_training_week(
@@ -208,22 +240,42 @@ def update_training_week(user: UserRow, exe_type: ExeType) -> dict:
         pseudo_training_week=pseudo_training_week,
         mileage_recommendation=mileage_rec,
     )
+    return FullTrainingWeek(
+        past_training_week=this_weeks_activity,
+        future_training_week=training_week,
+    )
 
+
+def update_training_week(user: UserRow, exe_type: ExeType) -> dict:
+    """
+    Full pipeline with update training week & push notification side effects
+
+    :param user: UserRow object
+    :param exe_type: ExeType object
+    :return: dict
+    """
+    training_week = _update_training_week(user=user, exe_type=exe_type)
     supabase_client.upsert_training_week(
         athlete_id=user.athlete_id,
-        future_training_week=training_week,
-        past_training_week=this_weeks_activity,
+        future_training_week=training_week.future_training_week,
+        past_training_week=training_week.past_training_week,
     )
     send_push_notif_wrapper(user)
     return {"success": True}
 
 
 def update_training_week_wrapper(user: UserRow, exe_type: ExeType) -> dict:
-    """Wrapper to handle errors in the update pipeline"""
+    """
+    Wrapper to handle errors in the update pipeline
+
+    :param user: UserRow object
+    :param exe_type: ExeType object
+    :return: dict
+    """
     try:
         return update_training_week(user, exe_type)
     except Exception as e:
-        error_message = f"Error updating training week: {e}\n{traceback.format_exc()}"
+        error_message = f"Error updating training week for user {user.athlete_id}: {e}\n{traceback.format_exc()}"
         logger.error(error_message)
         send_alert_email(
             subject="TrackFlow Update Pipeline Error 😵‍💫",
@@ -236,13 +288,15 @@ def update_all_users() -> dict:
     """
     Evenings excluding Sunday: Send update to users who have not yet triggered an update today
     Sunday evening: Send new training week to all active users
+
+    :return: dict
     """
     if datetime_now_est().weekday() != 6:
         for user in supabase_client.list_users(debug=True):
             if not supabase_client.has_user_updated_today(user.athlete_id):
-                update_training_week(user, ExeType.MID_WEEK)
+                update_training_week_wrapper(user, ExeType.MID_WEEK)
     else:
         # all users get a new training week on Sunday night
         for user in supabase_client.list_users(debug=True):
-            update_training_week(user, ExeType.NEW_WEEK)
+            update_training_week_wrapper(user, ExeType.NEW_WEEK)
     return {"success": True}

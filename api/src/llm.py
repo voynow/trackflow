@@ -11,7 +11,7 @@ load_dotenv()
 client = OpenAI()
 
 
-def get_completion(
+def _get_completion(
     messages: List[ChatCompletionMessage],
     model: str = "gpt-4o",
     response_format: Optional[Dict] = None,
@@ -20,6 +20,21 @@ def get_completion(
         model=model, messages=messages, response_format=response_format
     )
     return response.choices[0].message.content
+
+
+def get_completion(
+    message: str,
+    model: str = "gpt-4o",
+):
+    """
+    LLM completion with raw string response
+
+    :param message: The message to send to the LLM.
+    :param model: The model to use for the completion.
+    :return: The raw string response from the LLM.
+    """
+    messages = [{"role": "user", "content": message}]
+    return _get_completion(messages=messages, model=model)
 
 
 def get_completion_json(
@@ -53,7 +68,7 @@ def get_completion_json(
 
     for attempt in range(max_retries):
         try:
-            response_str = get_completion(
+            response_str = _get_completion(
                 model=model,
                 messages=messages,
                 response_format={"type": "json_object"},

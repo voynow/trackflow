@@ -1,3 +1,4 @@
+import logging
 import os
 from datetime import timedelta
 
@@ -8,7 +9,7 @@ from src import auth_manager, supabase_client
 from src.main import app
 from src.types.training_week import FullTrainingWeek
 from src.types.update_pipeline import ExeType
-from src.update_pipeline import update_training_week
+from src.update_pipeline import _update_training_week
 from src.utils import datetime_now_est
 
 client = TestClient(app)
@@ -27,15 +28,15 @@ def setup_test_environment():
     auth_manager.authenticate_athlete(os.environ["JAMIES_ATHLETE_ID"])
 
 
-# def test_get_training_week():
-#     """Test successful retrieval of training week"""
-#     user_auth = supabase_client.get_user_auth(os.environ["JAMIES_ATHLETE_ID"])
+def test_get_training_week():
+    """Test successful retrieval of training week"""
+    user_auth = supabase_client.get_user_auth(os.environ["JAMIES_ATHLETE_ID"])
 
-#     response = client.get(
-#         "/training_week/", headers={"Authorization": f"Bearer {user_auth.jwt_token}"}
-#     )
-#     assert FullTrainingWeek(**response.json())
-#     assert response.status_code == 200
+    response = client.get(
+        "/training_week/", headers={"Authorization": f"Bearer {user_auth.jwt_token}"}
+    )
+    assert FullTrainingWeek(**response.json())
+    assert response.status_code == 200
 
 
 def test_update_device_token():
@@ -104,16 +105,20 @@ def test_update_training_week_new_week():
     """Test successful update of new week, must be tested on a Sunday"""
     user = supabase_client.get_user(os.environ["JAMIES_ATHLETE_ID"])
 
-    @freeze_time(f"{get_last_sunday()} 00:00:00")
+    @freeze_time(f"{get_last_sunday()} 12:00:00")
     def frozen_update_training_week_new_week():
-        return update_training_week(user, ExeType.NEW_WEEK)
+        return _update_training_week(user, ExeType.NEW_WEEK)
 
     response = frozen_update_training_week_new_week()
-    assert response == {"success": True}
+    assert isinstance(response, FullTrainingWeek)
 
 
 def test_update_training_week_mid_week():
     """Test successful update of mid week"""
     user = supabase_client.get_user(os.environ["JAMIES_ATHLETE_ID"])
-    response = update_training_week(user, ExeType.MID_WEEK)
-    assert response == {"success": True}
+    response = _update_training_week(user, ExeType.MID_WEEK)
+    assert isinstance(response, FullTrainingWeek)
+
+
+# def test_apple_push_notification():
+#     raise NotImplementedError
