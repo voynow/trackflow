@@ -66,4 +66,9 @@ resource "aws_cloudwatch_event_target" "trackflow_daily_target" {
   target_id = "TrackflowDailyTarget"
   arn       = aws_cloudwatch_event_api_destination.trackflow_daily_destination.arn
   role_arn  = aws_iam_role.eventbridge_api_destination.arn
+
+  retry_policy {
+    maximum_event_age_in_seconds = 3600
+    maximum_retry_attempts       = 0
+  }
 } 
