@@ -24,13 +24,14 @@ enum Day: String, CaseIterable, Codable {
   init(from decoder: Decoder) throws {
     let container = try decoder.singleValueContainer()
     let value = try container.decode(String.self)
-    
+
     // Normalize variations
-    let normalizedValue = value
+    let normalizedValue =
+      value
       .replacingOccurrences(of: "Tues", with: "Tue")
       .replacingOccurrences(of: "Thurs", with: "Thu")
       .capitalized
-    
+
     guard let day = Day(rawValue: normalizedValue) else {
       throw DecodingError.dataCorruptedError(
         in: container,
@@ -141,6 +142,16 @@ struct DailyMetrics: Codable {
   }
 }
 
+struct EnrichedActivity: Codable {
+  let activity: DailyMetrics
+  let coachesNotes: String
+
+  enum CodingKeys: String, CodingKey {
+    case activity
+    case coachesNotes = "coaches_notes"
+  }
+}
+
 struct TrainingSession: Codable, Identifiable {
   let id: UUID
   let day: Day
@@ -177,7 +188,7 @@ struct TrainingWeek: Codable {
 }
 
 struct FullTrainingWeek: Codable {
-  let pastTrainingWeek: [DailyMetrics]
+  let pastTrainingWeek: [EnrichedActivity]
   let futureTrainingWeek: TrainingWeek
 
   enum CodingKeys: String, CodingKey {

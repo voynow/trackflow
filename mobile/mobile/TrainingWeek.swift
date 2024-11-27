@@ -7,17 +7,17 @@ struct TrainingWeekView: View {
   var body: some View {
     VStack(spacing: 16) {
       WeeklyProgressView(
-        pastSessions: trainingWeekData.pastTrainingWeek,
+        pastSessions: trainingWeekData.pastTrainingWeek.map(\.activity),
         futureSessions: trainingWeekData.futureTrainingWeek.sessions,
         weeklySummaries: weeklySummaries
       )
       SessionListView(
-        sessions: trainingWeekData.pastTrainingWeek.map { metrics in
+        sessions: trainingWeekData.pastTrainingWeek.map { enriched in
           TrainingSession(
-            day: metrics.dayOfWeek,
+            day: enriched.activity.dayOfWeek,
             sessionType: .easy,
-            distance: metrics.distanceInMiles,
-            notes: ""
+            distance: enriched.activity.distanceInMiles,
+            notes: enriched.coachesNotes
           )
         },
         isCompleted: true
