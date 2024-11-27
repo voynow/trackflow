@@ -25,6 +25,7 @@ from src.types.training_week import (
 from src.types.update_pipeline import ExeType
 from src.types.user import Preferences, UserRow
 from src.utils import datetime_now_est
+from src.prompts import PSEUDO_TRAINING_WEEK_PROMPT, TRAINING_WEEK_PROMPT, COACHES_NOTES_PROMPT
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -62,22 +63,17 @@ def gen_pseudo_training_week(
     rest_of_week: List[str],
     user_preferences: Preferences,
 ) -> PseudoTrainingWeek:
-    message = f"""{COACH_ROLE}
-
-Your athlete has provided the following preferences:
-{user_preferences}
-
-Here is the athlete's activity for the past {len(last_n_days_of_activity)} days:
-{last_n_days_of_activity}
-
-The athlete has completed {miles_completed_this_week} miles this week and has {miles_remaining_this_week} miles remaining (if we are halfway through the week and this goal is no longer realistic, that is fine just ensure the athlete finished out the week safely)
-
-Additionally, here are some notes you have written on recommendations for the week in question:
-{mileage_recommendation}
-
-Lets generate a pseudo-training week for the next {len(rest_of_week)} days:
-{rest_of_week}
-"""
+    message = PSEUDO_TRAINING_WEEK_PROMPT.substitute(
+        COACH_ROLE=COACH_ROLE,
+        user_preferences=user_preferences,
+        n_days=len(last_n_days_of_activity),
+        last_n_days_of_activity=last_n_days_of_activity,
+        miles_completed_this_week=miles_completed_this_week,
+        miles_remaining_this_week=miles_remaining_this_week,
+        mileage_recommendation=mileage_recommendation,
+        n_remaining_days=len(rest_of_week),
+        rest_of_week=rest_of_week,
+    )
     if len(rest_of_week) == 0:
         return PseudoTrainingWeek(days=[])
     return get_completion_json(
@@ -91,19 +87,13 @@ def gen_training_week(
     pseudo_training_week: PseudoTrainingWeek,
     mileage_recommendation: MileageRecommendation,
 ) -> TrainingWeek:
-    message = f"""{COACH_ROLE}
-
-Your athlete has provided the following preferences:
-{user.preferences}
-
-Here is the pseudo-training week you created for your athlete:
-{pseudo_training_week}
-
-Here are some notes you have written on recommendations for the week in question:
-{mileage_recommendation}
-
-Please create a proper training week for the next {len(pseudo_training_week.days)} days based on the information provided.
-"""
+    message = TRAINING_WEEK_PROMPT.substitute(
+        COACH_ROLE=COACH_ROLE,
+        preferences=user.preferences,
+        n_days=len(pseudo_training_week.days),
+        pseudo_training_week=pseudo_training_week,
+        mileage_recommendation=mileage_recommendation,
+    )
     if len(pseudo_training_week.days) == 0:
         return TrainingWeek(sessions=[])
     return get_completion_json(
@@ -159,16 +149,12 @@ def get_or_gen_mileage_recommendation(
 def gen_coaches_notes(
     activity_of_interest: DailyMetrics, past_7_days: List[DailyMetrics]
 ) -> str:
-    message = f"""{COACH_ROLE}
-
-Here is the activity for the past 7 days:
-{past_7_days}
-
-Here is the activity for the day:
-{activity_of_interest}
-
-Please write some notes about the activity from the coach's perspective. These notes should provide interesting insights for the athlete.
-"""
+    message = COACHES_NOTES_PROMPT.substitute(
+        COACH_ROLE=COACH_ROLE,
+        past_7_days=past_7_days,
+        activity_of_interest=activity_of_interest,
+        day_of_week=activity_of_interest.day_of_week,
+    )
     return get_completion(message=message)
 
 
