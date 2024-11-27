@@ -1,6 +1,4 @@
-import logging
 import os
-from datetime import timedelta
 
 import pytest
 from fastapi.testclient import TestClient
@@ -10,16 +8,9 @@ from src.main import app
 from src.types.training_week import FullTrainingWeek
 from src.types.update_pipeline import ExeType
 from src.update_pipeline import _update_training_week
-from src.utils import datetime_now_est
+from src.utils import get_last_sunday
 
 client = TestClient(app)
-
-
-def get_last_sunday():
-    today = datetime_now_est().today()
-    days_since_sunday = (today.weekday() + 1) % 7
-    most_recent_sunday = today - timedelta(days=days_since_sunday)
-    return most_recent_sunday.strftime("%Y-%m-%d")
 
 
 @pytest.fixture(autouse=True, scope="session")

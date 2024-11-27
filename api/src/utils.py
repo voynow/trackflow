@@ -1,7 +1,7 @@
-from datetime import datetime
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 from pydantic import BaseModel
-from zoneinfo import ZoneInfo
 
 
 def datetime_now_est() -> datetime:
@@ -24,3 +24,10 @@ def round_all_floats(model: BaseModel, precision: int = 2) -> BaseModel:
         ):
             setattr(model, field_name, round(getattr(model, field_name), precision))
     return model
+
+
+def get_last_sunday():
+    today = datetime_now_est().today()
+    days_since_sunday = (today.weekday() + 1) % 7
+    most_recent_sunday = today - timedelta(days=days_since_sunday)
+    return most_recent_sunday.strftime("%Y-%m-%d")
