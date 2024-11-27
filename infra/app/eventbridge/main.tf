@@ -14,14 +14,14 @@ resource "aws_cloudwatch_event_api_destination" "trackflow_daily_destination" {
   name                             = "trackflow-daily-destination"
   connection_arn                   = aws_cloudwatch_event_connection.trackflow_api_connection.arn
   http_method                      = "POST"
-  invocation_endpoint             = "${var.api_endpoint}/update-all-users/"
+  invocation_endpoint             = "${var.api_base_url}/update-all-users/"
   invocation_rate_limit_per_second = 1
 }
 
 resource "aws_cloudwatch_event_rule" "trackflow_daily" {
   name                = "trackflow-daily"
   description         = "Trigger daily TrackFlow updates at 8:30 PM EST"
-  schedule_expression = "cron(30 1 * * ? *)"
+  schedule_expression = "cron(30 1 * * ? *)" # 8:30 PM EST
 }
 
 resource "aws_iam_role" "eventbridge_api_destination" {
@@ -66,4 +66,9 @@ resource "aws_cloudwatch_event_target" "trackflow_daily_target" {
   target_id = "TrackflowDailyTarget"
   arn       = aws_cloudwatch_event_api_destination.trackflow_daily_destination.arn
   role_arn  = aws_iam_role.eventbridge_api_destination.arn
+
+  retry_policy {
+    maximum_event_age_in_seconds = 3600
+    maximum_retry_attempts       = 0
+  }
 } 

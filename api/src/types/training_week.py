@@ -54,6 +54,11 @@ class TrainingWeek(BaseModel):
         return sum(session.distance for session in self.sessions)
 
 
+class EnrichedActivity(BaseModel):
+    activity: DailyMetrics
+    coaches_notes: str
+
+
 class FullTrainingWeek(BaseModel):
-    past_training_week: List[DailyMetrics]
+    past_training_week: List[EnrichedActivity]
     future_training_week: TrainingWeek

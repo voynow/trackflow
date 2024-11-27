@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import datetime
-import json
 import os
 from typing import List, Optional
 
@@ -12,7 +11,12 @@ from src.types.mileage_recommendation import (
     MileageRecommendation,
     MileageRecommendationRow,
 )
-from src.types.training_week import FullTrainingWeek, TrainingSession, TrainingWeek
+from src.types.training_week import (
+    EnrichedActivity,
+    FullTrainingWeek,
+    TrainingSession,
+    TrainingWeek,
+)
 from src.types.user import Preferences, UserAuthRow, UserRow
 from supabase import Client, create_client
 
@@ -26,6 +30,28 @@ def init() -> Client:
 
 
 client = init()
+
+
+def get_training_week_table_name() -> str:
+    """
+    Inject test_training_week table name during testing
+
+    :return: The name of the training_week table
+    """
+    if os.environ.get("TEST_FLAG", "false") == "true":
+        return "test_training_week"
+    return "training_week"
+
+
+def get_mileage_recommendation_table_name() -> str:
+    """
+    Inject test_mileage_recommendation table name during testing
+
+    :return: The name of the mileage_recommendation table
+    """
+    if os.environ.get("TEST_FLAG", "false") == "true":
+        return "test_mileage_recommendation"
+    return "mileage_recommendation"
 
 
 def get_device_token(athlete_id: int) -> Optional[str]:
@@ -58,7 +84,7 @@ def get_user(athlete_id: int) -> UserRow:
     return UserRow(**response.data[0])
 
 
-def list_users() -> list[UserRow]:
+def list_users(debug: bool = False) -> list[UserRow]:
     """
     List all users in the user_auth table
 
@@ -67,7 +93,37 @@ def list_users() -> list[UserRow]:
     table = client.table("user")
     response = table.select("*").execute()
 
-    return [UserRow(**row) for row in response.data]
+    users = [UserRow(**row) for row in response.data]
+
+    if debug:
+        users = [
+            user
+            for user in users
+            if user.email in ["rachel.decker122@gmail.com", "voynow99@gmail.com"]
+        ]
+    return users
+
+
+def list_user_auths() -> list[UserAuthRow]:
+    """
+    List all user_auths in the user_auth table
+
+    :return: list of UserAuthRow
+    """
+    table = client.table("user_auth")
+    response = table.select("*").execute()
+    return [UserAuthRow(**row) for row in response.data]
+
+
+def list_mileage_recommendations() -> list[MileageRecommendationRow]:
+    """
+    List all mileage_recommendations in the mileage_recommendation table
+
+    :return: list of MileageRecommendationRow
+    """
+    table = client.table(get_mileage_recommendation_table_name())
+    response = table.select("*").execute()
+    return [MileageRecommendationRow(**row) for row in response.data]
 
 
 def get_user_auth(athlete_id: int) -> UserAuthRow:
@@ -93,7 +149,7 @@ def get_training_week(athlete_id: int) -> FullTrainingWeek:
     :param athlete_id: int
     :return: FullTrainingWeek
     """
-    table = client.table("training_week")
+    table = client.table(get_training_week_table_name())
     response = (
         table.select("future_training_week, past_training_week")
         .eq("athlete_id", athlete_id)
@@ -119,7 +175,7 @@ def get_training_week(athlete_id: int) -> FullTrainingWeek:
             future_json_data_cleansed.append(session)
 
         return FullTrainingWeek(
-            past_training_week=[DailyMetrics(**obj) for obj in past_json_data],
+            past_training_week=[EnrichedActivity(**obj) for obj in past_json_data],
             future_training_week=TrainingWeek(
                 sessions=[
                     TrainingSession(**session) for session in future_json_data_cleansed
@@ -204,7 +260,7 @@ def does_user_exist(athlete_id: int) -> bool:
 def upsert_training_week(
     athlete_id: int,
     future_training_week: TrainingWeek,
-    past_training_week: List[DailyMetrics],
+    past_training_week: List[EnrichedActivity],
 ):
     """
     Upsert a row into the training_week table
@@ -220,7 +276,7 @@ def upsert_training_week(
         "future_training_week": orjson.dumps(future_sessions).decode("utf-8"),
         "past_training_week": orjson.dumps(past_sessions).decode("utf-8"),
     }
-    table = client.table("training_week")
+    table = client.table(get_training_week_table_name())
     table.upsert(row_data).execute()
 
 
@@ -233,7 +289,7 @@ def has_user_updated_today(athlete_id: int) -> bool:
     :param athlete_id: The ID of the athlete
     :return: True if the user has received an update today, False otherwise
     """
-    table = client.table("training_week")
+    table = client.table(get_training_week_table_name())
     response = (
         table.select("*")
         .eq("athlete_id", athlete_id)
@@ -269,7 +325,7 @@ def insert_mileage_recommendation(
         "week_of_year": week_of_year,
         **mileage_recommendation.dict(),
     }
-    table = client.table("mileage_recommendation")
+    table = client.table(get_mileage_recommendation_table_name())
     table.upsert(row_data).execute()
 
 
@@ -284,7 +340,7 @@ def get_mileage_recommendation(
     :param week_of_year: The week of the year of the recommendation
     :return: A MileageRecommendation object
     """
-    table = client.table("mileage_recommendation")
+    table = client.table(get_mileage_recommendation_table_name())
     response = (
         table.select("*")
         .eq("athlete_id", athlete_id)

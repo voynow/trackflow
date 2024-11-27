@@ -4,7 +4,7 @@ variable "api_key" {
   sensitive   = true
 }
 
-variable "api_endpoint" {
+variable "api_base_url" {
   description = "Base URL for the API endpoint"
   type        = string
 }

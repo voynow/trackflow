@@ -47,7 +47,7 @@ module "ecs" {
 module "eventbridge" {
   source       = "./eventbridge"
   api_key      = var.api_key
-  api_endpoint = var.api_endpoint
+  api_base_url = var.api_base_url
 }
 
 

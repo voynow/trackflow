@@ -1,18 +1,21 @@
 import os
-from unittest.mock import patch
 
 import pytest
 from fastapi.testclient import TestClient
+from freezegun import freeze_time
 from src import auth_manager, supabase_client
 from src.main import app
 from src.types.training_week import FullTrainingWeek
 from src.types.update_pipeline import ExeType
+from src.update_pipeline import _update_training_week
+from src.utils import get_last_sunday
 
 client = TestClient(app)
 
 
 @pytest.fixture(autouse=True, scope="session")
 def setup_test_environment():
+    os.environ["TEST_FLAG"] = "true"
     auth_manager.authenticate_athlete(os.environ["JAMIES_ATHLETE_ID"])
 
 
@@ -89,13 +92,24 @@ def test_strava_webhook():
     assert response.status_code == 200
 
 
-def test_trigger_new_user_onboarding():
-    """Test successful onboarding initialization"""
+def test_update_training_week_new_week():
+    """Test successful update of new week, must be tested on a Sunday"""
+    user = supabase_client.get_user(os.environ["JAMIES_ATHLETE_ID"])
 
-    user_auth = supabase_client.get_user_auth(os.environ["JAMIES_ATHLETE_ID"])
-    response = client.post(
-        "/onboarding/", headers={"Authorization": f"Bearer {user_auth.jwt_token}"}
-    )
+    @freeze_time(f"{get_last_sunday()} 12:00:00")
+    def frozen_update_training_week_new_week():
+        return _update_training_week(user, ExeType.NEW_WEEK)
 
-    assert response.status_code == 200
-    assert response.json() == {"success": True}
+    response = frozen_update_training_week_new_week()
+    assert isinstance(response, FullTrainingWeek)
+
+
+def test_update_training_week_mid_week():
+    """Test successful update of mid week"""
+    user = supabase_client.get_user(os.environ["JAMIES_ATHLETE_ID"])
+    response = _update_training_week(user, ExeType.MID_WEEK)
+    assert isinstance(response, FullTrainingWeek)
+
+
+# def test_apple_push_notification():
+#     raise NotImplementedError

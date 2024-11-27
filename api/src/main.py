@@ -1,6 +1,7 @@
 import logging
 import os
 import traceback
+from datetime import datetime, timezone
 
 from fastapi import (
     BackgroundTasks,
@@ -11,7 +12,6 @@ from fastapi import (
     HTTPException,
     Request,
 )
-from fastapi.responses import JSONResponse
 from src import activities, auth_manager, supabase_client, webhook
 from src.email_manager import send_alert_email
 from src.types.training_week import FullTrainingWeek
@@ -28,26 +28,44 @@ logger = logging.getLogger("uvicorn.error")
 @app.middleware("http")
 async def log_and_handle_errors(request: Request, call_next):
     """
-    Log full request and response details, and send alerts on errors
+    Log structured request and response details, and send alerts on errors.
 
     :param request: The incoming HTTP request
     :param call_next: Function to call the next middleware or endpoint
     :return: Response or error message
     """
+    start_time = datetime.now(timezone.utc)
     try:
-        logger.info(f"Request: {request}")
+        request_details = {
+            "method": request.method,
+            "url": str(request.url),
+            "headers": dict(request.headers),
+            "client": request.client.host,
+        }
+        logger.info(f"Request: {request_details}")
         response = await call_next(request)
-        logger.info(f"Response: {response}")
+        elapsed_time = (datetime.now(timezone.utc) - start_time).total_seconds()
+
+        response_details = {
+            "status_code": response.status_code,
+            "headers": dict(response.headers),
+            "elapsed_time_sec": elapsed_time,
+        }
+        logger.info(f"Response: {response_details}")
         return response
 
     except Exception as e:
-        error_message = (
-            f"Error for {request.method} {request.url}: {e}\n{traceback.format_exc()}"
-        )
-        logger.error(error_message)
+        error_message = {
+            "error": str(e),
+            "traceback": traceback.format_exc(),
+            "method": request.method,
+            "url": str(request.url),
+            "client": request.client.host,
+        }
+        logger.error(f"Error Occurred: {error_message}")
         send_alert_email(
             subject="TrackFlow API Error 😵‍💫",
-            text_content=error_message,
+            text_content=str(error_message),
         )
         return {"success": False, "error": error_message}
 
@@ -68,11 +86,7 @@ async def training_week(user: UserRow = Depends(auth_manager.validate_user)):
     :param athlete_id: The athlete_id to retrieve the training_week for
     :return: The most recent training_week row for the athlete
     """
-    try:
-        return supabase_client.get_training_week(user.athlete_id)
-    except ValueError as e:
-        logger.error(f"Error retrieving training week: {e}", exc_info=True)
-        raise HTTPException(status_code=404, detail=str(e))
+    return supabase_client.get_training_week(user.athlete_id)
 
 
 @app.post("/device_token/")
@@ -87,14 +101,10 @@ async def update_device_token(
     :param user: The authenticated user
     :return: Success status
     """
-    try:
-        supabase_client.update_user_device_token(
-            athlete_id=user.athlete_id, device_token=device_token
-        )
-        return {"success": True}
-    except Exception as e:
-        logger.error(f"Failed to update device token: {e}", exc_info=True)
-        raise HTTPException(status_code=400, detail=str(e))
+    supabase_client.update_user_device_token(
+        athlete_id=user.athlete_id, device_token=device_token
+    )
+    return {"success": True}
 
 
 @app.post("/preferences/")
@@ -108,14 +118,10 @@ async def update_preferences(
     :param user: The authenticated user
     :return: Success status
     """
-    try:
-        supabase_client.update_preferences(
-            athlete_id=user.athlete_id, preferences=preferences
-        )
-        return {"success": True}
-    except Exception as e:
-        logger.error(f"Failed to update preferences: {e}", exc_info=True)
-        raise HTTPException(status_code=400, detail=str(e))
+    supabase_client.update_preferences(
+        athlete_id=user.athlete_id, preferences=preferences
+    )
+    return {"success": True}
 
 
 @app.get("/profile/")
@@ -126,21 +132,17 @@ async def get_profile(user: UserRow = Depends(auth_manager.validate_user)) -> di
     :param user: The authenticated user
     :return: Dictionary containing profile information
     """
-    try:
-        athlete = auth_manager.get_strava_client(user.athlete_id).get_athlete()
-        return {
-            "success": True,
-            "profile": {
-                "firstname": athlete.firstname,
-                "lastname": athlete.lastname,
-                "profile": athlete.profile,
-                "email": user.email,
-                "preferences": user.preferences.json(),
-            },
-        }
-    except Exception as e:
-        logger.error(f"Failed to get profile: {e}", exc_info=True)
-        raise HTTPException(status_code=400, detail=str(e))
+    athlete = auth_manager.get_strava_client(user.athlete_id).get_athlete()
+    return {
+        "success": True,
+        "profile": {
+            "firstname": athlete.firstname,
+            "lastname": athlete.lastname,
+            "profile": athlete.profile,
+            "email": user.email,
+            "preferences": user.preferences.json(),
+        },
+    }
 
 
 @app.get("/weekly_summaries/")
@@ -153,16 +155,12 @@ async def get_weekly_summaries(
     :param user: The authenticated user
     :return: List of WeekSummary objects as JSON
     """
-    try:
-        strava_client = auth_manager.get_strava_client(user.athlete_id)
-        weekly_summaries = activities.get_weekly_summaries(strava_client)
-        return {
-            "success": True,
-            "weekly_summaries": [summary.json() for summary in weekly_summaries],
-        }
-    except Exception as e:
-        logger.error(f"Failed to get weekly summaries: {e}", exc_info=True)
-        raise HTTPException(status_code=400, detail=str(e))
+    strava_client = auth_manager.get_strava_client(user.athlete_id)
+    weekly_summaries = activities.get_weekly_summaries(strava_client)
+    return {
+        "success": True,
+        "weekly_summaries": [summary.json() for summary in weekly_summaries],
+    }
 
 
 @app.post("/authenticate/")
@@ -173,11 +171,7 @@ async def authenticate(code: str = Form(...)) -> dict:
     :param code: Strava authorization code from form data
     :return: Dictionary with success status, JWT token and new user flag
     """
-    try:
-        return auth_manager.authenticate_on_signin(code=code)
-    except Exception as e:
-        logger.error(f"Authentication failed: {e}", exc_info=True)
-        raise HTTPException(status_code=400, detail=str(e))
+    return auth_manager.authenticate_on_signin(code=code)
 
 
 @app.post("/strava-webhook/")
@@ -205,13 +199,9 @@ async def trigger_new_user_onboarding(
     :param user: The authenticated user
     :return: Success status
     """
-    try:
-        update_training_week(user, ExeType.NEW_WEEK)
-        update_training_week(user, ExeType.MID_WEEK)
-        return {"success": True}
-    except Exception as e:
-        logger.error(f"Failed to start onboarding: {e}", exc_info=True)
-        raise HTTPException(status_code=400, detail=str(e))
+    update_training_week(user, ExeType.NEW_WEEK)
+    update_training_week(user, ExeType.MID_WEEK)
+    return {"success": True}
 
 
 @app.post("/update-all-users/")
