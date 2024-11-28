@@ -63,10 +63,6 @@ class APIManager {
       }
 
       do {
-        if let jsonString = String(data: data, encoding: .utf8) {
-          print("Raw Profile JSON response: \(jsonString)")
-        }
-
         // Create a container struct for the response
         struct ProfileResponse: Decodable {
           let success: Bool

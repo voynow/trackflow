@@ -10,63 +10,84 @@ struct Feature: Identifiable {
 
 struct LandingPageView: View {
   @ObservedObject var authManager: StravaAuthManager
+  @State private var currentPage: Int = 0
 
-  let features: [Feature] = [
-    Feature(
-      icon: "figure.run", title: "Personalized Plans",
-      description:
-        "AI powered hyper-personalized training recommendations tailored to your preferences."),
-    Feature(
-      icon: "chart.bar.fill", title: "Strava Integration",
-      description:
-        "Go for a run, upload it to Strava, and TrackFlow will update your progress accordingly."),
-    Feature(
-      icon: "trophy.fill", title: "Goal Oriented",
-      description:
-        "Our weekly plans are designed to help you achieve your goals, whether you want to run a marathon or recover from an injury."
-    ),
+  let pages: [(image: String, title: String, subtitle: String)] = [
+    ("AppDashboard", "Train Smarter", "AI-powered plans that adapt to your progress"),
+    ("AppDashboardAlt", "Connect with Strava", "Seamless integration with your activities"),
+    ("AppProfile", "Achieve Your Goals", "From 5K to marathon, we've got you covered"),
   ]
 
   var body: some View {
     GeometryReader { geometry in
-      ScrollView {
-        VStack(spacing: 24) {
-          Text("🏃‍♂️🎯")
-          Spacer()
-          HStack(spacing: 0) {
-            Text("Track")
-              .font(.system(size: 50, weight: .black))
-              .foregroundColor(ColorTheme.primaryLight)
-            Text("Flow")
-              .font(.system(size: 50, weight: .black))
-              .foregroundColor(ColorTheme.primary)
+      VStack(spacing: 0) {
+        // Image carousel at top
+        TabView(selection: $currentPage) {
+          ForEach(0..<pages.count, id: \.self) { index in
+            Image(pages[index].image)
+              .resizable()
+              .aspectRatio(contentMode: .fit)
+              .frame(height: geometry.size.height * 0.65)
+              .clipShape(RoundedRectangle(cornerRadius: 30))
+              .padding(.horizontal, 20)
+              .shadow(
+                color: Color(white: 0.3, opacity: 0.3),
+                radius: 15,
+                x: 0,
+                y: 8
+              )
+              .background(
+                Color(white: 0.12)
+                  .blur(radius: 20)
+                  .offset(y: 10)
+                  .clipShape(RoundedRectangle(cornerRadius: 30))
+              )
+              .overlay(
+                LinearGradient(
+                  gradient: Gradient(colors: [.clear, .black.opacity(0.3)]),
+                  startPoint: .top,
+                  endPoint: .bottom
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 30))
+              )
+              .tag(index)
           }
+        }
+        .tabViewStyle(PageTabViewStyle(indexDisplayMode: .automatic))
+        .frame(height: geometry.size.height * 0.75)
 
-          Text("Step into the Next Generation of Training")
-            .font(.title2)
-            .foregroundColor(ColorTheme.lightGrey)
+        Spacer()
+
+        // Title and subtitle
+        VStack(spacing: 8) {
+          Text(pages[currentPage].title)
+            .font(.system(size: 32, weight: .bold))
+            .foregroundColor(.white)
+
+          Text(pages[currentPage].subtitle)
+            .font(.system(size: 16))
+            .foregroundColor(.white.opacity(0.8))
             .multilineTextAlignment(.center)
             .padding(.horizontal)
-
-          signInButton
-
-          FeaturesListView(features: features)
-            .padding(.horizontal)
         }
-        .padding()
-        .frame(maxWidth: min(geometry.size.width, 600))
-        .frame(maxWidth: .infinity)
+        .padding(.bottom, 40)
+
+
+        signInButton
+          .padding(.horizontal, 24)
+          .padding(.bottom, geometry.safeAreaInsets.bottom + 24)
       }
-      .background(ColorTheme.black.edgesIgnoringSafeArea(.all))
-      .onOpenURL { url in
-        authManager.handleURL(url)
-      }
-      .alert(isPresented: $authManager.showAlert) {
-        Alert(
-          title: Text("Strava App Not Installed"),
-          message: Text("Please install the Strava app to continue."),
-          dismissButton: .default(Text("OK")))
-      }
+      .ignoresSafeArea(edges: .top)
+    }
+    .onOpenURL { url in
+      authManager.handleURL(url)
+    }
+    .alert(isPresented: $authManager.showAlert) {
+      Alert(
+        title: Text("Strava App Not Installed"),
+        message: Text("Please install the Strava app to continue."),
+        dismissButton: .default(Text("OK"))
+      )
     }
   }
 
@@ -93,7 +114,6 @@ struct LandingPageView: View {
       .cornerRadius(12)
       .shadow(radius: 5)
     }
-    .padding(.horizontal)
   }
 }
 
