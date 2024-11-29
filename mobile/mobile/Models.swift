@@ -84,9 +84,10 @@ struct Preferences: Codable {
     raceDistance = try container.decodeIfPresent(String.self, forKey: .raceDistance)
     idealTrainingWeek = try container.decodeIfPresent([TrainingDay].self, forKey: .idealTrainingWeek)
     
-    // Handle date decoding
+    // Parse date as YYYY-MM-DD
     if let dateString = try container.decodeIfPresent(String.self, forKey: .raceDate) {
-      let formatter = ISO8601DateFormatter()
+      let formatter = DateFormatter()
+      formatter.dateFormat = "yyyy-MM-dd"
       raceDate = formatter.date(from: dateString)
     } else {
       raceDate = nil
@@ -98,9 +99,10 @@ struct Preferences: Codable {
     try container.encodeIfPresent(raceDistance, forKey: .raceDistance)
     try container.encodeIfPresent(idealTrainingWeek, forKey: .idealTrainingWeek)
     
-    // Handle date encoding
+    // Format date as YYYY-MM-DD only
     if let date = raceDate {
-      let formatter = ISO8601DateFormatter()
+      let formatter = DateFormatter()
+      formatter.dateFormat = "yyyy-MM-dd"
       try container.encode(formatter.string(from: date), forKey: .raceDate)
     }
   }

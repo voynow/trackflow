@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from enum import StrEnum
 from typing import List, Optional
 
@@ -22,7 +22,7 @@ class TheoreticalTrainingSession(BaseModel):
 
 class Preferences(BaseModel):
     race_distance: Optional[RaceDistance] = None
-    race_date: Optional[datetime] = None
+    race_date: Optional[date] = None
     ideal_training_week: Optional[List[TheoreticalTrainingSession]] = []
 
 
