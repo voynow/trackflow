@@ -62,17 +62,42 @@ struct ProfileView: View {
 
   private var preferencesBinding: Binding<Preferences> {
     Binding(
-      get: {
-        Preferences(fromJSON: profileData?.preferences ?? "{}")
-      },
-      set: { newValue in
-        if let preferencesJSON = try? JSONEncoder().encode(newValue),
-          let preferencesString = String(data: preferencesJSON, encoding: .utf8)
-        {
-          profileData?.preferences = preferencesString
-          ProfileCache.updatePreferences(preferencesString)
+        get: {
+            if let preferencesString = profileData?.preferences {
+                if let jsonData = preferencesString.data(using: .utf8) {
+                    do {
+                        let decoder = JSONDecoder()
+                        decoder.dateDecodingStrategy = .iso8601
+                        let prefs = try decoder.decode(Preferences.self, from: jsonData)
+                        return prefs
+                    } catch {
+                        assertionFailure("Failed to decode preferences: \(error)")
+                        return Preferences()
+                    }
+                }
+            }
+            return Preferences()
+        },
+        set: { newValue in
+            do {
+                let encoder = JSONEncoder()
+                encoder.dateEncodingStrategy = .iso8601
+                encoder.outputFormatting = .prettyPrinted
+                
+                let preferencesJSON = try encoder.encode(newValue)
+                if let preferencesString = String(data: preferencesJSON, encoding: .utf8) {
+                    profileData?.preferences = preferencesString
+                    ProfileCache.updatePreferences(preferencesString)
+                }
+            } catch {
+                assertionFailure("Failed to encode preferences: \(error)")
+                if let emptyPrefs = try? JSONEncoder().encode(Preferences()),
+                   let emptyPrefsString = String(data: emptyPrefs, encoding: .utf8) {
+                    profileData?.preferences = emptyPrefsString
+                    ProfileCache.updatePreferences(emptyPrefsString)
+                }
+            }
         }
-      }
     )
   }
 
@@ -216,7 +241,19 @@ private enum ProfileCache {
   }
 
   static func updatePreferences(_ preferences: String) {
-    data?.preferences = preferences
+    if var cachedData = data {
+      guard let _ = preferences.data(using: .utf8) else {
+        print("Debug: ProfileCache - Invalid preferences string")
+        return
+      }
+      
+      cachedData.preferences = preferences
+      data = cachedData
+      
+      print("Debug: ProfileCache - Successfully updated preferences")
+    } else {
+      print("Debug: ProfileCache - No cached data to update")
+    }
   }
 
   static func clear() {

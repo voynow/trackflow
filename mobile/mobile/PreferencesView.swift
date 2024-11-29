@@ -17,7 +17,7 @@ struct PreferencesContainer: View {
   var body: some View {
     ZStack {
       PreferencesContent(
-        preferences: $preferences, 
+        preferences: $preferences,
         onUpdate: savePreferences
       )
 
@@ -72,39 +72,47 @@ struct PreferencesContent: View {
   @Binding var preferences: Preferences
   var onUpdate: () -> Void
   @State private var activeSaveSection: String?
+  @State private var showRaceSetupSheet: Bool = false
 
   var body: some View {
     VStack(alignment: .leading, spacing: 24) {
       preferenceSectionView(
         title: "Race Details",
-        subtitle: "Optionally select your race distance",
+        subtitle: "Set up your target race",
         sectionId: "race"
       ) {
-        preferenceRowView(
-          title: "Race Distance",
-          value: Binding(
-            get: { preferences.raceDistance ?? "" },
-            set: {
-              preferences.raceDistance = $0.isEmpty ? nil : $0
-              onUpdate()
-              showSaveBanner(for: "race")
-            }
-          )
-        ) { binding in
-          CustomPickerWrapper(
-            selection: binding,
-            content: AnyView(
-              Picker("Race Distance", selection: binding) {
-                Text("No Preference").tag("")
-                Text("5K").tag("5k")
-                Text("10K").tag("10k")
-                Text("Half Marathon").tag("half marathon")
-                Text("Marathon").tag("marathon")
-                Text("Ultra Marathon").tag("ultra marathon")
+        if let raceDistance = preferences.raceDistance, let raceDate = preferences.raceDate {
+          VStack(spacing: 16) {
+            Button(action: { showRaceSetupSheet = true }) {
+              VStack(spacing: 16) {
+                preferenceRowView(
+                  title: "Race Distance",
+                  value: .constant(raceDistance)
+                ) { _ in
+                  Text(raceDistance)
+                    .foregroundColor(ColorTheme.primary)
+                }
+
+                preferenceRowView(
+                  title: "Race Date",
+                  value: .constant(raceDate.formatted(date: .long, time: .omitted))
+                ) { _ in
+                  Text(raceDate.formatted(date: .long, time: .omitted))
+                    .foregroundColor(ColorTheme.primary)
+                }
               }
-              .pickerStyle(MenuPickerStyle())
-            )
-          )
+            }
+          }
+        } else {
+          Button(action: { showRaceSetupSheet = true }) {
+            HStack {
+              Image(systemName: "plus.circle.fill")
+              Text("Set up your race")
+              Spacer()
+            }
+            .padding(.vertical, 8)
+            .foregroundColor(ColorTheme.primaryLight)
+          }
         }
       }
 
@@ -137,6 +145,16 @@ struct PreferencesContent: View {
       }
     }
     .background(ColorTheme.black)
+    .sheet(isPresented: $showRaceSetupSheet) {
+      RaceSetupSheet(
+        preferences: $preferences,
+        isPresented: $showRaceSetupSheet,
+        onSave: {
+          onUpdate()
+          showSaveBanner(for: "race")
+        }
+      )
+    }
   }
 
   private func showSaveBanner(for section: String) {
@@ -166,7 +184,6 @@ struct PreferencesContent: View {
     }
 
     if newValue.isEmpty {
-      // Remove the entry if "No Preference" is selected
       preferences.idealTrainingWeek?.removeAll { $0.day == day }
     } else {
       if let index = preferences.idealTrainingWeek?.firstIndex(where: { $0.day == day }) {
@@ -186,20 +203,35 @@ struct PreferencesContent: View {
   ) -> some View {
     ZStack(alignment: .topTrailing) {
       VStack(alignment: .leading, spacing: 16) {
-        VStack(alignment: .leading, spacing: 4) {
-          Text(title)
-            .font(.system(size: 20, weight: .semibold))
-            .foregroundColor(ColorTheme.white)
-          Text(subtitle)
-            .font(.system(size: 14))
-            .foregroundColor(ColorTheme.midLightGrey)
+        HStack(alignment: .top) {
+          VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+              .font(.system(size: 20, weight: .semibold))
+              .foregroundColor(ColorTheme.white)
+            Text(subtitle)
+              .font(.system(size: 14))
+              .foregroundColor(ColorTheme.midLightGrey)
+          }
+          Spacer()
+          if sectionId == "race" && preferences.raceDistance != nil {
+            Button(action: clearRace) {
+              Text("Clear Race")
+                .foregroundColor(ColorTheme.redPink)
+                .font(.system(size: 14, weight: .medium))
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .opacity(0.75)
+            }
+            .background(ColorTheme.darkGrey)
+            .cornerRadius(8)
+          }
         }
         content()
       }
       .padding(24)
       .background(ColorTheme.darkDarkGrey)
       .cornerRadius(12)
-      
+
       if activeSaveSection == sectionId {
         SaveBanner()
           .transition(.move(edge: .top).combined(with: .opacity))
@@ -225,6 +257,13 @@ struct PreferencesContent: View {
     }
     .padding(.horizontal, 12)
   }
+
+  private func clearRace() {
+    preferences.raceDistance = nil
+    preferences.raceDate = nil
+    onUpdate()
+    showSaveBanner(for: "race")
+  }
 }
 
 struct CustomPickerWrapper: View {
@@ -234,5 +273,57 @@ struct CustomPickerWrapper: View {
   var body: some View {
     content
       .opacity(selection.isEmpty ? 0.4 : 1.0)
+  }
+}
+
+struct RaceSetupSheet: View {
+  @Binding var preferences: Preferences
+  @Binding var isPresented: Bool
+  let onSave: () -> Void
+
+  @State private var selectedDistance: String = ""
+  @State private var selectedDate: Date = Date()
+
+  var body: some View {
+    NavigationView {
+      Form {
+        Picker("Race Distance", selection: $selectedDistance) {
+          Text("Select Distance").tag("")
+          Text("5K").tag("5K")
+          Text("10K").tag("10K")
+          Text("Half Marathon").tag("Half Marathon")
+          Text("Marathon").tag("Marathon")
+          Text("Ultra Marathon").tag("Ultra Marathon")
+        }
+
+        DatePicker(
+          "Race Date",
+          selection: $selectedDate,
+          in: Date()...,
+          displayedComponents: .date
+        )
+      }
+      .navigationTitle("Set Up Race")
+      .navigationBarItems(
+        leading: Button("Cancel") { isPresented = false },
+        trailing: Button("Save") {
+          guard !selectedDistance.isEmpty else { return }
+          preferences.raceDistance = selectedDistance
+          preferences.raceDate = selectedDate
+          
+          onSave()
+          isPresented = false
+        }
+        .disabled(selectedDistance.isEmpty)
+      )
+    }
+    .onAppear {
+      if let existingDistance = preferences.raceDistance {
+        selectedDistance = existingDistance
+      }
+      if let existingDate = preferences.raceDate {
+        selectedDate = existingDate
+      }
+    }
   }
 }

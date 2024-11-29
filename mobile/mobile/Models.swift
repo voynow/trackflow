@@ -70,35 +70,45 @@ struct TrainingDay: Codable {
 
 struct Preferences: Codable {
   var raceDistance: String?
+  var raceDate: Date?
   var idealTrainingWeek: [TrainingDay]?
 
   enum CodingKeys: String, CodingKey {
     case raceDistance = "race_distance"
+    case raceDate = "race_date"
     case idealTrainingWeek = "ideal_training_week"
   }
 
-  func toJSON() -> String {
-    let encoder = JSONEncoder()
-    encoder.outputFormatting = .prettyPrinted
-    do {
-      let jsonData = try encoder.encode(self)
-      return String(data: jsonData, encoding: .utf8) ?? "{}"
-    } catch {
-      print("Error encoding preferences: \(error)")
-      return "{}"
+  init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    raceDistance = try container.decodeIfPresent(String.self, forKey: .raceDistance)
+    idealTrainingWeek = try container.decodeIfPresent([TrainingDay].self, forKey: .idealTrainingWeek)
+    
+    // Handle date decoding
+    if let dateString = try container.decodeIfPresent(String.self, forKey: .raceDate) {
+      let formatter = ISO8601DateFormatter()
+      raceDate = formatter.date(from: dateString)
+    } else {
+      raceDate = nil
+    }
+  }
+  
+  func encode(to encoder: Encoder) throws {
+    var container = encoder.container(keyedBy: CodingKeys.self)
+    try container.encodeIfPresent(raceDistance, forKey: .raceDistance)
+    try container.encodeIfPresent(idealTrainingWeek, forKey: .idealTrainingWeek)
+    
+    // Handle date encoding
+    if let date = raceDate {
+      let formatter = ISO8601DateFormatter()
+      try container.encode(formatter.string(from: date), forKey: .raceDate)
     }
   }
 
-  init(fromJSON json: String) {
-    let decoder = JSONDecoder()
-    if let jsonData = json.data(using: .utf8),
-      let decoded = try? decoder.decode(Preferences.self, from: jsonData)
-    {
-      self = decoded
-    } else {
-      self.raceDistance = nil
-      self.idealTrainingWeek = nil
-    }
+  init() {
+    self.raceDistance = nil
+    self.raceDate = nil
+    self.idealTrainingWeek = nil
   }
 }
 
