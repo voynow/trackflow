@@ -144,7 +144,7 @@ class APIManager {
     preferences: Preferences,
     completion: @escaping (Result<Void, Error>) -> Void
   ) {
-    let startTime = CFAbsoluteTimeGetCurrent()
+
     guard let url = URL(string: "\(apiURL)/preferences/") else {
       completion(
         .failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"]))
@@ -157,37 +157,19 @@ class APIManager {
     request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
-    let idealTrainingWeek = preferences.idealTrainingWeek?.map { day in
-      return [
-        "day": day.day.rawValue,
-        "session_type": day.sessionType,
-      ]
+    // Create encoder with date handling strategy
+    let encoder = JSONEncoder()
+    encoder.dateEncodingStrategy = .iso8601
+
+    do {
+      let jsonData = try encoder.encode(preferences)
+      request.httpBody = jsonData
+    } catch {
+      completion(.failure(error))
+      return
     }
 
-    let payload: [String: Any] = [
-      "race_distance": preferences.raceDistance ?? NSNull(),
-      "ideal_training_week": idealTrainingWeek ?? [],
-    ]
-
-    request.httpBody = try? JSONSerialization.data(withJSONObject: payload)
-
     session.dataTask(with: request) { data, response, error in
-      let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime
-      print("APIManager: savePreferences took \(timeElapsed) seconds")
-
-      if let httpResponse = response as? HTTPURLResponse,
-        !(200..<300).contains(httpResponse.statusCode)
-      {
-        completion(
-          .failure(
-            NSError(
-              domain: "",
-              code: httpResponse.statusCode,
-              userInfo: [NSLocalizedDescriptionKey: "Failed to save preferences"]
-            )))
-        return
-      }
-
       if let error = error {
         completion(.failure(error))
         return

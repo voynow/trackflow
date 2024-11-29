@@ -7,11 +7,11 @@ from src.types.training_week import Day, SessionType
 
 
 class RaceDistance(StrEnum):
-    FIVE_KILOMETER = "5k"
-    TEN_KILOMETER = "10k"
-    HALF_MARATHON = "half marathon"
-    MARATHON = "marathon"
-    ULTRA = "ultra marathon"
+    FIVE_KILOMETER = "5K"
+    TEN_KILOMETER = "10K"
+    HALF_MARATHON = "Half Marathon"
+    MARATHON = "Marathon"
+    ULTRA_MARATHON = "Ultra Marathon"
     NONE = "none"
 
 
@@ -22,6 +22,7 @@ class TheoreticalTrainingSession(BaseModel):
 
 class Preferences(BaseModel):
     race_distance: Optional[RaceDistance] = None
+    race_date: Optional[datetime] = None
     ideal_training_week: Optional[List[TheoreticalTrainingSession]] = []
 
 
