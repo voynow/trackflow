@@ -201,9 +201,7 @@ def _update_training_week(user: UserRow, exe_type: ExeType) -> FullTrainingWeek:
     """
     strava_client = get_strava_client(user.athlete_id)
     daily_activity = get_daily_activity(strava_client)
-    weekly_summaries = get_weekly_summaries(
-        strava_client=strava_client, daily_metrics=daily_activity
-    )
+    weekly_summaries = get_weekly_summaries(daily_metrics=daily_activity)
     mileage_rec = get_or_gen_mileage_recommendation(
         user=user, weekly_summaries=weekly_summaries, exe_type=exe_type
     )
