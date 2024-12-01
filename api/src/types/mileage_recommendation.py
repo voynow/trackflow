@@ -19,11 +19,10 @@ class MileageRecommendation(BaseModel):
 class MileageRecommendationRow(BaseModel):
     """Database row representation of mileage_recommendation table"""
 
-    id: int
-    created_at: datetime
     week_of_year: Optional[int]
     year: Optional[int]
     thoughts: Optional[str]
     total_volume: Optional[int]
     long_run: Optional[int]
     athlete_id: Optional[int]
+    created_at: datetime = datetime.now()
