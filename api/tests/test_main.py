@@ -52,7 +52,7 @@ def test_update_preferences():
     user = supabase_client.get_user(os.environ["JAMIES_ATHLETE_ID"])
     response = client.post(
         "/preferences/",
-        json={"preferences": user.preferences.json()},
+        json=user.preferences.dict(),
         headers={"Authorization": f"Bearer {user_auth.jwt_token}"},
     )
     assert response.status_code == 200
@@ -97,13 +97,39 @@ def test_strava_webhook():
     assert response.status_code == 200
 
 
-def test_update_training_week_new_week():
-    """Test successful update of new week, must be tested on a Sunday"""
+def test_update_training_week_generate_training_recommendation():
+    """
+    Test successful update of new week
+
+    When the race date & distance are not set, we go through the default
+    recommendation generation pipeline using weekly summaries
+    """
     user = supabase_client.get_user(os.environ["JAMIES_ATHLETE_ID"])
+    user.preferences.race_date = None
+    user.preferences.race_distance = None
 
     @freeze_time(f"{get_last_sunday()} 12:00:00")
     def frozen_update_training_week_new_week():
         return _update_training_week(user, ExeType.NEW_WEEK)
+
+    response = frozen_update_training_week_new_week()
+    assert isinstance(response, FullTrainingWeek)
+
+
+def test_update_training_week_generate_training_plan():
+    """
+    Test successful update of new week
+
+    When race date & distance are set, we go through the full training plan
+    generation pipeline
+    """
+    user = supabase_client.get_user(os.environ["JAMIES_ATHLETE_ID"])
+    assert user.preferences.race_date is not None
+    assert user.preferences.race_distance is not None
+
+    @freeze_time(f"{get_last_sunday()} 12:00:00")
+    def frozen_update_training_week_new_week():
+        return _update_training_week(user, ExeType.MID_WEEK)
 
     response = frozen_update_training_week_new_week()
     assert isinstance(response, FullTrainingWeek)

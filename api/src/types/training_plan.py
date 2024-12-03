@@ -37,6 +37,12 @@ class TrainingPlanWeek(BaseModel):
         description="How many miles the athlete should aim to run in their long run this week"
     )
 
+    def dict(self, *args, **kwargs):
+        data = super().dict(*args, **kwargs)
+        if isinstance(data["week_start_date"], date):
+            data["week_start_date"] = data["week_start_date"].isoformat()
+        return data
+
 
 class TrainingPlan(BaseModel):
     training_week_plans: List[TrainingPlanWeek]

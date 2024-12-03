@@ -25,6 +25,12 @@ class Preferences(BaseModel):
     race_date: Optional[date] = None
     ideal_training_week: Optional[List[TheoreticalTrainingSession]] = []
 
+    def dict(self, *args, **kwargs):
+        data = super().dict(*args, **kwargs)
+        if isinstance(data["race_date"], date):
+            data["race_date"] = data["race_date"].isoformat()
+        return data
+
 
 class UserRow(BaseModel):
     athlete_id: int

@@ -1,3 +1,4 @@
+import logging
 from typing import List
 
 from src import activities, supabase_client
@@ -12,6 +13,9 @@ from src.types.mileage_recommendation import (
 from src.types.update_pipeline import ExeType
 from src.types.user import Preferences, UserRow
 from src.utils import datetime_now_est
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 def gen_mileage_recommendation(
@@ -59,7 +63,6 @@ def gen_mileage_rec_wrapper(
         raise ValueError(
             "Mileage recommendation can only be generated on Sunday (night) when the week is complete"
         )
-
     if user.preferences.race_date and user.preferences.race_distance:
         training_plan = gen_training_plan_pipeline(
             user=user, weekly_summaries=weekly_summaries
