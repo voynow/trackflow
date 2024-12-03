@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from enum import StrEnum
 from typing import List, Optional
 
@@ -22,8 +22,14 @@ class TheoreticalTrainingSession(BaseModel):
 
 class Preferences(BaseModel):
     race_distance: Optional[RaceDistance] = None
-    race_date: Optional[datetime] = None
+    race_date: Optional[date] = None
     ideal_training_week: Optional[List[TheoreticalTrainingSession]] = []
+
+    def dict(self, *args, **kwargs):
+        data = super().dict(*args, **kwargs)
+        if isinstance(data["race_date"], date):
+            data["race_date"] = data["race_date"].isoformat()
+        return data
 
 
 class UserRow(BaseModel):

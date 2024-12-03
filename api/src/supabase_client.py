@@ -6,11 +6,10 @@ from typing import List, Optional
 
 import orjson
 from dotenv import load_dotenv
-from src.types.activity import DailyMetrics
 from src.types.mileage_recommendation import (
-    MileageRecommendation,
     MileageRecommendationRow,
 )
+from src.types.training_plan import TrainingPlan, TrainingPlanWeekRow
 from src.types.training_week import (
     EnrichedActivity,
     FullTrainingWeek,
@@ -52,6 +51,17 @@ def get_mileage_recommendation_table_name() -> str:
     if os.environ.get("TEST_FLAG", "false") == "true":
         return "test_mileage_recommendation"
     return "mileage_recommendation"
+
+
+def get_training_plan_table_name() -> str:
+    """
+    Inject test_training_plan table name during testing
+
+    :return: The name of the training_plan table
+    """
+    if os.environ.get("TEST_FLAG", "false") == "true":
+        return "test_training_plan"
+    return "training_plan"
 
 
 def get_device_token(athlete_id: int) -> Optional[str]:
@@ -308,30 +318,20 @@ def has_user_updated_today(athlete_id: int) -> bool:
     return time_diff < datetime.timedelta(hours=23, minutes=30)
 
 
-def insert_mileage_recommendation(
-    athlete_id: int,
-    mileage_recommendation: MileageRecommendation,
-    year: int,
-    week_of_year: int,
-):
+def insert_mileage_recommendation(mileage_recommendation_row: MileageRecommendationRow):
     """
     Insert a row into the mileage_recommendations table
 
-    :param mileage_recommendation: A MileageRecommendation object
+    :param mileage_recommendation_row: A MileageRecommendationRow object
     """
-    row_data = {
-        "athlete_id": athlete_id,
-        "year": year,
-        "week_of_year": week_of_year,
-        **mileage_recommendation.dict(),
-    }
+    print(mileage_recommendation_row.dict())
     table = client.table(get_mileage_recommendation_table_name())
-    table.upsert(row_data).execute()
+    table.insert(mileage_recommendation_row.dict()).execute()
 
 
 def get_mileage_recommendation(
     athlete_id: int, year: int, week_of_year: int
-) -> MileageRecommendation:
+) -> MileageRecommendationRow:
     """
     Get the most recent mileage recommendation for the given year and week of year
 
@@ -355,7 +355,21 @@ def get_mileage_recommendation(
         raise ValueError(
             f"Could not find mileage recommendation for {athlete_id=} {year=} {week_of_year=}"
         )
-    data = MileageRecommendationRow(**response.data[0])
-    return MileageRecommendation(
-        thoughts=data.thoughts, total_volume=data.total_volume, long_run=data.long_run
-    )
+    return MileageRecommendationRow(**response.data[0])
+
+
+def insert_training_plan(athlete_id: int, training_plan: TrainingPlan):
+    """
+    Insert a training plan into the training_plan table
+
+    :param athlete_id: The ID of the athlete
+    :param training_plan: A TrainingPlan object
+    """
+    table = client.table(get_training_plan_table_name())
+    for week in training_plan.training_week_plans:
+        row = {"athlete_id": athlete_id, **week.dict()}
+        try:
+            TrainingPlanWeekRow(**row)
+        except Exception as e:
+            raise ValueError("Invalid training plan week") from e
+        table.insert(row).execute()

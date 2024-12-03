@@ -117,7 +117,8 @@ def get_daily_activity(strava_client: Client, num_weeks: int = 8) -> List[DailyM
 
 
 def get_weekly_summaries(
-    strava_client: Client, daily_metrics: Optional[List[DailyMetrics]] = None
+    strava_client: Optional[Client] = None,
+    daily_metrics: Optional[List[DailyMetrics]] = None,
 ) -> List[WeekSummary]:
     """
     Aggregate daily metrics by week of the year and calculate load for each week.
@@ -125,6 +126,9 @@ def get_weekly_summaries(
     :param strava_client: The Strava client object to fetch data.
     :return: A list of WeekSummary objects with summary statistics
     """
+    if strava_client is None and daily_metrics is None:
+        raise ValueError("Either strava_client or daily_metrics must be provided")
+
     if daily_metrics is None:
         daily_metrics = get_daily_activity(strava_client)
 

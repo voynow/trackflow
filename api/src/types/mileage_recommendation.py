@@ -19,11 +19,16 @@ class MileageRecommendation(BaseModel):
 class MileageRecommendationRow(BaseModel):
     """Database row representation of mileage_recommendation table"""
 
-    id: int
-    created_at: datetime
     week_of_year: Optional[int]
     year: Optional[int]
     thoughts: Optional[str]
     total_volume: Optional[int]
     long_run: Optional[int]
     athlete_id: Optional[int]
+    created_at: datetime = datetime.now()
+
+    def dict(self, *args, **kwargs):
+        data = super().dict(*args, **kwargs)
+        if isinstance(data["created_at"], datetime):
+            data["created_at"] = data["created_at"].isoformat()
+        return data
