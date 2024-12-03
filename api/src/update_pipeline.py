@@ -37,7 +37,7 @@ def _update_training_week(user: UserRow, exe_type: ExeType) -> FullTrainingWeek:
     return training_week.gen_full_training_week(
         user=user,
         daily_activity=daily_activity,
-        mileage_recommendation=mileage_rec,
+        mileage_rec=mileage_rec,
         exe_type=exe_type,
     )
 

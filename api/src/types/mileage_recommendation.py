@@ -26,3 +26,9 @@ class MileageRecommendationRow(BaseModel):
     long_run: Optional[int]
     athlete_id: Optional[int]
     created_at: datetime = datetime.now()
+
+    def dict(self, *args, **kwargs):
+        data = super().dict(*args, **kwargs)
+        if isinstance(data["created_at"], datetime):
+            data["created_at"] = data["created_at"].isoformat()
+        return data

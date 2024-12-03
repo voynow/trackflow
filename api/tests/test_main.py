@@ -1,14 +1,19 @@
+import logging
 import os
 
 import pytest
 from fastapi.testclient import TestClient
 from freezegun import freeze_time
 from src import auth_manager, supabase_client
+from src.apn import send_push_notification
 from src.main import app
 from src.types.training_week import FullTrainingWeek
 from src.types.update_pipeline import ExeType
 from src.update_pipeline import _update_training_week
 from src.utils import get_last_sunday
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 client = TestClient(app)
 
@@ -47,7 +52,7 @@ def test_update_preferences():
     user = supabase_client.get_user(os.environ["JAMIES_ATHLETE_ID"])
     response = client.post(
         "/preferences/",
-        json={"preferences": user.preferences.dict()},
+        json={"preferences": user.preferences.json()},
         headers={"Authorization": f"Bearer {user_auth.jwt_token}"},
     )
     assert response.status_code == 200
@@ -111,5 +116,16 @@ def test_update_training_week_mid_week():
     assert isinstance(response, FullTrainingWeek)
 
 
-# def test_apple_push_notification():
-#     raise NotImplementedError
+def test_apple_push_notification():
+    user_auth = supabase_client.get_user_auth(os.environ["JAMIES_ATHLETE_ID"])
+    send_push_notification(
+        device_token=user_auth.device_token,
+        title="Test Notification ✔️",
+        body="Don't panic! This is only a test.",
+    )
+    user_auth = supabase_client.get_user_auth(os.environ["RACHELS_ATHLETE_ID"])
+    send_push_notification(
+        device_token=user_auth.device_token,
+        title="Test Notification ✔️",
+        body="Don't panic! This is only a test.",
+    )

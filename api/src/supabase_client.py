@@ -53,6 +53,17 @@ def get_mileage_recommendation_table_name() -> str:
     return "mileage_recommendation"
 
 
+def get_training_plan_table_name() -> str:
+    """
+    Inject test_training_plan table name during testing
+
+    :return: The name of the training_plan table
+    """
+    if os.environ.get("TEST_FLAG", "false") == "true":
+        return "test_training_plan"
+    return "training_plan"
+
+
 def get_device_token(athlete_id: int) -> Optional[str]:
     """
     Get the device token for a user in the database.
@@ -313,6 +324,7 @@ def insert_mileage_recommendation(mileage_recommendation_row: MileageRecommendat
 
     :param mileage_recommendation_row: A MileageRecommendationRow object
     """
+    print(mileage_recommendation_row.dict())
     table = client.table(get_mileage_recommendation_table_name())
     table.insert(mileage_recommendation_row.dict()).execute()
 
@@ -353,7 +365,7 @@ def insert_training_plan(athlete_id: int, training_plan: TrainingPlan):
     :param athlete_id: The ID of the athlete
     :param training_plan: A TrainingPlan object
     """
-    table = client.table("training_plan")
+    table = client.table(get_training_plan_table_name())
     for week in training_plan.training_week_plans:
         row = {"athlete_id": athlete_id, **week.dict()}
         try:
