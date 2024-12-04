@@ -373,3 +373,39 @@ def insert_training_plan(athlete_id: int, training_plan: TrainingPlan):
         except Exception as e:
             raise ValueError("Invalid training plan week") from e
         table.insert(row).execute()
+
+
+def get_training_plan(athlete_id: int) -> TrainingPlan:
+    """
+    Get the most recent training plan for a specific athlete.
+    Since new training plan rows are added weekly, we need to get the latest set
+    based on created_at timestamp.
+
+    :param athlete_id: The ID of the athlete
+    :return: A TrainingPlan object containing the most recent set of training weeks
+    """
+    table = client.table(get_training_plan_table_name())
+
+    # First get the most recent created_at timestamp for this athlete
+    latest_timestamp = (
+        table.select("created_at")
+        .eq("athlete_id", athlete_id)
+        .order("created_at", desc=True)
+        .limit(1)
+        .execute()
+    )
+
+
+    if not latest_timestamp.data:
+        raise ValueError(f"Could not find training plan for athlete_id {athlete_id}")
+
+    response = (
+        table.select("*")
+        .eq("athlete_id", athlete_id)
+        .eq("created_at", latest_timestamp.data[0]["created_at"])
+        .order("week_number")
+        .execute()
+    )
+
+    training_weeks = [TrainingPlanWeekRow(**row) for row in response.data]
+    return TrainingPlan(training_week_plans=training_weeks)
