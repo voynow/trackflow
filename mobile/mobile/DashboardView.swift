@@ -9,36 +9,49 @@ struct DashboardView: View {
   @State private var showOnboarding: Bool = false
   @State private var showErrorAlert: Bool = false
   @State private var errorMessage: String = ""
+  @State private var selectedTab: Int = 0
 
   var body: some View {
     NavigationView {
       ZStack {
-        VStack {
-          DashboardNavbar(onLogout: handleLogout, showProfile: $showProfile)
-            .background(ColorTheme.black)
-            .zIndex(1)
+        TabView(selection: $selectedTab) {
+          VStack {
+            DashboardNavbar(onLogout: handleLogout, showProfile: $showProfile)
+              .background(ColorTheme.black)
+              .zIndex(1)
 
-          ScrollView {
-            if let data = trainingWeekData {
-              // Show training week as soon as it's available
-              TrainingWeekView(
-                trainingWeekData: data,
-                weeklySummaries: weeklySummaries  // Can be nil
-              )
-            } else if isLoadingTrainingWeek {
-              DashboardSkeletonView()
-            } else {
-              Text("No training data available")
-                .font(.headline)
-                .foregroundColor(ColorTheme.lightGrey)
+            ScrollView {
+              if let data = trainingWeekData {
+                // Show training week as soon as it's available
+                TrainingWeekView(
+                  trainingWeekData: data,
+                  weeklySummaries: weeklySummaries  // Can be nil
+                )
+              } else if isLoadingTrainingWeek {
+                DashboardSkeletonView()
+              } else {
+                Text("No training data available")
+                  .font(.headline)
+                  .foregroundColor(ColorTheme.lightGrey)
+              }
+            }
+            .refreshable {
+              fetchData()
             }
           }
-          .refreshable {
-            fetchData()
+          .background(ColorTheme.black.edgesIgnoringSafeArea(.all))
+          .tabItem {
+            Image(systemName: "chart.bar.fill")
+            Text("Dashboard")
           }
+          TrainingPlanView()
+            .tabItem {
+              Image(systemName: "calendar")
+              Text("Training Plan")
+            }
+            .tag(1)
         }
-        .background(ColorTheme.black.edgesIgnoringSafeArea(.all))
-        .navigationBarHidden(true)
+        .accentColor(ColorTheme.primary)
 
         if showProfile {
           ProfileView(
@@ -49,6 +62,7 @@ struct DashboardView: View {
           .zIndex(2)
         }
       }
+      .navigationBarHidden(true)
     }
     .onAppear {
       fetchData()

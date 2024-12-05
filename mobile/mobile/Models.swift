@@ -281,3 +281,40 @@ struct GenericResponse: Codable {
   let success: Bool
   let message: String?
 }
+
+enum WeekType: String, Codable {
+    case build = "build"
+    case peak = "peak"
+    case taper = "taper"
+    case race = "race"
+}
+
+struct TrainingPlanWeek: Codable, Identifiable {
+    let weekStartDate: Date
+    let weekNumber: Int
+    let nWeeksUntilRace: Int
+    let weekType: WeekType
+    let notes: String
+    let totalDistance: Double
+    let longRunDistance: Double
+    
+    var id: Int { weekNumber }
+    
+    enum CodingKeys: String, CodingKey {
+        case weekStartDate = "week_start_date"
+        case weekNumber = "week_number"
+        case nWeeksUntilRace = "n_weeks_until_race"
+        case weekType = "week_type"
+        case notes
+        case totalDistance = "total_distance"
+        case longRunDistance = "long_run_distance"
+    }
+}
+
+struct TrainingPlan: Codable {
+    let trainingWeekPlans: [TrainingPlanWeek]
+    
+    enum CodingKeys: String, CodingKey {
+        case trainingWeekPlans = "training_week_plans"
+    }
+}

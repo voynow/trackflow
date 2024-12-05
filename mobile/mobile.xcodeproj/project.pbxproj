@@ -34,6 +34,7 @@
 				ProfileSkeletonView.swift,
 				ProfileView.swift,
 				StravaAuthManager.swift,
+				TrainingPlanView.swift,
 				TrainingWeek.swift,
 			);
 			target = 80777D102C973F01007565FC /* mobile */;
