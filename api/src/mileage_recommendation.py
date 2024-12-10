@@ -67,7 +67,7 @@ def gen_mileage_rec_wrapper(
         training_plan = gen_training_plan_pipeline(
             user=user, weekly_summaries=weekly_summaries
         )
-        next_week_plan = training_plan.training_week_plans[0]
+        next_week_plan = training_plan.training_plan_weeks[0]
         return MileageRecommendation(
             thoughts=next_week_plan.notes,
             total_volume=next_week_plan.total_distance,

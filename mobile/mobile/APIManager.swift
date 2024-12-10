@@ -406,120 +406,79 @@ class APIManager {
   }
 
   func fetchTrainingPlan(token: String, completion: @escaping (Result<TrainingPlan, Error>) -> Void) {
-    let startDate = Date()
-    let dummyWeeks = [
-        TrainingPlanWeek(
-            weekStartDate: startDate,
-            weekNumber: 1,
-            nWeeksUntilRace: 12,
-            weekType: .build,
-            notes: "Base building - focus on easy miles",
-            totalDistance: 25.0,
-            longRunDistance: 8.0
-        ),
-        TrainingPlanWeek(
-            weekStartDate: startDate.addingTimeInterval(7*24*60*60),
-            weekNumber: 2,
-            nWeeksUntilRace: 11,
-            weekType: .build,
-            notes: "Gradually increasing mileage",
-            totalDistance: 28.0,
-            longRunDistance: 10.0
-        ),
-        TrainingPlanWeek(
-            weekStartDate: startDate.addingTimeInterval(14*24*60*60),
-            weekNumber: 3,
-            nWeeksUntilRace: 10,
-            weekType: .build,
-            notes: "First tempo workout introduction",
-            totalDistance: 32.0,
-            longRunDistance: 12.0
-        ),
-        TrainingPlanWeek(
-            weekStartDate: startDate.addingTimeInterval(21*24*60*60),
-            weekNumber: 4,
-            nWeeksUntilRace: 9,
-            weekType: .build,
-            notes: "Building endurance with longer runs",
-            totalDistance: 34.0,
-            longRunDistance: 14.0
-        ),
-        TrainingPlanWeek(
-            weekStartDate: startDate.addingTimeInterval(28*24*60*60),
-            weekNumber: 5,
-            nWeeksUntilRace: 8,
-            weekType: .build,
-            notes: "Introducing marathon pace segments",
-            totalDistance: 36.0,
-            longRunDistance: 15.0
-        ),
-        TrainingPlanWeek(
-            weekStartDate: startDate.addingTimeInterval(35*24*60*60),
-            weekNumber: 6,
-            nWeeksUntilRace: 7,
-            weekType: .build,
-            notes: "Focus on quality workouts",
-            totalDistance: 38.0,
-            longRunDistance: 16.0
-        ),
-        TrainingPlanWeek(
-            weekStartDate: startDate.addingTimeInterval(42*24*60*60),
-            weekNumber: 7,
-            nWeeksUntilRace: 6,
-            weekType: .build,
-            notes: "Peak training begins",
-            totalDistance: 40.0,
-            longRunDistance: 17.0
-        ),
-        TrainingPlanWeek(
-            weekStartDate: startDate.addingTimeInterval(49*24*60*60),
-            weekNumber: 8,
-            nWeeksUntilRace: 5,
-            weekType: .peak,
-            notes: "Heavy mileage week",
-            totalDistance: 42.0,
-            longRunDistance: 18.0
-        ),
-        TrainingPlanWeek(
-            weekStartDate: startDate.addingTimeInterval(56*24*60*60),
-            weekNumber: 9,
-            nWeeksUntilRace: 4,
-            weekType: .peak,
-            notes: "Last big push before taper",
-            totalDistance: 44.0,
-            longRunDistance: 19.0
-        ),
-        TrainingPlanWeek(
-            weekStartDate: startDate.addingTimeInterval(63*24*60*60),
-            weekNumber: 10,
-            nWeeksUntilRace: 3,
-            weekType: .peak,
-            notes: "Peak week - highest mileage",
-            totalDistance: 45.0,
-            longRunDistance: 20.0
-        ),
-        TrainingPlanWeek(
-            weekStartDate: startDate.addingTimeInterval(70*24*60*60),
-            weekNumber: 11,
-            nWeeksUntilRace: 2,
-            weekType: .taper,
-            notes: "Begin taper - reduce volume but maintain intensity",
-            totalDistance: 35.0,
-            longRunDistance: 12.0
-        ),
-        TrainingPlanWeek(
-            weekStartDate: startDate.addingTimeInterval(77*24*60*60),
-            weekNumber: 12,
-            nWeeksUntilRace: 1,
-            weekType: .taper,
-            notes: "Race week - light running and rest",
-            totalDistance: 20.0,
-            longRunDistance: 6.0
-        )
-    ]
-    
-    let dummyPlan = TrainingPlan(trainingWeekPlans: dummyWeeks)
-    completion(.success(dummyPlan))
+    let startTime = CFAbsoluteTimeGetCurrent()
+    guard let url = URL(string: "\(apiURL)/training-plan/") else {
+      completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))
+      return
+    }
+
+    var request = URLRequest(url: url)
+    request.httpMethod = "GET" 
+    request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+
+    session.dataTask(with: request) { data, response, error in
+      let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime
+      print("APIManager: fetchTrainingPlan took \(timeElapsed) seconds")
+
+      // Debug HTTP response
+      if let httpResponse = response as? HTTPURLResponse {
+        print("HTTP Status Code: \(httpResponse.statusCode)")
+        print("Response Headers: \(httpResponse.allHeaderFields)")
+      }
+
+      // Debug raw data
+      if let data = data, let rawString = String(data: data, encoding: .utf8) {
+        print("Raw Response Data:")
+        print(rawString)
+        
+        // Pretty print JSON if possible
+        if let json = try? JSONSerialization.jsonObject(with: data),
+           let prettyData = try? JSONSerialization.data(withJSONObject: json, options: .prettyPrinted),
+           let prettyString = String(data: prettyData, encoding: .utf8) {
+            print("\nPretty Printed JSON:")
+            print(prettyString)
+        }
+      }
+
+      if let httpResponse = response as? HTTPURLResponse,
+        !(200..<300).contains(httpResponse.statusCode)
+      {
+        completion(
+          .failure(
+            NSError(
+              domain: "",
+              code: httpResponse.statusCode,
+              userInfo: [NSLocalizedDescriptionKey: "Failed to fetch training plan"]
+            )))
+        return
+      }
+
+      if let error = error {
+        completion(.failure(error))
+        return
+      }
+
+      guard let data = data else {
+        completion(
+          .failure(
+            NSError(
+              domain: "",
+              code: 0,
+              userInfo: [NSLocalizedDescriptionKey: "No data received"]
+            )))
+        return
+      }
+
+      do {
+        // Create a direct mapping to the API response structure
+        let decoder = JSONDecoder()
+        let response = try decoder.decode(TrainingPlan.self, from: data)
+        completion(.success(response))
+      } catch {
+        print("Decoding error: \(error)")
+        completion(.failure(error))
+      }
+    }.resume()
   }
 
 }

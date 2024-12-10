@@ -1,8 +1,7 @@
-from __future__ import annotations
-
 import datetime
 import os
 from typing import List, Optional
+from uuid import uuid4
 
 import orjson
 from dotenv import load_dotenv
@@ -365,13 +364,14 @@ def insert_training_plan(athlete_id: int, training_plan: TrainingPlan):
     :param athlete_id: The ID of the athlete
     :param training_plan: A TrainingPlan object
     """
+    plan_id = str(uuid4())
     table = client.table(get_training_plan_table_name())
-    for week in training_plan.training_week_plans:
-        row = {"athlete_id": athlete_id, **week.dict()}
+    for week in training_plan.training_plan_weeks:
+        row = {"athlete_id": athlete_id, "plan_id": plan_id, **week.dict()}
         try:
             TrainingPlanWeekRow(**row)
         except Exception as e:
-            raise ValueError("Invalid training plan week") from e
+            raise ValueError(f"Invalid training plan week: {row=}, {e=}")
         table.insert(row).execute()
 
 
@@ -388,13 +388,12 @@ def get_training_plan(athlete_id: int) -> TrainingPlan:
 
     # First get the most recent created_at timestamp for this athlete
     latest_timestamp = (
-        table.select("created_at")
+        table.select("plan_id")
         .eq("athlete_id", athlete_id)
         .order("created_at", desc=True)
         .limit(1)
         .execute()
     )
-
 
     if not latest_timestamp.data:
         raise ValueError(f"Could not find training plan for athlete_id {athlete_id}")
@@ -402,10 +401,10 @@ def get_training_plan(athlete_id: int) -> TrainingPlan:
     response = (
         table.select("*")
         .eq("athlete_id", athlete_id)
-        .eq("created_at", latest_timestamp.data[0]["created_at"])
+        .eq("plan_id", latest_timestamp.data[0]["plan_id"])
         .order("week_number")
         .execute()
     )
 
     training_weeks = [TrainingPlanWeekRow(**row) for row in response.data]
-    return TrainingPlan(training_week_plans=training_weeks)
+    return TrainingPlan(training_plan_weeks=training_weeks)

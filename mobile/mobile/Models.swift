@@ -309,6 +309,27 @@ struct TrainingPlanWeek: Codable, Identifiable {
         case totalDistance = "total_distance"
         case longRunDistance = "long_run_distance"
     }
+
+  init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    
+    // Handle date string conversion
+    let dateString = try container.decode(String.self, forKey: .weekStartDate)
+    let formatter = DateFormatter()
+    formatter.dateFormat = "yyyy-MM-dd"
+    guard let date = formatter.date(from: dateString) else {
+      throw DecodingError.dataCorruptedError(forKey: .weekStartDate, in: container, debugDescription: "Date string does not match format")
+    }
+    weekStartDate = date
+    
+    // Decode other properties normally
+    weekNumber = try container.decode(Int.self, forKey: .weekNumber)
+    nWeeksUntilRace = try container.decode(Int.self, forKey: .nWeeksUntilRace)
+    weekType = try container.decode(WeekType.self, forKey: .weekType)
+    notes = try container.decode(String.self, forKey: .notes)
+    totalDistance = try container.decode(Double.self, forKey: .totalDistance)
+    longRunDistance = try container.decode(Double.self, forKey: .longRunDistance)
+  }
 }
 
 struct TrainingPlan: Codable {
