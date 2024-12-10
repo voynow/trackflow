@@ -281,3 +281,61 @@ struct GenericResponse: Codable {
   let success: Bool
   let message: String?
 }
+
+enum WeekType: String, Codable {
+    case build = "build"
+    case peak = "peak"
+    case taper = "taper"
+    case race = "race"
+}
+
+struct TrainingPlanWeek: Codable, Identifiable {
+    let weekStartDate: Date
+    let weekNumber: Int
+    let nWeeksUntilRace: Int
+    let weekType: WeekType
+    let notes: String
+    let totalDistance: Double
+    let longRunDistance: Double
+    
+    var id: Int { weekNumber }
+    
+    enum CodingKeys: String, CodingKey {
+        case weekStartDate = "week_start_date"
+        case weekNumber = "week_number"
+        case nWeeksUntilRace = "n_weeks_until_race"
+        case weekType = "week_type"
+        case notes
+        case totalDistance = "total_distance"
+        case longRunDistance = "long_run_distance"
+    }
+
+  init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    
+    // Handle date string conversion
+    let dateString = try container.decode(String.self, forKey: .weekStartDate)
+    let formatter = DateFormatter()
+    formatter.dateFormat = "yyyy-MM-dd"
+    guard let date = formatter.date(from: dateString) else {
+      throw DecodingError.dataCorruptedError(forKey: .weekStartDate, in: container, debugDescription: "Date string does not match format")
+    }
+    weekStartDate = date
+    
+    // Decode other properties normally
+    weekNumber = try container.decode(Int.self, forKey: .weekNumber)
+    nWeeksUntilRace = try container.decode(Int.self, forKey: .nWeeksUntilRace)
+    weekType = try container.decode(WeekType.self, forKey: .weekType)
+    notes = try container.decode(String.self, forKey: .notes)
+    totalDistance = try container.decode(Double.self, forKey: .totalDistance)
+    longRunDistance = try container.decode(Double.self, forKey: .longRunDistance)
+  }
+}
+
+struct TrainingPlan: Codable {
+    let trainingWeekPlans: [TrainingPlanWeek]
+    
+    enum CodingKeys: String, CodingKey {
+        case trainingWeekPlans = "training_week_plans"
+    }
+}

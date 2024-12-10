@@ -1,5 +1,6 @@
 from datetime import date
 from typing import List
+from uuid import uuid4
 
 from pydantic import BaseModel, Field
 from strenum import StrEnum
@@ -45,7 +46,7 @@ class TrainingPlanWeek(BaseModel):
 
 
 class TrainingPlan(BaseModel):
-    training_week_plans: List[TrainingPlanWeek]
+    training_plan_weeks: List[TrainingPlanWeek]
 
 
 class TrainingPlanWeekRow(BaseModel):
@@ -57,3 +58,4 @@ class TrainingPlanWeekRow(BaseModel):
     notes: str
     total_distance: float
     long_run_distance: float
+    plan_id: str

@@ -14,6 +14,7 @@ from fastapi import (
 )
 from src import activities, auth_manager, supabase_client, webhook
 from src.email_manager import send_alert_email
+from src.types.training_plan import TrainingPlan
 from src.types.training_week import FullTrainingWeek
 from src.types.update_pipeline import ExeType
 from src.types.user import UserRow
@@ -216,3 +217,13 @@ async def update_all_users_trigger(request: Request) -> dict:
 
     update_all_users()
     return {"success": True}
+
+
+@app.get("/training-plan/", response_model=TrainingPlan)
+async def get_training_plan(
+    user: UserRow = Depends(auth_manager.validate_user),
+) -> TrainingPlan:
+    """
+    Get the training plan for a user
+    """
+    return supabase_client.get_training_plan(user.athlete_id)

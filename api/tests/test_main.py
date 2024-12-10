@@ -3,14 +3,11 @@ import os
 
 import pytest
 from fastapi.testclient import TestClient
-from freezegun import freeze_time
 from src import auth_manager, supabase_client
 from src.apn import send_push_notification
 from src.main import app
+from src.types.training_plan import TrainingPlan
 from src.types.training_week import FullTrainingWeek
-from src.types.update_pipeline import ExeType
-from src.update_pipeline import _update_training_week
-from src.utils import get_last_sunday
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -110,3 +107,14 @@ def test_apple_push_notification():
         title="Test Notification ✔️",
         body="Don't panic! This is only a test.",
     )
+
+
+def test_get_training_plan():
+    """Test successful retrieval of training plan"""
+    user_auth = supabase_client.get_user_auth(os.environ["JAMIES_ATHLETE_ID"])
+    response = client.get(
+        "/training-plan/", headers={"Authorization": f"Bearer {user_auth.jwt_token}"}
+    )
+    assert response.status_code == 200
+    assert TrainingPlan(**response.json())
+

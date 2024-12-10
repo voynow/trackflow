@@ -405,4 +405,80 @@ class APIManager {
     }.resume()
   }
 
+  func fetchTrainingPlan(token: String, completion: @escaping (Result<TrainingPlan, Error>) -> Void) {
+    let startTime = CFAbsoluteTimeGetCurrent()
+    guard let url = URL(string: "\(apiURL)/training-plan/") else {
+      completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))
+      return
+    }
+
+    var request = URLRequest(url: url)
+    request.httpMethod = "GET" 
+    request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+
+    session.dataTask(with: request) { data, response, error in
+      let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime
+      print("APIManager: fetchTrainingPlan took \(timeElapsed) seconds")
+
+      // Debug HTTP response
+      if let httpResponse = response as? HTTPURLResponse {
+        print("HTTP Status Code: \(httpResponse.statusCode)")
+        print("Response Headers: \(httpResponse.allHeaderFields)")
+      }
+
+      // Debug raw data
+      if let data = data, let rawString = String(data: data, encoding: .utf8) {
+        print("Raw Response Data:")
+        print(rawString)
+        
+        // Pretty print JSON if possible
+        if let json = try? JSONSerialization.jsonObject(with: data),
+           let prettyData = try? JSONSerialization.data(withJSONObject: json, options: .prettyPrinted),
+           let prettyString = String(data: prettyData, encoding: .utf8) {
+            print("\nPretty Printed JSON:")
+            print(prettyString)
+        }
+      }
+
+      if let httpResponse = response as? HTTPURLResponse,
+        !(200..<300).contains(httpResponse.statusCode)
+      {
+        completion(
+          .failure(
+            NSError(
+              domain: "",
+              code: httpResponse.statusCode,
+              userInfo: [NSLocalizedDescriptionKey: "Failed to fetch training plan"]
+            )))
+        return
+      }
+
+      if let error = error {
+        completion(.failure(error))
+        return
+      }
+
+      guard let data = data else {
+        completion(
+          .failure(
+            NSError(
+              domain: "",
+              code: 0,
+              userInfo: [NSLocalizedDescriptionKey: "No data received"]
+            )))
+        return
+      }
+
+      do {
+        // Create a direct mapping to the API response structure
+        let decoder = JSONDecoder()
+        let response = try decoder.decode(TrainingPlan.self, from: data)
+        completion(.success(response))
+      } catch {
+        print("Decoding error: \(error)")
+        completion(.failure(error))
+      }
+    }.resume()
+  }
+
 }
