@@ -88,8 +88,9 @@ def gen_training_plan(
 
     message = f"""# Best practices for distance running training plans
     1. Simple is better than complex - No need to get cute with cutbacks weeks unless the training block is very long
-    2. Its best to be peaking at n_weeks_until_race=4 and begin tapering at n_weeks_until_race=3. Peaking too early is bad because the athlete won't be maximally fit for the race.
-    3. Athletes expect to be challenged - if last training block they peaked at 55 miles per week then maybe push them to peak at 60 miles per week this block
+    2. Its best to be peaking at n_weeks_until_race=6,5,4 and begin tapering at n_weeks_until_race=3. Peaking too early is bad because the athlete won't be maximally fit for the race.
+    3. If the athlete is behind schedule (e.g. doesn't have many weeks left) then delay the peak as needed
+    4. Athletes expect to be challenged - if last training block they peaked at 55 miles per week then maybe push them to peak at 60 miles per week this block
 
     ---
 
