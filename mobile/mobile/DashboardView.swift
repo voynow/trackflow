@@ -44,7 +44,7 @@ struct DashboardView: View {
             Image(systemName: "chart.bar.fill")
             Text("Dashboard")
           }
-          TrainingPlanView()
+          TrainingPlanView(historicalWeeks: weeklySummaries ?? [])
             .tabItem {
               Image(systemName: "calendar")
               Text("Training Plan")

@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 struct ProfileData: Codable {
   var firstname: String
@@ -287,6 +288,15 @@ enum WeekType: String, Codable {
     case peak = "peak"
     case taper = "taper"
     case race = "race"
+    
+    var color: Color {
+        switch self {
+        case .build: return ColorTheme.orange
+        case .peak: return ColorTheme.redPink
+        case .taper: return ColorTheme.yellow
+        case .race: return ColorTheme.green
+        }
+    }
 }
 
 struct TrainingPlanWeek: Codable, Identifiable {

@@ -11,8 +11,9 @@ struct ColorTheme {
 
   static let primary: Color = Color(red: 0.28, green: 0.5, blue: 1.0)  // #477eff
   static let primaryLight: Color = Color(red: 0.55, green: 0.68, blue: 1.0)  // #8caeff
-  static let primaryDark: Color = Color(red: 0.17, green: 0.31, blue: 0.62)  // #2c4f9f
+  static let primaryDark: Color = Color(red: 0.21, green: 0.37, blue: 0.75)  // #355fbf
   static let indigo: Color = Color(red: 0.42, green: 0.28, blue: 1.0)  // #6c47ff
+  static let indigoDark: Color = Color(red: 0.32, green: 0.21, blue: 0.75)  // #5135bf
   static let redPink: Color = Color(red: 1.0, green: 0.278, blue: 0.494)  // #ff477e
   static let orange: Color = Color(red: 1.0, green: 0.424, blue: 0.278)  // #ff6c47
   static let yellow: Color = Color(red: 1.0, green: 0.784, blue: 0.278)  // #ffc847
