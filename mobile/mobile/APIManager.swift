@@ -420,26 +420,6 @@ class APIManager {
       let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime
       print("APIManager: fetchTrainingPlan took \(timeElapsed) seconds")
 
-      // Debug HTTP response
-      if let httpResponse = response as? HTTPURLResponse {
-        print("HTTP Status Code: \(httpResponse.statusCode)")
-        print("Response Headers: \(httpResponse.allHeaderFields)")
-      }
-
-      // Debug raw data
-      if let data = data, let rawString = String(data: data, encoding: .utf8) {
-        print("Raw Response Data:")
-        print(rawString)
-        
-        // Pretty print JSON if possible
-        if let json = try? JSONSerialization.jsonObject(with: data),
-           let prettyData = try? JSONSerialization.data(withJSONObject: json, options: .prettyPrinted),
-           let prettyString = String(data: prettyData, encoding: .utf8) {
-            print("\nPretty Printed JSON:")
-            print(prettyString)
-        }
-      }
-
       if let httpResponse = response as? HTTPURLResponse,
         !(200..<300).contains(httpResponse.statusCode)
       {
