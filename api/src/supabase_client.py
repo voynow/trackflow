@@ -5,6 +5,7 @@ from uuid import uuid4
 
 import orjson
 from dotenv import load_dotenv
+from src.types.activity import DailyMetrics
 from src.types.mileage_recommendation import (
     MileageRecommendationRow,
 )
@@ -108,7 +109,12 @@ def list_users(debug: bool = False) -> list[UserRow]:
         users = [
             user
             for user in users
-            if user.email in ["rachel.decker122@gmail.com", "voynow99@gmail.com"]
+            if user.email
+            in [
+                "rachel.decker122@gmail.com",
+                "voynow99@gmail.com",
+                "voynowtestaddress@gmail.com",
+            ]
         ]
     return users
 
@@ -329,7 +335,7 @@ def insert_mileage_recommendation(mileage_recommendation_row: MileageRecommendat
 
 
 def get_mileage_recommendation(
-    athlete_id: int, year: int, week_of_year: int
+    athlete_id: int, dt: datetime.datetime
 ) -> MileageRecommendationRow:
     """
     Get the most recent mileage recommendation for the given year and week of year
@@ -343,8 +349,8 @@ def get_mileage_recommendation(
     response = (
         table.select("*")
         .eq("athlete_id", athlete_id)
-        .eq("year", year)
-        .eq("week_of_year", week_of_year)
+        .eq("year", dt.year)
+        .eq("week_of_year", dt.isocalendar()[1])
         .order("created_at", desc=True)
         .limit(1)
         .execute()
@@ -352,7 +358,7 @@ def get_mileage_recommendation(
 
     if not response.data:
         raise ValueError(
-            f"Could not find mileage recommendation for {athlete_id=} {year=} {week_of_year=}"
+            f"Could not find mileage recommendation for {athlete_id=}, year={dt.year}, week={dt.isocalendar()[1]}"
         )
     return MileageRecommendationRow(**response.data[0])
 

@@ -1,3 +1,4 @@
+import datetime
 import logging
 import traceback
 
@@ -19,19 +20,22 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 
-def _update_training_week(user: UserRow, exe_type: ExeType) -> FullTrainingWeek:
+def _update_training_week(
+    user: UserRow, exe_type: ExeType, dt: datetime.datetime
+) -> FullTrainingWeek:
     """
     Single function to handle all training week updates
 
     :param user: UserRow object
     :param exe_type: ExeType object
+    :param dt: datetime injection, helpful for testing
     :return: FullTrainingWeek object
     """
     strava_client = auth_manager.get_strava_client(user.athlete_id)
-    daily_activity = activities.get_daily_activity(strava_client, num_weeks=52)
+    daily_activity = activities.get_daily_activity(strava_client, dt=dt, num_weeks=52)
 
     mileage_rec = mileage_recommendation.get_or_gen_mileage_recommendation(
-        user=user, daily_activity=daily_activity, exe_type=exe_type
+        user=user, daily_activity=daily_activity, exe_type=exe_type, dt=dt
     )
 
     return training_week.gen_full_training_week(
@@ -39,18 +43,20 @@ def _update_training_week(user: UserRow, exe_type: ExeType) -> FullTrainingWeek:
         daily_activity=daily_activity,
         mileage_rec=mileage_rec,
         exe_type=exe_type,
+        dt=dt,
     )
 
 
-def update_training_week(user: UserRow, exe_type: ExeType) -> dict:
+def update_training_week(user: UserRow, exe_type: ExeType, dt: datetime.datetime) -> dict:
     """
     Full pipeline with update training week & push notification side effects
 
     :param user: UserRow object
     :param exe_type: ExeType object
+    :param dt: datetime injection, helpful for testing
     :return: dict
     """
-    training_week = _update_training_week(user=user, exe_type=exe_type)
+    training_week = _update_training_week(user=user, exe_type=exe_type, dt=dt)
     supabase_client.upsert_training_week(
         athlete_id=user.athlete_id,
         future_training_week=training_week.future_training_week,

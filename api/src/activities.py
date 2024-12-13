@@ -85,7 +85,9 @@ def aggregate_daily_metrics(activities: List[Activity]) -> List[DailyMetrics]:
     return results
 
 
-def get_daily_activity(strava_client: Client, num_weeks: int = 8) -> List[DailyMetrics]:
+def get_daily_activity(
+    strava_client: Client, dt: datetime, num_weeks: int = 8
+) -> List[DailyMetrics]:
     """
     Fetches activities for a given athlete ID and returns a DataFrame with daily aggregated activities
 
@@ -93,12 +95,9 @@ def get_daily_activity(strava_client: Client, num_weeks: int = 8) -> List[DailyM
     :param num_weeks: The number of weeks to fetch activities for.
     :return: A cleaned and processed DataFrame of the athlete's daily aggregated activities.
     """
-    end_date = datetime_now_est()
-    start_date = end_date - timedelta(weeks=num_weeks)
+    start_date = dt - timedelta(weeks=num_weeks)
 
-    all_strava_activities = strava_client.get_activities(
-        after=start_date, before=end_date
-    )
+    all_strava_activities = strava_client.get_activities(after=start_date, before=dt)
 
     # filter and convert to our Activity type
     activities = [
@@ -109,7 +108,7 @@ def get_daily_activity(strava_client: Client, num_weeks: int = 8) -> List[DailyM
 
     # add empty activities for missing dates
     all_dates_activities = add_missing_dates(
-        activities=activities, start_date=start_date, end_date=end_date
+        activities=activities, start_date=start_date, end_date=dt
     )
 
     # aggregate metrics
@@ -119,18 +118,21 @@ def get_daily_activity(strava_client: Client, num_weeks: int = 8) -> List[DailyM
 def get_weekly_summaries(
     strava_client: Optional[Client] = None,
     daily_metrics: Optional[List[DailyMetrics]] = None,
+    dt: Optional[datetime] = None,
 ) -> List[WeekSummary]:
     """
     Aggregate daily metrics by week of the year and calculate load for each week.
 
     :param strava_client: The Strava client object to fetch data.
+    :param daily_metrics: List of DailyMetrics objects
+    :param dt: datetime injection, helpful for testing
     :return: A list of WeekSummary objects with summary statistics
     """
     if strava_client is None and daily_metrics is None:
         raise ValueError("Either strava_client or daily_metrics must be provided")
 
     if daily_metrics is None:
-        daily_metrics = get_daily_activity(strava_client)
+        daily_metrics = get_daily_activity(strava_client, dt=dt)
 
     weekly_aggregates = defaultdict(
         lambda: {"total_distance": 0, "longest_run": 0, "start_of_week": None}
