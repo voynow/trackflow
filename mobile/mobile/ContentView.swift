@@ -14,7 +14,18 @@ struct ContentView: View {
       case .newUser:
         OnboardingView()
       case .loggedIn:
-        DashboardView()
+        ZStack {
+          DashboardView()
+          
+          if appState.showProfile {
+            ProfileView(
+              isPresented: $appState.showProfile,
+              showProfile: $appState.showProfile
+            )
+            .transition(.move(edge: .trailing))
+            .zIndex(2)
+          }
+        }
       case .loggedOut:
         LandingPageView(authManager: authManager)
       case .loading:
