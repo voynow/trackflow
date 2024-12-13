@@ -5,26 +5,29 @@ struct TrainingPlanView: View {
   @EnvironmentObject var appState: AppState
   @State private var trainingPlan: TrainingPlan?
   @State private var profileData: ProfileData?
-  @State private var isLoading = true
+  @State private var isLoadingTrainingPlan = true
+  @State private var isLoadingProfile = true
   @State private var errorMessage: String?
-  @State private var showProfile: Bool = false
   let historicalWeeks: [WeekSummary]
+  let preloadedPlan: TrainingPlan?
 
   var body: some View {
     VStack {
-      DashboardNavbar(onLogout: handleLogout, showProfile: $showProfile)
+      DashboardNavbar(onLogout: handleLogout, showProfile: $appState.showProfile)
         .background(ColorTheme.black)
         .zIndex(1)
 
       ScrollView {
         VStack(spacing: 16) {
-          if isLoading {
-            ProgressView("Loading training plan...")
-              .foregroundColor(ColorTheme.lightGrey)
-          } else if let plan = trainingPlan {
+          if let plan = trainingPlan {
             if let preferences = decodePreferences() {
               RaceDetailsWidget(
                 preferences: preferences,
+                weeksCount: plan.trainingWeekPlans.map(\.nWeeksUntilRace).max() ?? 0
+              )
+              .padding(.bottom, 8)
+            } else {
+              RaceDetailsWidgetSkeleton(
                 weeksCount: plan.trainingWeekPlans.map(\.nWeeksUntilRace).max() ?? 0
               )
               .padding(.bottom, 8)
@@ -34,9 +37,12 @@ struct TrainingPlanView: View {
               trainingWeeks: plan.trainingWeekPlans,
               historicalWeeks: historicalWeeks
             )
-          } else if let error = errorMessage {
-            Text("Error: \(error)")
-              .foregroundColor(.red)
+          } else {
+            RaceDetailsWidgetSkeleton(weeksCount: 0)
+              .padding(.bottom, 8)
+
+            TrainingPlanChartSkeleton()
+              .padding(.bottom, 8)
           }
         }
         .padding()
@@ -44,7 +50,10 @@ struct TrainingPlanView: View {
     }
     .background(ColorTheme.black.edgesIgnoringSafeArea(.all))
     .onAppear {
-      if trainingPlan == nil {
+      if let plan = preloadedPlan {
+        self.trainingPlan = plan
+        self.isLoadingTrainingPlan = false
+      } else if trainingPlan == nil {
         fetchTrainingPlanData()
       }
       if profileData == nil {
@@ -56,15 +65,6 @@ struct TrainingPlanView: View {
       fetchProfileData()
     }
     .navigationBarHidden(true)
-
-    if showProfile {
-      ProfileView(
-        isPresented: $showProfile,
-        showProfile: $showProfile
-      )
-      .transition(.move(edge: .trailing))
-      .zIndex(2)
-    }
   }
 
   private func handleLogout() {
@@ -76,7 +76,7 @@ struct TrainingPlanView: View {
   private func fetchTrainingPlanData() {
     guard let token = appState.jwtToken else {
       errorMessage = "No valid token"
-      isLoading = false
+      isLoadingTrainingPlan = false
       return
     }
 
@@ -90,7 +90,7 @@ struct TrainingPlanView: View {
         case .failure(let error):
           self.errorMessage = error.localizedDescription
         }
-        self.isLoading = false
+        self.isLoadingTrainingPlan = false
       }
     }
   }
@@ -120,6 +120,7 @@ struct TrainingPlanView: View {
         if case .success(let profile) = result {
           self.profileData = profile
         }
+        self.isLoadingProfile = false
       }
     }
   }
@@ -134,31 +135,31 @@ struct TrainingPlanChart: View {
   enum WeekOrHistoricalWeek {
     case future(TrainingPlanWeek)
     case past(WeekSummary)
-    
+
     var date: Date {
       switch self {
       case .future(let week): return week.weekStartDate
-      case .past(let summary): 
+      case .past(let summary):
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
         return formatter.date(from: summary.weekStartDate) ?? Date()
       }
     }
-    
+
     var weekNumber: Int {
       switch self {
       case .future(let week): return week.weekNumber
       case .past(let summary): return -summary.weekOfYear
       }
     }
-    
+
     var totalDistance: Double {
       switch self {
       case .future(let week): return week.totalDistance
       case .past(let summary): return summary.totalDistance
       }
     }
-    
+
     var longRunDistance: Double {
       switch self {
       case .future(let week): return week.longRunDistance
@@ -173,10 +174,10 @@ struct TrainingPlanChart: View {
       formatter.dateFormat = "yyyy-MM-dd"
       return formatter.date(from: week.weekStartDate)
     }
-    
+
     let startDate = historicalDates.min() ?? trainingWeeks.first!.weekStartDate
     let endDate = trainingWeeks.last?.weekStartDate ?? Date()
-    
+
     return startDate...endDate
   }
 
@@ -266,7 +267,7 @@ struct TrainingPlanChart: View {
       "Past Volume": ColorTheme.primaryDark,
       "Past Long Run": ColorTheme.indigoDark,
       "Volume": ColorTheme.primary,
-      "Long Run": ColorTheme.indigo
+      "Long Run": ColorTheme.indigo,
     ])
     .chartLegend(position: .bottom) {
       HStack {
@@ -287,18 +288,25 @@ struct TrainingPlanChart: View {
               .onChanged { value in
                 let x = value.location.x
                 if let date = proxy.value(atX: x, as: Date.self) {
-                  if let historicalWeek = historicalWeeks
-                    .min(by: { abs($0.parsedWeekStartDate?.timeIntervalSince(date) ?? .infinity) < abs($1.parsedWeekStartDate?.timeIntervalSince(date) ?? .infinity) }),
-                     let historicalDate = historicalWeek.parsedWeekStartDate,
-                     let futureWeek = trainingWeeks
-                      .min(by: { abs($0.weekStartDate.timeIntervalSince(date) ?? .infinity) < abs($1.weekStartDate.timeIntervalSince(date) ?? .infinity) })
+                  if let historicalWeek =
+                    historicalWeeks
+                    .min(by: {
+                      abs($0.parsedWeekStartDate?.timeIntervalSince(date) ?? .infinity)
+                        < abs($1.parsedWeekStartDate?.timeIntervalSince(date) ?? .infinity)
+                    }),
+                    let historicalDate = historicalWeek.parsedWeekStartDate,
+                    let futureWeek =
+                      trainingWeeks
+                      .min(by: {
+                        abs($0.weekStartDate.timeIntervalSince(date) ?? .infinity)
+                          < abs($1.weekStartDate.timeIntervalSince(date) ?? .infinity)
+                      })
                   {
                     let historicalDiff = abs(historicalDate.timeIntervalSince(date))
                     let futureDiff = abs(futureWeek.weekStartDate.timeIntervalSince(date))
-                    
-                    selectedWeek = historicalDiff < futureDiff ? 
-                      .past(historicalWeek) : 
-                      .future(futureWeek)
+
+                    selectedWeek =
+                      historicalDiff < futureDiff ? .past(historicalWeek) : .future(futureWeek)
                   }
                 }
               }
@@ -309,52 +317,54 @@ struct TrainingPlanChart: View {
 
   private var weekDetails: some View {
     VStack(alignment: .leading, spacing: 8) {
-        switch selectedWeek {
-        case .future(let week):
-            HStack {
-                Text(week.weekStartDate.formatted(date: .long, time: .omitted))
-                    .font(.title3)
-                    .foregroundColor(ColorTheme.lightGrey)
-                Spacer()
-                Text("\(week.weekType.rawValue.capitalized) Week")
-                    .padding(4)
-                    .background(week.weekType.color)
-                    .cornerRadius(4)
-                    .foregroundColor(ColorTheme.black)
-            }
-
-            Text("Total: \(week.totalDistance, specifier: "%.1f") miles")
-                .foregroundColor(ColorTheme.primary)
-
-            Text("Long Run: \(week.longRunDistance, specifier: "%.1f") miles")
-                .foregroundColor(ColorTheme.indigo)
-
-            if !week.notes.isEmpty {
-                Text(week.notes)
-                    .foregroundColor(ColorTheme.lightGrey)
-                    .font(.subheadline)
-                    .padding(.top, 4)
-            }
-            
-        case .past(let week):
-            HStack {
-                Text(week.parsedWeekStartDate?.formatted(date: .long, time: .omitted) ?? week.weekStartDate)
-                    .font(.title3)
-                    .foregroundColor(ColorTheme.lightGrey)
-                Spacer()
-                Text("Past Week")
-                    .padding(4)
-                    .background(ColorTheme.midLightGrey)
-                    .cornerRadius(4)
-                    .foregroundColor(ColorTheme.black)
-            }
-            
-            Text("Total: \(week.totalDistance, specifier: "%.1f") miles")
-                .foregroundColor(ColorTheme.primary)
-            
-            Text("Long Run: \(week.longestRun, specifier: "%.1f") miles")
-                .foregroundColor(ColorTheme.indigo)
+      switch selectedWeek {
+      case .future(let week):
+        HStack {
+          Text(week.weekStartDate.formatted(date: .long, time: .omitted))
+            .font(.title3)
+            .foregroundColor(ColorTheme.lightGrey)
+          Spacer()
+          Text("\(week.weekType.rawValue.capitalized) Week")
+            .padding(4)
+            .background(week.weekType.color)
+            .cornerRadius(4)
+            .foregroundColor(ColorTheme.black)
         }
+
+        Text("Total: \(week.totalDistance, specifier: "%.1f") miles")
+          .foregroundColor(ColorTheme.primary)
+
+        Text("Long Run: \(week.longRunDistance, specifier: "%.1f") miles")
+          .foregroundColor(ColorTheme.indigo)
+
+        if !week.notes.isEmpty {
+          Text(week.notes)
+            .foregroundColor(ColorTheme.lightGrey)
+            .font(.subheadline)
+            .padding(.top, 4)
+        }
+
+      case .past(let week):
+        HStack {
+          Text(
+            week.parsedWeekStartDate?.formatted(date: .long, time: .omitted) ?? week.weekStartDate
+          )
+          .font(.title3)
+          .foregroundColor(ColorTheme.lightGrey)
+          Spacer()
+          Text("Past Week")
+            .padding(4)
+            .background(ColorTheme.midLightGrey)
+            .cornerRadius(4)
+            .foregroundColor(ColorTheme.black)
+        }
+
+        Text("Total: \(week.totalDistance, specifier: "%.1f") miles")
+          .foregroundColor(ColorTheme.primary)
+
+        Text("Long Run: \(week.longestRun, specifier: "%.1f") miles")
+          .foregroundColor(ColorTheme.indigo)
+      }
     }
     .padding(.top, 8)
   }
@@ -418,11 +428,11 @@ struct LegendItem: View {
   let label: String
   let symbol: Symbol
   let color: Color
-  
+
   enum Symbol {
     case circle, square
   }
-  
+
   var body: some View {
     HStack(spacing: 4) {
       switch symbol {

@@ -14,9 +14,28 @@ class APIManager {
   internal let session: URLSession
   internal let apiURL = "http://trackflow-alb-499532887.us-east-1.elb.amazonaws.com"
 
-  // new request functions
+  private struct ProfileCache {
+    static var data: ProfileData?
+    static var lastFetchTime: Date?
+    static let cacheTimeout: TimeInterval = 300 // 5 minutes
+    
+    static func shouldRefetch() -> Bool {
+      guard let lastFetch = lastFetchTime else { return true }
+      return Date().timeIntervalSince(lastFetch) > cacheTimeout
+    }
+    
+    static func update(_ profile: ProfileData) {
+      data = profile
+      lastFetchTime = Date()
+    }
+  }
 
   func fetchProfileData(token: String, completion: @escaping (Result<ProfileData, Error>) -> Void) {
+    if !ProfileCache.shouldRefetch(), let cachedData = ProfileCache.data {
+      completion(.success(cachedData))
+      return
+    }
+    
     let startTime = CFAbsoluteTimeGetCurrent()
     guard let url = URL(string: "\(apiURL)/profile/") else {
       completion(
@@ -70,6 +89,7 @@ class APIManager {
         }
 
         let response = try JSONDecoder().decode(ProfileResponse.self, from: data)
+        ProfileCache.update(response.profile) // Update cache
         completion(.success(response.profile))
       } catch {
         print("Decoding error: \(error)")

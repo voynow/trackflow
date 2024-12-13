@@ -2,9 +2,9 @@ import SwiftUI
 
 struct ProfileView: View {
   @Binding var isPresented: Bool
+  @Binding var showProfile: Bool
   @State private var profileData: ProfileData?
   @EnvironmentObject var appState: AppState
-  @Binding var showProfile: Bool
   @State private var isSaving: Bool = false
   @State private var isLoading: Bool = true
   @State private var lastFetchTime: Date?
@@ -14,23 +14,24 @@ struct ProfileView: View {
     ZStack {
       ColorTheme.black.edgesIgnoringSafeArea(.all)
 
-      VStack(spacing: 24) {
-        profileHeader
-
-        if isLoading {
-          ProfileSkeletonView()
-        } else if let profileData = profileData {
-          ScrollView {
-            VStack(spacing: 24) {
-              ProfileInfoCard(profileData: profileData)
-              PreferencesContainer(preferences: preferencesBinding)
-              SignOutButton(action: handleSignOut)
+      if isLoading {
+        ProfileSkeletonView()
+      } else {
+        VStack(spacing: 24) {
+          profileHeader
+          if let profileData = profileData {
+            ScrollView {
+              VStack(spacing: 24) {
+                ProfileInfoCard(profileData: profileData)
+                PreferencesContainer(preferences: preferencesBinding)
+                SignOutButton(action: handleSignOut)
+              }
+              .padding()
             }
-            .padding()
+          } else {
+            Text("Failed to load profile")
+              .foregroundColor(ColorTheme.lightGrey)
           }
-        } else {
-          Text("Failed to load profile")
-            .foregroundColor(ColorTheme.lightGrey)
         }
       }
     }
@@ -116,17 +117,10 @@ struct ProfileView: View {
       return
     }
 
-    if !ProfileCache.shouldRefetch() && ProfileCache.data != nil {
-      self.profileData = ProfileCache.data
-      isLoading = false
-      return
-    }
-
     APIManager.shared.fetchProfileData(token: token) { result in
       DispatchQueue.main.async {
         self.isLoading = false
         if case .success(let profile) = result {
-          ProfileCache.update(profile)
           self.profileData = profile
         }
       }
@@ -208,20 +202,14 @@ struct SignOutButton: View {
 }
 
 struct LoadingIcon: View {
-  @State private var isRotating = false
-
   var body: some View {
     Circle()
-      .trim(from: 0, to: 0.7)
-      .stroke(ColorTheme.primaryDark, lineWidth: 2)
-      .frame(width: 50, height: 50)
-      .rotationEffect(Angle(degrees: isRotating ? 360 : 0))
-      .animation(
-        Animation.linear(duration: 1).repeatForever(autoreverses: false), value: isRotating
+      .fill(ColorTheme.darkDarkGrey)
+      .overlay(
+        Image(systemName: "person.fill")
+          .foregroundColor(ColorTheme.midLightGrey)
       )
-      .onAppear {
-        isRotating = true
-      }
+      .frame(width: 50, height: 50)
   }
 }
 
