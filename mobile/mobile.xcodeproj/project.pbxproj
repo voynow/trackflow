@@ -33,7 +33,9 @@
 				"Preview Content/Preview Assets.xcassets",
 				ProfileSkeletonView.swift,
 				ProfileView.swift,
+				RaceDetailsWidgetSkeleton.swift,
 				StravaAuthManager.swift,
+				TrainingPlanChartSkeleton.swift,
 				TrainingPlanView.swift,
 				TrainingWeek.swift,
 			);
@@ -283,7 +285,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.12;
+				MARKETING_VERSION = 1.13;
 				PRODUCT_BUNDLE_IDENTIFIER = voynow.mobile;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -314,7 +316,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.12;
+				MARKETING_VERSION = 1.13;
 				PRODUCT_BUNDLE_IDENTIFIER = voynow.mobile;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
