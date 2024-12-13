@@ -1,11 +1,11 @@
 import datetime
+import logging
 import os
 from typing import List, Optional
 from uuid import uuid4
 
 import orjson
 from dotenv import load_dotenv
-from src.types.activity import DailyMetrics
 from src.types.mileage_recommendation import (
     MileageRecommendationRow,
 )
@@ -20,6 +20,9 @@ from src.types.user import Preferences, UserAuthRow, UserRow
 from supabase import Client, create_client
 
 load_dotenv()
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 def init() -> Client:
@@ -329,7 +332,6 @@ def insert_mileage_recommendation(mileage_recommendation_row: MileageRecommendat
 
     :param mileage_recommendation_row: A MileageRecommendationRow object
     """
-    print(mileage_recommendation_row.dict())
     table = client.table(get_mileage_recommendation_table_name())
     table.insert(mileage_recommendation_row.dict()).execute()
 

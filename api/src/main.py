@@ -1,7 +1,7 @@
+import datetime
 import logging
 import os
 import traceback
-from datetime import datetime, timezone
 
 from fastapi import (
     BackgroundTasks,
@@ -35,7 +35,7 @@ async def log_and_handle_errors(request: Request, call_next):
     :param call_next: Function to call the next middleware or endpoint
     :return: Response or error message
     """
-    start_time = datetime.now(timezone.utc)
+    start_time = datetime.datetime.now(datetime.timezone.utc)
     try:
         request_details = {
             "method": request.method,
@@ -45,7 +45,9 @@ async def log_and_handle_errors(request: Request, call_next):
         }
         logger.info(f"Request: {request_details}")
         response = await call_next(request)
-        elapsed_time = (datetime.now(timezone.utc) - start_time).total_seconds()
+        elapsed_time = (
+            datetime.datetime.now(datetime.timezone.utc) - start_time
+        ).total_seconds()
 
         response_details = {
             "status_code": response.status_code,

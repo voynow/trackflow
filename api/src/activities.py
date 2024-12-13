@@ -1,15 +1,17 @@
+import datetime
 from collections import defaultdict
-from datetime import datetime, timedelta
 from typing import List, Optional
 
 from src import constants
-from src.types.activity import Activity, ActivitySummary, DailyMetrics, WeekSummary
-from src.utils import datetime_now_est, round_all_floats
+from src.types.activity import Activity, DailyMetrics, WeekSummary
+from src.utils import round_all_floats
 from stravalib.client import Client
 
 
 def add_missing_dates(
-    activities: List[Activity], start_date: datetime, end_date: datetime
+    activities: List[Activity],
+    start_date: datetime.datetime,
+    end_date: datetime.datetime,
 ) -> List[Activity]:
     """
     Ensures that the list of activities includes placeholder activities for all dates
@@ -22,13 +24,17 @@ def add_missing_dates(
     """
     existing_dates = {activity.start_date_local.date() for activity in activities}
     total_days = (end_date.date() - start_date.date()).days + 1
-    all_dates = {start_date.date() + timedelta(days=i) for i in range(total_days)}
+    all_dates = {
+        start_date.date() + datetime.timedelta(days=i) for i in range(total_days)
+    }
     missing_dates = all_dates - existing_dates
 
     placeholders = [
         Activity(
-            start_date=datetime.combine(date, datetime.min.time()),
-            start_date_local=datetime.combine(date, datetime.min.time()),
+            start_date=datetime.datetime.combine(date, datetime.datetime.min.time()),
+            start_date_local=datetime.datetime.combine(
+                date, datetime.datetime.min.time()
+            ),
         )
         for date in missing_dates
     ]
@@ -86,7 +92,7 @@ def aggregate_daily_metrics(activities: List[Activity]) -> List[DailyMetrics]:
 
 
 def get_daily_activity(
-    strava_client: Client, dt: datetime, num_weeks: int = 8
+    strava_client: Client, dt: datetime.datetime, num_weeks: int = 8
 ) -> List[DailyMetrics]:
     """
     Fetches activities for a given athlete ID and returns a DataFrame with daily aggregated activities
@@ -95,7 +101,7 @@ def get_daily_activity(
     :param num_weeks: The number of weeks to fetch activities for.
     :return: A cleaned and processed DataFrame of the athlete's daily aggregated activities.
     """
-    start_date = dt - timedelta(weeks=num_weeks)
+    start_date = dt - datetime.timedelta(weeks=num_weeks)
 
     all_strava_activities = strava_client.get_activities(after=start_date, before=dt)
 
@@ -118,7 +124,7 @@ def get_daily_activity(
 def get_weekly_summaries(
     strava_client: Optional[Client] = None,
     daily_metrics: Optional[List[DailyMetrics]] = None,
-    dt: Optional[datetime] = None,
+    dt: Optional[datetime.datetime] = None,
 ) -> List[WeekSummary]:
     """
     Aggregate daily metrics by week of the year and calculate load for each week.
