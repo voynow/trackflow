@@ -1,4 +1,4 @@
-from datetime import timedelta
+import datetime
 from typing import List
 
 from src.constants import COACH_ROLE
@@ -20,22 +20,23 @@ from src.types.update_pipeline import ExeType
 from src.types.user import Preferences, UserRow
 
 
-def get_remaining_days_of_week(today, exe_type: ExeType) -> List[str]:
+def get_remaining_days_of_week(dt: datetime.datetime, exe_type: ExeType) -> List[str]:
     """
     Returns the remaining days of the week from the given day's perspective.
     Special handling for Sunday:
     - If it's Sunday and exe_type is ExeType.NEW_WEEK, return the full week starting with Monday
     - If it's Sunday and exe_type is ExeType.MID_WEEK, return an empty list
 
-    :param today: DailyMetrics object representing today's metrics and date
+    :param dt: datetime injection, helpful for testing
     :param exe_type: The type of update to be generated
     :return: List of remaining days of the week
     """
     days_of_week = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
-    day_index = days_of_week.index(today.day_of_week)
+    current_day = dt.strftime("%a").lower()
+    day_index = days_of_week.index(current_day)
 
-    # on Sunday, we either generate a new week or no remaining days
-    if today.day_of_week == "sun":
+    # on Sunday, its either a new week (return all days) or no remaining days
+    if current_day == "sun":
         if exe_type == ExeType.NEW_WEEK:
             return days_of_week
         else:
@@ -115,25 +116,26 @@ def slice_and_gen_weekly_activity(
     :return: List of EnrichedActivity objects
     """
     if len(rest_of_week) == 7:
-        this_weeks_activity = []
-    else:
-        this_weeks_activity = daily_activity[-(7 - len(rest_of_week)) :]
+        return []
 
-    enriched_activities = []
-    for activity_of_interest in this_weeks_activity:
-        past_7_days = [
-            obj
-            for obj in daily_activity
-            if obj.date > activity_of_interest.date - timedelta(days=7)
-            and obj.date < activity_of_interest.date
-        ]
-        coaches_notes = gen_coaches_notes(
-            activity_of_interest=activity_of_interest, past_7_days=past_7_days
+    days_so_far = 7 - len(rest_of_week)
+    this_weeks_activity = daily_activity[-days_so_far:]
+
+    return [
+        EnrichedActivity(
+            activity=activity,
+            coaches_notes=gen_coaches_notes(
+                activity_of_interest=activity,
+                past_7_days=[
+                    a
+                    for a in daily_activity
+                    if a.date > activity.date - datetime.timedelta(days=7)
+                    and a.date < activity.date
+                ],
+            ),
         )
-        enriched_activities.append(
-            EnrichedActivity(activity=activity_of_interest, coaches_notes=coaches_notes)
-        )
-    return enriched_activities
+        for activity in this_weeks_activity
+    ]
 
 
 def gen_full_training_week(
@@ -141,6 +143,7 @@ def gen_full_training_week(
     daily_activity: List[DailyMetrics],
     mileage_rec: MileageRecommendation,
     exe_type: ExeType,
+    dt: datetime.datetime,
 ) -> FullTrainingWeek:
     """
     Generates full training week given mileage recommendation
@@ -149,9 +152,10 @@ def gen_full_training_week(
     :param daily_activity: list of daily actvity metrics past n weeks
     :param mileage_rec: recommendation for this weeks training
     :param exe_type: new week or mid week
+    :param dt: datetime injection, helpful for testing
     :return: full training week
     """
-    rest_of_week = get_remaining_days_of_week(daily_activity[-1], exe_type)
+    rest_of_week = get_remaining_days_of_week(dt, exe_type)
     this_weeks_activity = slice_and_gen_weekly_activity(daily_activity, rest_of_week)
     miles_completed_this_week = sum(
         [obj.activity.distance_in_miles for obj in this_weeks_activity]

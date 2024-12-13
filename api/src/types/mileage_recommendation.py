@@ -1,4 +1,4 @@
-from datetime import datetime
+import datetime
 from typing import Optional
 
 from pydantic import BaseModel, Field
@@ -25,10 +25,10 @@ class MileageRecommendationRow(BaseModel):
     total_volume: Optional[int]
     long_run: Optional[int]
     athlete_id: Optional[int]
-    created_at: datetime = datetime.now()
+    created_at: datetime.datetime = datetime.datetime.now()
 
     def dict(self, *args, **kwargs):
         data = super().dict(*args, **kwargs)
-        if isinstance(data["created_at"], datetime):
+        if isinstance(data["created_at"], datetime.datetime):
             data["created_at"] = data["created_at"].isoformat()
         return data

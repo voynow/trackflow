@@ -1,17 +1,17 @@
-from datetime import datetime, timedelta
+import datetime
 from zoneinfo import ZoneInfo
 
 from pydantic import BaseModel
 
 
-def datetime_now_est() -> datetime:
+def datetime_now_est() -> datetime.datetime:
     """
     Returns the current time in the specified timezone
 
     :param zone: The timezone name (default is 'America/New_York')
     :return: The current datetime in the specified timezone
     """
-    return datetime.now(ZoneInfo("America/New_York"))
+    return datetime.datetime.now(ZoneInfo("America/New_York"))
 
 
 def round_all_floats(model: BaseModel, precision: int = 2) -> BaseModel:
@@ -26,8 +26,7 @@ def round_all_floats(model: BaseModel, precision: int = 2) -> BaseModel:
     return model
 
 
-def get_last_sunday():
+def get_last_sunday() -> datetime.datetime:
     today = datetime_now_est().today()
     days_since_sunday = (today.weekday() + 1) % 7
-    most_recent_sunday = today - timedelta(days=days_since_sunday)
-    return most_recent_sunday.strftime("%Y-%m-%d")
+    return today - datetime.timedelta(days=days_since_sunday)

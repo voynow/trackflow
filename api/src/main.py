@@ -1,7 +1,7 @@
+import datetime
 import logging
 import os
 import traceback
-from datetime import datetime, timezone
 
 from fastapi import (
     BackgroundTasks,
@@ -12,7 +12,7 @@ from fastapi import (
     HTTPException,
     Request,
 )
-from src import activities, auth_manager, supabase_client, webhook
+from src import activities, auth_manager, supabase_client, utils, webhook
 from src.email_manager import send_alert_email
 from src.types.training_plan import TrainingPlan
 from src.types.training_week import FullTrainingWeek
@@ -35,7 +35,7 @@ async def log_and_handle_errors(request: Request, call_next):
     :param call_next: Function to call the next middleware or endpoint
     :return: Response or error message
     """
-    start_time = datetime.now(timezone.utc)
+    start_time = datetime.datetime.now(datetime.timezone.utc)
     try:
         request_details = {
             "method": request.method,
@@ -45,7 +45,9 @@ async def log_and_handle_errors(request: Request, call_next):
         }
         logger.info(f"Request: {request_details}")
         response = await call_next(request)
-        elapsed_time = (datetime.now(timezone.utc) - start_time).total_seconds()
+        elapsed_time = (
+            datetime.datetime.now(datetime.timezone.utc) - start_time
+        ).total_seconds()
 
         response_details = {
             "status_code": response.status_code,
@@ -157,7 +159,9 @@ async def get_weekly_summaries(
     :return: List of WeekSummary objects as JSON
     """
     strava_client = auth_manager.get_strava_client(user.athlete_id)
-    weekly_summaries = activities.get_weekly_summaries(strava_client)
+    weekly_summaries = activities.get_weekly_summaries(
+        strava_client=strava_client, dt=utils.datetime_now_est()
+    )
     return {
         "success": True,
         "weekly_summaries": [summary.json() for summary in weekly_summaries],
@@ -200,8 +204,8 @@ async def trigger_new_user_onboarding(
     :param user: The authenticated user
     :return: Success status
     """
-    update_training_week(user, ExeType.NEW_WEEK)
-    update_training_week(user, ExeType.MID_WEEK)
+    update_training_week(user, ExeType.NEW_WEEK, dt=utils.get_last_sunday())
+    update_training_week(user, ExeType.MID_WEEK, dt=utils.datetime_now_est())
     return {"success": True}
 
 

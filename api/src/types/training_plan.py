@@ -1,14 +1,13 @@
-from datetime import date
+import datetime
 from typing import List
-from uuid import uuid4
 
 from pydantic import BaseModel, Field
 from strenum import StrEnum
 
 
 class WeekRange(BaseModel):
-    start_date: date
-    end_date: date
+    start_date: datetime.date
+    end_date: datetime.date
     week_number: int
     n_weeks_until_race: int
 
@@ -24,7 +23,7 @@ class WeekType(StrEnum):
 
 
 class TrainingPlanWeek(BaseModel):
-    week_start_date: date
+    week_start_date: datetime.date
     week_number: int
     n_weeks_until_race: int
     week_type: WeekType
@@ -40,7 +39,7 @@ class TrainingPlanWeek(BaseModel):
 
     def dict(self, *args, **kwargs):
         data = super().dict(*args, **kwargs)
-        if isinstance(data["week_start_date"], date):
+        if isinstance(data["week_start_date"], datetime.date):
             data["week_start_date"] = data["week_start_date"].isoformat()
         return data
 
@@ -51,7 +50,7 @@ class TrainingPlan(BaseModel):
 
 class TrainingPlanWeekRow(BaseModel):
     athlete_id: int
-    week_start_date: date
+    week_start_date: datetime.date
     week_number: int
     n_weeks_until_race: int
     week_type: WeekType

@@ -1,5 +1,6 @@
+import datetime
 import logging
-from typing import List
+from typing import List, Tuple
 
 from src import activities, supabase_client
 from src.constants import COACH_ROLE
@@ -12,7 +13,6 @@ from src.types.mileage_recommendation import (
 )
 from src.types.update_pipeline import ExeType
 from src.types.user import Preferences, UserRow
-from src.utils import datetime_now_est
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -49,23 +49,26 @@ Your task is to provide training recommendations for the upcoming week."""
 
 
 def gen_mileage_rec_wrapper(
-    user: UserRow, weekly_summaries: List[WeekSummary]
+    user: UserRow, daily_activity: List[DailyMetrics], dt: datetime.datetime
 ) -> MileageRecommendation:
     """
     Abstraction for mileage rec generation, either pulled from training plan
     generation or generated directly from weekly summaries
 
     :param user: UserRow object
-    :param weekly_summaries: List of WeekSummary objects
+    :param daily_activity: List of DailyMetrics objects
+    :param dt: datetime injection, helpful for testing
     :return: MileageRecommendation used to generate training week
     """
-    if datetime_now_est().weekday() != 6:
+    if dt.weekday() != 6:
         raise ValueError(
             "Mileage recommendation can only be generated on Sunday (night) when the week is complete"
         )
+
+    weekly_summaries = activities.get_weekly_summaries(daily_metrics=daily_activity)
     if user.preferences.race_date and user.preferences.race_distance:
         training_plan = gen_training_plan_pipeline(
-            user=user, weekly_summaries=weekly_summaries
+            user=user, weekly_summaries=weekly_summaries, dt=dt
         )
         next_week_plan = training_plan.training_plan_weeks[0]
         return MileageRecommendation(
@@ -81,32 +84,24 @@ def gen_mileage_rec_wrapper(
 
 
 def create_new_mileage_recommendation(
-    user: UserRow, weekly_summaries: List[WeekSummary]
+    user: UserRow, daily_activity: List[DailyMetrics], dt: datetime.datetime
 ) -> MileageRecommendation:
     """
     Creates a new mileage recommendation for the next week
 
     :param user: user entity
-    :param weekly_summaries: list of weekly summaries
+    :param daily_activity: list of daily metrics
+    :param dt: datetime injection, helpful for testing
     :return: mileage recommendation entity
     """
-    past_week = weekly_summaries[-1].week_of_year
-    past_year = weekly_summaries[-1].year
-
-    if past_week == 52:
-        next_week = 1
-        next_year = past_year + 1
-    else:
-        next_week = past_week + 1
-        next_year = past_year
-
     mileage_recommendation = gen_mileage_rec_wrapper(
-        user=user, weekly_summaries=weekly_summaries
+        user=user, daily_activity=daily_activity, dt=dt
     )
+    tomorrow = dt + datetime.timedelta(days=1)
     supabase_client.insert_mileage_recommendation(
         MileageRecommendationRow(
-            week_of_year=next_week,
-            year=next_year,
+            week_of_year=tomorrow.isocalendar()[1],
+            year=tomorrow.year,
             thoughts=mileage_recommendation.thoughts,
             total_volume=mileage_recommendation.total_volume,
             long_run=mileage_recommendation.long_run,
@@ -120,6 +115,7 @@ def get_or_gen_mileage_recommendation(
     user: UserRow,
     daily_activity: List[DailyMetrics],
     exe_type: ExeType,
+    dt: datetime,
 ) -> MileageRecommendation:
     """
     Executes mileage rec strategy depending on exe type
@@ -127,19 +123,16 @@ def get_or_gen_mileage_recommendation(
     :param user: user entity
     :param daily_activity: list of daily metrics
     :param exe_type: new week or mid week
+    :param dt: datetime injection, helpful for testing
     :return: mileage recommendation entity
     """
-    weekly_summaries = activities.get_weekly_summaries(daily_metrics=daily_activity)
-
     if exe_type == ExeType.NEW_WEEK:
         return create_new_mileage_recommendation(
-            user=user, weekly_summaries=weekly_summaries
+            user=user, daily_activity=daily_activity, dt=dt
         )
     else:
         mileage_recommendation_row = supabase_client.get_mileage_recommendation(
-            athlete_id=user.athlete_id,
-            year=weekly_summaries[-1].year,
-            week_of_year=weekly_summaries[-1].week_of_year,
+            athlete_id=user.athlete_id, dt=dt
         )
         return MileageRecommendation(
             thoughts=mileage_recommendation_row.thoughts,

@@ -1,4 +1,4 @@
-from datetime import date, datetime
+import datetime
 from enum import StrEnum
 from typing import List, Optional
 
@@ -22,12 +22,12 @@ class TheoreticalTrainingSession(BaseModel):
 
 class Preferences(BaseModel):
     race_distance: Optional[RaceDistance] = None
-    race_date: Optional[date] = None
+    race_date: Optional[datetime.date] = None
     ideal_training_week: Optional[List[TheoreticalTrainingSession]] = []
 
     def dict(self, *args, **kwargs):
         data = super().dict(*args, **kwargs)
-        if isinstance(data["race_date"], date):
+        if isinstance(data["race_date"], datetime.date):
             data["race_date"] = data["race_date"].isoformat()
         return data
 
@@ -36,13 +36,13 @@ class UserRow(BaseModel):
     athlete_id: int
     preferences: Optional[Preferences] = Preferences()
     email: Optional[str] = None
-    created_at: datetime = datetime.now()
+    created_at: datetime.datetime = datetime.datetime.now()
 
 
 class UserAuthRow(BaseModel):
     athlete_id: int
     access_token: str
     refresh_token: str
-    expires_at: datetime
+    expires_at: datetime.datetime
     jwt_token: str
     device_token: Optional[str] = None

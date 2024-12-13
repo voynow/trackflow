@@ -1,4 +1,4 @@
-from datetime import date, datetime, timedelta
+import datetime
 from typing import Optional
 
 from pydantic import BaseModel
@@ -11,7 +11,7 @@ class Activity(BaseModel):
     average_speed: float = 0.0
     comment_count: int = 0
     distance: float = 0.0
-    elapsed_time: timedelta = timedelta(0)
+    elapsed_time: datetime.timedelta = datetime.timedelta(0)
     elev_high: Optional[float] = None
     elev_low: Optional[float] = None
     external_id: Optional[str] = None
@@ -21,11 +21,11 @@ class Activity(BaseModel):
     kudos_count: int = 0
     manual: bool = False
     max_speed: float = 0.0
-    moving_time: timedelta = timedelta(0)
+    moving_time: datetime.timedelta = datetime.timedelta(0)
     name: str = "Empty Activity"
     private: bool = True
-    start_date: datetime = datetime.min
-    start_date_local: datetime = datetime.min
+    start_date: datetime.datetime = datetime.datetime.min
+    start_date_local: datetime.datetime = datetime.datetime.min
     timezone: str = ""
     total_elevation_gain: float = 0.0
     total_photo_count: int = 0
@@ -42,7 +42,7 @@ class Activity(BaseModel):
 
 
 class DailyMetrics(BaseModel):
-    date: date
+    date: datetime.date
     day_of_week: str
     week_of_year: int
     year: int
@@ -65,7 +65,7 @@ class ActivitySummary(BaseModel):
 class WeekSummary(BaseModel):
     year: int
     week_of_year: int
-    week_start_date: date
+    week_start_date: datetime.date
     longest_run: float
     total_distance: float
 
