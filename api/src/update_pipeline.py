@@ -66,7 +66,7 @@ def update_training_week(user: UserRow, exe_type: ExeType, dt: datetime.datetime
     return {"success": True}
 
 
-def update_training_week_wrapper(user: UserRow, exe_type: ExeType) -> dict:
+def update_training_week_wrapper(user: UserRow, exe_type: ExeType, dt: datetime.datetime) -> dict:
     """
     Wrapper to handle errors in the update pipeline
 
@@ -75,7 +75,7 @@ def update_training_week_wrapper(user: UserRow, exe_type: ExeType) -> dict:
     :return: dict
     """
     try:
-        return update_training_week(user, exe_type)
+        return update_training_week(user, exe_type, dt)
     except Exception as e:
         error_message = f"Error updating training week for user {user.athlete_id}: {e}\n{traceback.format_exc()}"
         logger.error(error_message)
@@ -96,9 +96,9 @@ def update_all_users() -> dict:
     if utils.datetime_now_est().weekday() != 6:
         for user in supabase_client.list_users(debug=True):
             if not supabase_client.has_user_updated_today(user.athlete_id):
-                update_training_week_wrapper(user, ExeType.MID_WEEK)
+                update_training_week_wrapper(user, ExeType.MID_WEEK, dt=utils.datetime_now_est())
     else:
         # all users get a new training week on Sunday night
         for user in supabase_client.list_users(debug=True):
-            update_training_week_wrapper(user, ExeType.NEW_WEEK)
+            update_training_week_wrapper(user, ExeType.NEW_WEEK, dt=utils.get_last_sunday())
     return {"success": True}

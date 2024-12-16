@@ -31,7 +31,7 @@ logger = logging.getLogger("uvicorn.error")
 async def log_and_handle_errors(request: Request, call_next):
     """
     Log request/response data and handle errors.
-    
+
     Args:
         request: FastAPI Request object
         call_next: Next middleware function
@@ -47,22 +47,22 @@ async def log_and_handle_errors(request: Request, call_next):
             "method": request.method,
             "query_params": dict(request.query_params),
             "body": body.decode() if body else None,
-            "client_ip": request.client.host
+            "client_ip": request.client.host,
         }
         logger.info(f"REQUEST: {log_data}")
 
         # Get response
         response = await call_next(request)
-        
+
         # Log response
         response_body = b""
         async for chunk in response.body_iterator:
             response_body += chunk
-        
+
         log_data = {
             "status_code": response.status_code,
             "response_body": response_body.decode(),
-            "content_type": response.headers.get("content-type")
+            "content_type": response.headers.get("content-type"),
         }
         logger.info(f"RESPONSE: {log_data}")
 
@@ -70,20 +70,17 @@ async def log_and_handle_errors(request: Request, call_next):
             content=response_body,
             status_code=response.status_code,
             headers=dict(response.headers),
-            media_type=response.media_type
+            media_type=response.media_type,
         )
 
     except Exception as e:
         error = {
             "error": str(e),
             "path": request.url.path,
-            "traceback": traceback.format_exc()
+            "traceback": traceback.format_exc(),
         }
         logger.error(f"ERROR: {error}")
-        send_alert_email(
-            subject="TrackFlow API Error 😵‍💫",
-            text_content=str(error)
-        )
+        send_alert_email(subject="TrackFlow API Error 😵‍💫", text_content=str(error))
         return {"success": False, "error": error}
 
 
@@ -208,12 +205,12 @@ async def strava_webhook(request: Request, background_tasks: BackgroundTasks) ->
     return {"success": True}
 
 
-@app.post("/onboarding/")
-async def trigger_new_user_onboarding(
+@app.post("/refresh/")
+async def refresh_user_data(
     user: UserRow = Depends(auth_manager.validate_user),
 ) -> dict:
     """
-    Initialize training weeks for new user onboarding
+    Trigger new week and mid-week updates
 
     :param user: The authenticated user
     :return: Success status
