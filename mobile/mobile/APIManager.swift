@@ -341,7 +341,7 @@ class APIManager {
 
   func startOnboarding(token: String, completion: @escaping (Result<Void, Error>) -> Void) {
     let startTime = CFAbsoluteTimeGetCurrent()
-    guard let url = URL(string: "\(apiURL)/onboarding/") else {
+    guard let url = URL(string: "\(apiURL)/refresh/") else {
       completion(
         .failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"]))
       )

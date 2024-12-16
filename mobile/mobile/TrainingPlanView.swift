@@ -20,23 +20,54 @@ struct TrainingPlanView: View {
       ScrollView {
         VStack(spacing: 16) {
           if let plan = trainingPlan {
-            if let preferences = decodePreferences() {
-              RaceDetailsWidget(
-                preferences: preferences,
-                weeksCount: plan.trainingWeekPlans.map(\.nWeeksUntilRace).max() ?? 0
-              )
-              .padding(.bottom, 8)
+            if plan.isEmpty {
+              VStack(spacing: 16) {
+                Text("Lets get you a training plan!")
+                  .font(.title3)
+                  .foregroundColor(ColorTheme.lightGrey)
+                
+                Text("Fill out the race details section in your profile to get started.")
+                  .font(.subheadline)
+                  .foregroundColor(ColorTheme.midLightGrey)
+                  .multilineTextAlignment(.center)
+                  .padding(.horizontal)
+                
+                Button(action: {
+                  appState.showProfile = true
+                }) {
+                  Text("Set Up Race Details")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(ColorTheme.black)
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 12)
+                    .background(ColorTheme.primary)
+                    .cornerRadius(8)
+                }
+              }
+              .padding()
+              .background(ColorTheme.darkDarkGrey)
+              .cornerRadius(12)
+              .frame(maxHeight: .infinity, alignment: .center)
+              .padding()
             } else {
-              RaceDetailsWidgetSkeleton(
-                weeksCount: plan.trainingWeekPlans.map(\.nWeeksUntilRace).max() ?? 0
-              )
-              .padding(.bottom, 8)
-            }
+              if let preferences = decodePreferences() {
+                RaceDetailsWidget(
+                  preferences: preferences,
+                  weeksCount: plan.trainingPlanWeeks.map(\.nWeeksUntilRace).max() ?? 0
+                )
+                .padding(.bottom, 8)
+              } else {
+                RaceDetailsWidgetSkeleton(
+                  weeksCount: plan.trainingPlanWeeks.map(\.nWeeksUntilRace).max() ?? 0
+                )
+                .padding(.bottom, 8)
+              }
 
-            TrainingPlanChart(
-              trainingWeeks: plan.trainingWeekPlans,
-              historicalWeeks: historicalWeeks
-            )
+              TrainingPlanChart(
+                trainingWeeks: plan.trainingPlanWeeks,
+                historicalWeeks: historicalWeeks
+              )
+            }
           } else {
             RaceDetailsWidgetSkeleton(weeksCount: 0)
               .padding(.bottom, 8)
@@ -184,8 +215,8 @@ struct TrainingPlanChart: View {
   init(trainingWeeks: [TrainingPlanWeek], historicalWeeks: [WeekSummary] = []) {
     self.trainingWeeks = trainingWeeks
     self.historicalWeeks = historicalWeeks
-    _selectedWeek = State(initialValue: .future(trainingWeeks[0]))
-    _selectedX = State(initialValue: trainingWeeks[0].weekNumber)
+    _selectedWeek = State(initialValue: trainingWeeks.first.map { .future($0) } ?? .past(historicalWeeks.first ?? WeekSummary(year: 0, weekOfYear: 0, weekStartDate: "", longestRun: 0, totalDistance: 0)))
+    _selectedX = State(initialValue: trainingWeeks.first?.weekNumber ?? 0)
   }
 
   private var historicalVolumePlot: some ChartContent {
@@ -264,15 +295,15 @@ struct TrainingPlanChart: View {
       }
     }
     .chartForegroundStyleScale([
-      "Past Volume": ColorTheme.primaryDark,
-      "Past Long Run": ColorTheme.indigoDark,
+      "Past Volume": ColorTheme.white,
+      "Past Long Run": ColorTheme.midLightGrey2,
       "Volume": ColorTheme.primary,
       "Long Run": ColorTheme.indigo,
     ])
     .chartLegend(position: .bottom) {
       HStack {
-        LegendItem(label: "Past Volume", symbol: .square, color: ColorTheme.primaryDark)
-        LegendItem(label: "Past Long Run", symbol: .square, color: ColorTheme.indigoDark)
+        LegendItem(label: "Past Volume", symbol: .square, color: ColorTheme.white)
+        LegendItem(label: "Past Long Run", symbol: .square, color: ColorTheme.midLightGrey2)
         LegendItem(label: "Volume", symbol: .circle, color: ColorTheme.primary)
         LegendItem(label: "Long Run", symbol: .circle, color: ColorTheme.indigo)
       }

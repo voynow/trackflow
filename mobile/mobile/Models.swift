@@ -83,8 +83,9 @@ struct Preferences: Codable {
   init(from decoder: Decoder) throws {
     let container = try decoder.container(keyedBy: CodingKeys.self)
     raceDistance = try container.decodeIfPresent(String.self, forKey: .raceDistance)
-    idealTrainingWeek = try container.decodeIfPresent([TrainingDay].self, forKey: .idealTrainingWeek)
-    
+    idealTrainingWeek = try container.decodeIfPresent(
+      [TrainingDay].self, forKey: .idealTrainingWeek)
+
     // Parse date as YYYY-MM-DD
     if let dateString = try container.decodeIfPresent(String.self, forKey: .raceDate) {
       let formatter = DateFormatter()
@@ -94,12 +95,12 @@ struct Preferences: Codable {
       raceDate = nil
     }
   }
-  
+
   func encode(to encoder: Encoder) throws {
     var container = encoder.container(keyedBy: CodingKeys.self)
     try container.encodeIfPresent(raceDistance, forKey: .raceDistance)
     try container.encodeIfPresent(idealTrainingWeek, forKey: .idealTrainingWeek)
-    
+
     // Format date as YYYY-MM-DD only
     if let date = raceDate {
       let formatter = DateFormatter()
@@ -284,54 +285,56 @@ struct GenericResponse: Codable {
 }
 
 enum WeekType: String, Codable {
-    case build = "build"
-    case peak = "peak"
-    case taper = "taper"
-    case race = "race"
-    
-    var color: Color {
-        switch self {
-        case .build: return ColorTheme.orange
-        case .peak: return ColorTheme.redPink
-        case .taper: return ColorTheme.yellow
-        case .race: return ColorTheme.green
-        }
+  case build = "build"
+  case peak = "peak"
+  case taper = "taper"
+  case race = "race"
+
+  var color: Color {
+    switch self {
+    case .build: return ColorTheme.orange
+    case .peak: return ColorTheme.redPink
+    case .taper: return ColorTheme.yellow
+    case .race: return ColorTheme.green
     }
+  }
 }
 
 struct TrainingPlanWeek: Codable, Identifiable {
-    let weekStartDate: Date
-    let weekNumber: Int
-    let nWeeksUntilRace: Int
-    let weekType: WeekType
-    let notes: String
-    let totalDistance: Double
-    let longRunDistance: Double
-    
-    var id: Int { weekNumber }
-    
-    enum CodingKeys: String, CodingKey {
-        case weekStartDate = "week_start_date"
-        case weekNumber = "week_number"
-        case nWeeksUntilRace = "n_weeks_until_race"
-        case weekType = "week_type"
-        case notes
-        case totalDistance = "total_distance"
-        case longRunDistance = "long_run_distance"
-    }
+  let weekStartDate: Date
+  let weekNumber: Int
+  let nWeeksUntilRace: Int
+  let weekType: WeekType
+  let notes: String
+  let totalDistance: Double
+  let longRunDistance: Double
+
+  var id: Int { weekNumber }
+
+  enum CodingKeys: String, CodingKey {
+    case weekStartDate = "week_start_date"
+    case weekNumber = "week_number"
+    case nWeeksUntilRace = "n_weeks_until_race"
+    case weekType = "week_type"
+    case notes
+    case totalDistance = "total_distance"
+    case longRunDistance = "long_run_distance"
+  }
 
   init(from decoder: Decoder) throws {
     let container = try decoder.container(keyedBy: CodingKeys.self)
-    
+
     // Handle date string conversion
     let dateString = try container.decode(String.self, forKey: .weekStartDate)
     let formatter = DateFormatter()
     formatter.dateFormat = "yyyy-MM-dd"
     guard let date = formatter.date(from: dateString) else {
-      throw DecodingError.dataCorruptedError(forKey: .weekStartDate, in: container, debugDescription: "Date string does not match format")
+      throw DecodingError.dataCorruptedError(
+        forKey: .weekStartDate, in: container, debugDescription: "Date string does not match format"
+      )
     }
     weekStartDate = date
-    
+
     // Decode other properties normally
     weekNumber = try container.decode(Int.self, forKey: .weekNumber)
     nWeeksUntilRace = try container.decode(Int.self, forKey: .nWeeksUntilRace)
@@ -343,9 +346,13 @@ struct TrainingPlanWeek: Codable, Identifiable {
 }
 
 struct TrainingPlan: Codable {
-    let trainingWeekPlans: [TrainingPlanWeek]
-    
-    enum CodingKeys: String, CodingKey {
-        case trainingWeekPlans = "training_week_plans"
-    }
+  let trainingPlanWeeks: [TrainingPlanWeek]
+
+  var isEmpty: Bool {
+    trainingPlanWeeks.isEmpty
+  }
+
+  enum CodingKeys: String, CodingKey {
+    case trainingPlanWeeks = "training_plan_weeks"
+  }
 }
