@@ -23,6 +23,8 @@ from src.update_pipeline import update_all_users, update_training_week
 
 app = FastAPI()
 
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("stravalib.protocol").setLevel(logging.WARNING)
 logger = logging.getLogger("uvicorn.error")
 
 
