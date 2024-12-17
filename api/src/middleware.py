@@ -1,5 +1,6 @@
 import json
 import logging
+import traceback
 import uuid
 from datetime import datetime, timezone
 from typing import Callable
@@ -77,7 +78,11 @@ def log_response(request_id: str, response: Response, body: bytes) -> None:
 
 
 def create_error_log(
-    e: Exception, endpoint: str, user_info: str, request: Request
+    error: Exception,
+    traceback: str,
+    endpoint: str,
+    user_info: str,
+    request: Request,
 ) -> dict:
     """
     Create error log dictionary
@@ -89,11 +94,11 @@ def create_error_log(
     :return: error log dictionary
     """
     return {
-        "error": str(e),
-        "type": type(e).__name__,
+        "error": str(error),
+        "traceback": traceback,
+        "type": type(error).__name__,
         "endpoint": endpoint,
         "user": user_info,
-        "method": request.method,
         "client_ip": request.client.host,
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
@@ -112,14 +117,11 @@ async def log_and_handle_errors(request: Request, call_next: Callable) -> Respon
     endpoint = f"{request.method} {request.url.path}"
 
     try:
-        # Log request
         log_request(request_id, request, user_info)
 
-        # Handle request
         response = await call_next(request)
         response_body = await get_response_body(response)
 
-        # Log response
         log_response(request_id, response, response_body)
 
         return Response(
@@ -130,7 +132,13 @@ async def log_and_handle_errors(request: Request, call_next: Callable) -> Respon
         )
 
     except Exception as e:
-        error = create_error_log(e, endpoint, user_info, request)
+        error = create_error_log(
+            error=e,
+            traceback=traceback.format_exc(),
+            endpoint=endpoint,
+            user_info=user_info,
+            request=request,
+        )
         logger.error(f"ERROR: {error}")
         send_alert_email(
             subject=f"API Error: {endpoint} [{user_info}] - {type(e).__name__}",
