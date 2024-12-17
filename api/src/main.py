@@ -1,7 +1,6 @@
-import datetime
 import logging
 import os
-import traceback
+from typing import Callable
 
 from fastapi import (
     BackgroundTasks,
@@ -14,7 +13,7 @@ from fastapi import (
     Response,
 )
 from src import activities, auth_manager, supabase_client, utils, webhook
-from src.email_manager import send_alert_email
+from src.middleware import log_and_handle_errors
 from src.types.training_plan import TrainingPlan
 from src.types.training_week import FullTrainingWeek
 from src.types.update_pipeline import ExeType
@@ -28,60 +27,8 @@ logger = logging.getLogger("uvicorn.error")
 
 
 @app.middleware("http")
-async def log_and_handle_errors(request: Request, call_next):
-    """
-    Log request/response data and handle errors.
-
-    Args:
-        request: FastAPI Request object
-        call_next: Next middleware function
-    Returns:
-        Response object or error dict
-    """
-    try:
-        # Log request
-        body = await request.body()
-        log_data = {
-            "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
-            "path": request.url.path,
-            "method": request.method,
-            "query_params": dict(request.query_params),
-            "body": body.decode() if body else None,
-            "client_ip": request.client.host,
-        }
-        logger.info(f"REQUEST: {log_data}")
-
-        # Get response
-        response = await call_next(request)
-
-        # Log response
-        response_body = b""
-        async for chunk in response.body_iterator:
-            response_body += chunk
-
-        log_data = {
-            "status_code": response.status_code,
-            "response_body": response_body.decode(),
-            "content_type": response.headers.get("content-type"),
-        }
-        logger.info(f"RESPONSE: {log_data}")
-
-        return Response(
-            content=response_body,
-            status_code=response.status_code,
-            headers=dict(response.headers),
-            media_type=response.media_type,
-        )
-
-    except Exception as e:
-        error = {
-            "error": str(e),
-            "path": request.url.path,
-            "traceback": traceback.format_exc(),
-        }
-        logger.error(f"ERROR: {error}")
-        send_alert_email(subject="TrackFlow API Error 😵‍💫", text_content=str(error))
-        return {"success": False, "error": error}
+async def middleware(request: Request, call_next: Callable) -> Response:
+    return await log_and_handle_errors(request, call_next)
 
 
 @app.get("/health")
