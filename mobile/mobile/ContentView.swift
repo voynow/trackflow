@@ -30,6 +30,8 @@ struct ContentView: View {
         LandingPageView(authManager: authManager)
       case .loading:
         LoadingView()
+      case .generatingPlan:
+        GeneratingPlanView()
       }
     }
   }

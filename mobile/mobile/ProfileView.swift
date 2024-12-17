@@ -39,7 +39,7 @@ struct ProfileView: View {
                 isPresented: $showTrainingPlanPrompt,
                 raceDistance: preferencesBinding.wrappedValue.raceDistance ?? "",
                 onGenerate: {
-                  // TODO: Add your training plan generation logic here
+                  appState.status = .generatingPlan
                 }
               )
               .animation(.easeInOut, value: showTrainingPlanPrompt)

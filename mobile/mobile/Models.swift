@@ -273,10 +273,11 @@ struct GenerateTrainingPlanResponse: Codable {
 }
 
 enum AppStateStatus {
-  case loading
   case loggedOut
-  case loggedIn
+  case loading
   case newUser
+  case loggedIn
+  case generatingPlan
 }
 
 struct GenericResponse: Codable {

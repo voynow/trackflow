@@ -23,6 +23,7 @@
 				DashboardNavbar.swift,
 				DashboardSkeletonView.swift,
 				DashboardView.swift,
+				GeneratingPlanView.swift,
 				LandingPageView.swift,
 				LoadingView.swift,
 				mobileApp.swift,
@@ -38,6 +39,7 @@
 				TrainingPlanChartSkeleton.swift,
 				TrainingPlanView.swift,
 				TrainingWeek.swift,
+				WaitingForGenerationView.swift,
 			);
 			target = 80777D102C973F01007565FC /* mobile */;
 		};
