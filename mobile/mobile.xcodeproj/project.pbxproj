@@ -29,6 +29,7 @@
 				mobileApp.swift,
 				Models.swift,
 				NotificationManager.swift,
+				OnboardingEmailView.swift,
 				OnboardingView.swift,
 				PreferencesView.swift,
 				"Preview Content/Preview Assets.xcassets",
