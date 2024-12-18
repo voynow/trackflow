@@ -152,6 +152,7 @@ struct PreferencesContent: View {
         onSave: {
           onUpdate()
           showSaveBanner(for: "race")
+          NotificationCenter.default.post(name: .didSetupRace, object: nil)
         }
       )
     }

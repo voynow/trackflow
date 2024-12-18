@@ -404,7 +404,8 @@ def get_training_plan(athlete_id: int) -> TrainingPlan:
     )
 
     if not latest_timestamp.data:
-        raise ValueError(f"Could not find training plan for athlete_id {athlete_id}")
+        logger.error(f"Could not find training plan for athlete_id {athlete_id}")
+        return TrainingPlan()
 
     response = (
         table.select("*")

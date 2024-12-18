@@ -45,7 +45,7 @@ class TrainingPlanWeek(BaseModel):
 
 
 class TrainingPlan(BaseModel):
-    training_plan_weeks: List[TrainingPlanWeek]
+    training_plan_weeks: List[TrainingPlanWeek] = []
 
 
 class TrainingPlanWeekRow(BaseModel):

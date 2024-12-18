@@ -106,4 +106,4 @@ def send_push_notif_wrapper(user: UserRow):
     except Exception as e:
         logger.error(f"Failed to send push notification to user {user.athlete_id}: {e}")
         logger.error(traceback.format_exc())
-        raise
+        # raise

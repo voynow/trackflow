@@ -13,7 +13,7 @@ struct DashboardView: View {
   var body: some View {
     NavigationView {
       ZStack {
-        TabView(selection: $selectedTab) {
+        TabView(selection: $appState.selectedTab) {
           VStack {
             DashboardNavbar(onLogout: handleLogout, showProfile: $appState.showProfile)
               .background(ColorTheme.black)

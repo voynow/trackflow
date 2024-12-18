@@ -4,6 +4,7 @@ struct ColorTheme {
   static let white = Color(white: 0.95)
   static let lightGrey = Color(white: 0.9)
   static let midLightGrey = Color(white: 0.8)
+  static let midLightGrey2 = Color(white: 0.65)
   static let midDarkGrey = Color(white: 0.25)
   static let darkGrey = Color(white: 0.166)
   static let darkDarkGrey = Color(white: 0.133)

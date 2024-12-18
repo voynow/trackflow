@@ -7,8 +7,7 @@ struct ProfileView: View {
   @EnvironmentObject var appState: AppState
   @State private var isSaving: Bool = false
   @State private var isLoading: Bool = true
-  @State private var lastFetchTime: Date?
-  private let cacheTimeout: TimeInterval = 300
+  @State private var showTrainingPlanPrompt: Bool = false
 
   var body: some View {
     ZStack {
@@ -33,9 +32,32 @@ struct ProfileView: View {
               .foregroundColor(ColorTheme.lightGrey)
           }
         }
+        .overlay(
+          Group {
+            if showTrainingPlanPrompt {
+              TrainingPlanPrompt(
+                isPresented: $showTrainingPlanPrompt,
+                raceDistance: preferencesBinding.wrappedValue.raceDistance ?? "",
+                onGenerate: {
+                  appState.status = .generatingPlan
+                }
+              )
+              .animation(.easeInOut, value: showTrainingPlanPrompt)
+            }
+          }
+        )
       }
     }
-    .onAppear(perform: fetchProfileData)
+    .onAppear {
+      fetchProfileData()
+      NotificationCenter.default.addObserver(
+        forName: .didSetupRace,
+        object: nil,
+        queue: .main
+      ) { _ in
+        showTrainingPlanPrompt = true
+      }
+    }
   }
 
   private var profileHeader: some View {
@@ -63,52 +85,42 @@ struct ProfileView: View {
 
   private var preferencesBinding: Binding<Preferences> {
     Binding(
-        get: {
-            if let preferencesString = profileData?.preferences {
-                if let jsonData = preferencesString.data(using: .utf8) {
-                    do {
-                        let decoder = JSONDecoder()
-                        decoder.dateDecodingStrategy = .iso8601
-                        let prefs = try decoder.decode(Preferences.self, from: jsonData)
-                        return prefs
-                    } catch {
-                        assertionFailure("Failed to decode preferences: \(error)")
-                        return Preferences()
-                    }
-                }
-            }
-            return Preferences()
-        },
-        set: { newValue in
+      get: {
+        if let preferencesString = profileData?.preferences {
+          if let jsonData = preferencesString.data(using: .utf8) {
             do {
-                let encoder = JSONEncoder()
-                encoder.dateEncodingStrategy = .iso8601
-                encoder.outputFormatting = .prettyPrinted
-                
-                let preferencesJSON = try encoder.encode(newValue)
-                if let preferencesString = String(data: preferencesJSON, encoding: .utf8) {
-                    profileData?.preferences = preferencesString
-                    ProfileCache.updatePreferences(preferencesString)
-                }
+              let decoder = JSONDecoder()
+              decoder.dateDecodingStrategy = .iso8601
+              let prefs = try decoder.decode(Preferences.self, from: jsonData)
+              return prefs
             } catch {
-                assertionFailure("Failed to encode preferences: \(error)")
-                if let emptyPrefs = try? JSONEncoder().encode(Preferences()),
-                   let emptyPrefsString = String(data: emptyPrefs, encoding: .utf8) {
-                    profileData?.preferences = emptyPrefsString
-                    ProfileCache.updatePreferences(emptyPrefsString)
-                }
+              assertionFailure("Failed to decode preferences: \(error)")
+              return Preferences()
             }
+          }
         }
-    )
-  }
+        return Preferences()
+      },
+      set: { newValue in
+        do {
+          let encoder = JSONEncoder()
+          encoder.dateEncodingStrategy = .iso8601
+          encoder.outputFormatting = .prettyPrinted
 
-  private func shouldRefetchData() -> Bool {
-    guard let lastFetch = lastFetchTime else {
-      return true
-    }
-    let timeSinceLastFetch = Date().timeIntervalSince(lastFetch)
-    let shouldRefetch = timeSinceLastFetch > cacheTimeout
-    return shouldRefetch
+          let preferencesJSON = try encoder.encode(newValue)
+          if let preferencesString = String(data: preferencesJSON, encoding: .utf8) {
+            profileData?.preferences = preferencesString
+          }
+        } catch {
+          assertionFailure("Failed to encode preferences: \(error)")
+          if let emptyPrefs = try? JSONEncoder().encode(Preferences()),
+            let emptyPrefsString = String(data: emptyPrefs, encoding: .utf8)
+          {
+            profileData?.preferences = emptyPrefsString
+          }
+        }
+      }
+    )
   }
 
   private func fetchProfileData() {
@@ -213,39 +225,71 @@ struct LoadingIcon: View {
   }
 }
 
-private enum ProfileCache {
-  static var lastFetchTime: Date?
-  static var data: ProfileData?
-  static let timeout: TimeInterval = 300
+extension Notification.Name {
+  static let didSetupRace = Notification.Name("didSetupRace")
+}
 
-  static func shouldRefetch() -> Bool {
-    guard let lastFetch = lastFetchTime else { return true }
-    return Date().timeIntervalSince(lastFetch) > timeout
-  }
+struct TrainingPlanPrompt: View {
+  @Binding var isPresented: Bool
+  let raceDistance: String
+  let onGenerate: () -> Void
 
-  static func update(_ profile: ProfileData) {
-    data = profile
-    lastFetchTime = Date()
-  }
+  var body: some View {
+    ZStack {
+      Color.black.opacity(0.8)
+        .edgesIgnoringSafeArea(.all)
 
-  static func updatePreferences(_ preferences: String) {
-    if var cachedData = data {
-      guard let _ = preferences.data(using: .utf8) else {
-        print("Debug: ProfileCache - Invalid preferences string")
-        return
+      VStack(spacing: 24) {
+        VStack(spacing: 8) {
+          HStack(alignment: .firstTextBaseline) {
+            Image(systemName: "figure.run")
+              .font(.system(size: 24))
+              .foregroundColor(ColorTheme.primary)
+
+            Text("Ready to Start Training?")
+              .font(.system(size: 24, weight: .bold))
+              .foregroundColor(ColorTheme.white)
+          }
+
+          Text("Let's generate your personalized \(raceDistance) training plan.")
+            .font(.system(size: 16))
+            .foregroundColor(ColorTheme.lightGrey)
+            .multilineTextAlignment(.center)
+        }
+
+        HStack(spacing: 16) {
+          Button(action: { isPresented = false }) {
+            Text("Maybe Later")
+              .font(.system(size: 16, weight: .medium))
+              .foregroundColor(ColorTheme.lightGrey)
+              .frame(maxWidth: .infinity)
+              .padding(.vertical, 12)
+              .background(ColorTheme.darkDarkGrey)
+              .cornerRadius(8)
+          }
+
+          Button(action: {
+            onGenerate()
+            isPresented = false
+          }) {
+            HStack {
+              Text("Generate Plan")
+              Image(systemName: "chevron.right")
+            }
+            .font(.system(size: 16, weight: .semibold))
+            .foregroundColor(ColorTheme.black)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 12)
+            .background(ColorTheme.primary)
+            .cornerRadius(8)
+          }
+        }
       }
-      
-      cachedData.preferences = preferences
-      data = cachedData
-      
-      print("Debug: ProfileCache - Successfully updated preferences")
-    } else {
-      print("Debug: ProfileCache - No cached data to update")
+      .padding(24)
+      .background(ColorTheme.darkGrey)
+      .cornerRadius(16)
+      .padding(.horizontal, 40)
     }
-  }
-
-  static func clear() {
-    data = nil
-    lastFetchTime = nil
+    .transition(.opacity)
   }
 }

@@ -1,4 +1,4 @@
-from src import auth_manager, supabase_client
+from src import auth_manager, supabase_client, utils
 from src.types.update_pipeline import ExeType
 from src.types.webhook import StravaEvent
 from src.update_pipeline import update_training_week
@@ -18,6 +18,7 @@ def handle_activity_create(event: StravaEvent) -> dict:
         return update_training_week(
             user=user,
             exe_type=ExeType.MID_WEEK,
+            dt=utils.datetime_now_est(),
         )
     return {
         "success": False,

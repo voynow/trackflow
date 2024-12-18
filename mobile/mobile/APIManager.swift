@@ -17,13 +17,13 @@ class APIManager {
   private struct ProfileCache {
     static var data: ProfileData?
     static var lastFetchTime: Date?
-    static let cacheTimeout: TimeInterval = 300 // 5 minutes
-    
+    static let cacheTimeout: TimeInterval = 300  // 5 minutes
+
     static func shouldRefetch() -> Bool {
       guard let lastFetch = lastFetchTime else { return true }
       return Date().timeIntervalSince(lastFetch) > cacheTimeout
     }
-    
+
     static func update(_ profile: ProfileData) {
       data = profile
       lastFetchTime = Date()
@@ -35,7 +35,7 @@ class APIManager {
       completion(.success(cachedData))
       return
     }
-    
+
     let startTime = CFAbsoluteTimeGetCurrent()
     guard let url = URL(string: "\(apiURL)/profile/") else {
       completion(
@@ -89,7 +89,7 @@ class APIManager {
         }
 
         let response = try JSONDecoder().decode(ProfileResponse.self, from: data)
-        ProfileCache.update(response.profile) // Update cache
+        ProfileCache.update(response.profile)  // Update cache
         completion(.success(response.profile))
       } catch {
         print("Decoding error: \(error)")
@@ -164,7 +164,6 @@ class APIManager {
     preferences: Preferences,
     completion: @escaping (Result<Void, Error>) -> Void
   ) {
-
     guard let url = URL(string: "\(apiURL)/preferences/") else {
       completion(
         .failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"]))
@@ -177,7 +176,6 @@ class APIManager {
     request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
-    // Create encoder with date handling strategy
     let encoder = JSONEncoder()
     encoder.dateEncodingStrategy = .iso8601
 
@@ -189,10 +187,27 @@ class APIManager {
       return
     }
 
-    session.dataTask(with: request) { data, response, error in
+    session.dataTask(with: request) { [weak self] data, response, error in
       if let error = error {
         completion(.failure(error))
         return
+      }
+
+      // Update cache with new preferences
+      if let cachedProfile = ProfileCache.data {
+        do {
+          let encoder = JSONEncoder()
+          encoder.dateEncodingStrategy = .iso8601
+          encoder.outputFormatting = .prettyPrinted
+          let preferencesJSON = try encoder.encode(preferences)
+          if let preferencesString = String(data: preferencesJSON, encoding: .utf8) {
+            var updatedProfile = cachedProfile
+            updatedProfile.preferences = preferencesString
+            ProfileCache.update(updatedProfile)
+          }
+        } catch {
+          print("Failed to update preferences cache: \(error)")
+        }
       }
 
       completion(.success(()))
@@ -341,7 +356,7 @@ class APIManager {
 
   func startOnboarding(token: String, completion: @escaping (Result<Void, Error>) -> Void) {
     let startTime = CFAbsoluteTimeGetCurrent()
-    guard let url = URL(string: "\(apiURL)/onboarding/") else {
+    guard let url = URL(string: "\(apiURL)/refresh/") else {
       completion(
         .failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"]))
       )
@@ -425,15 +440,18 @@ class APIManager {
     }.resume()
   }
 
-  func fetchTrainingPlan(token: String, completion: @escaping (Result<TrainingPlan, Error>) -> Void) {
+  func fetchTrainingPlan(token: String, completion: @escaping (Result<TrainingPlan, Error>) -> Void)
+  {
     let startTime = CFAbsoluteTimeGetCurrent()
     guard let url = URL(string: "\(apiURL)/training-plan/") else {
-      completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))
+      completion(
+        .failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"]))
+      )
       return
     }
 
     var request = URLRequest(url: url)
-    request.httpMethod = "GET" 
+    request.httpMethod = "GET"
     request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
 
     session.dataTask(with: request) { data, response, error in

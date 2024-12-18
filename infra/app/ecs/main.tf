@@ -40,7 +40,7 @@ resource "aws_lb_target_group" "this" {
   target_type = "ip"
   health_check {
     port                = 80
-    path                = "/docs"
+    path                = "/health"
     interval            = 30
     protocol            = "HTTP"
     timeout             = 5

@@ -1,7 +1,6 @@
-import datetime
 import logging
 import os
-import traceback
+from typing import Callable
 
 from fastapi import (
     BackgroundTasks,
@@ -11,9 +10,10 @@ from fastapi import (
     Form,
     HTTPException,
     Request,
+    Response,
 )
 from src import activities, auth_manager, supabase_client, utils, webhook
-from src.email_manager import send_alert_email
+from src.middleware import log_and_handle_errors
 from src.types.training_plan import TrainingPlan
 from src.types.training_week import FullTrainingWeek
 from src.types.update_pipeline import ExeType
@@ -23,54 +23,14 @@ from src.update_pipeline import update_all_users, update_training_week
 
 app = FastAPI()
 
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("stravalib.protocol").setLevel(logging.WARNING)
 logger = logging.getLogger("uvicorn.error")
 
 
 @app.middleware("http")
-async def log_and_handle_errors(request: Request, call_next):
-    """
-    Log structured request and response details, and send alerts on errors.
-
-    :param request: The incoming HTTP request
-    :param call_next: Function to call the next middleware or endpoint
-    :return: Response or error message
-    """
-    start_time = datetime.datetime.now(datetime.timezone.utc)
-    try:
-        request_details = {
-            "method": request.method,
-            "url": str(request.url),
-            "headers": dict(request.headers),
-            "client": request.client.host,
-        }
-        logger.info(f"Request: {request_details}")
-        response = await call_next(request)
-        elapsed_time = (
-            datetime.datetime.now(datetime.timezone.utc) - start_time
-        ).total_seconds()
-
-        response_details = {
-            "status_code": response.status_code,
-            "headers": dict(response.headers),
-            "elapsed_time_sec": elapsed_time,
-        }
-        logger.info(f"Response: {response_details}")
-        return response
-
-    except Exception as e:
-        error_message = {
-            "error": str(e),
-            "traceback": traceback.format_exc(),
-            "method": request.method,
-            "url": str(request.url),
-            "client": request.client.host,
-        }
-        logger.error(f"Error Occurred: {error_message}")
-        send_alert_email(
-            subject="TrackFlow API Error 😵‍💫",
-            text_content=str(error_message),
-        )
-        return {"success": False, "error": error_message}
+async def middleware(request: Request, call_next: Callable) -> Response:
+    return await log_and_handle_errors(request, call_next)
 
 
 @app.get("/health")
@@ -194,12 +154,12 @@ async def strava_webhook(request: Request, background_tasks: BackgroundTasks) ->
     return {"success": True}
 
 
-@app.post("/onboarding/")
-async def trigger_new_user_onboarding(
+@app.post("/refresh/")
+async def refresh_user_data(
     user: UserRow = Depends(auth_manager.validate_user),
 ) -> dict:
     """
-    Initialize training weeks for new user onboarding
+    Trigger new week and mid-week updates
 
     :param user: The authenticated user
     :return: Success status
