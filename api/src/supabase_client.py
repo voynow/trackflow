@@ -417,3 +417,14 @@ def get_training_plan(athlete_id: int) -> TrainingPlan:
 
     training_weeks = [TrainingPlanWeekRow(**row) for row in response.data]
     return TrainingPlan(training_plan_weeks=training_weeks)
+
+
+def update_user_email(athlete_id: int, email: str):
+    """
+    Update user email
+
+    :param athlete_id: The ID of the athlete
+    :param email: The email to update
+    """
+    table = client.table("user")
+    table.update({"email": email}).eq("athlete_id", athlete_id).execute()
