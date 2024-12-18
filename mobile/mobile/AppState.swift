@@ -6,6 +6,7 @@ class AppState: ObservableObject {
   @Published var jwtToken: String? = nil
   @Published var notificationStatus: UNAuthorizationStatus = .notDetermined
   @Published var showProfile: Bool = false
+  @Published var selectedTab: Int = 0
   
   func checkNotificationStatus() {
     UNUserNotificationCenter.current().getNotificationSettings { settings in

@@ -5,17 +5,16 @@ struct WaitingForGenerationView: View {
   @State private var progress: Double = 0
   @State private var currentStage: Int = 0
   @State private var showExtendedWaitMessage: Bool = false
-  @State private var timer: Timer.TimerPublisher = Timer.publish(every: 0.05, on: .main, in: .common)
+  @State private var timer: Timer.TimerPublisher = Timer.publish(every: 0.25, on: .main, in: .common)
   @State private var timerCancellable: AnyCancellable?
 
   let stages: [String]
-  let minimumGenerationTime: Double = 20.0
   let title: String
   let subtitle: String
   let onComplete: () -> Void
 
   var calculatedProgressIncrement: Double {
-    return 0.5 / minimumGenerationTime
+    return 0.01  // 1% per tick, 100 ticks total
   }
 
   var body: some View {

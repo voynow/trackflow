@@ -16,7 +16,13 @@ struct GeneratingPlanView: View {
       ],
       title: "Generating Your Training Plan",
       subtitle: "This typically takes 20-30 seconds",
-      onComplete: { startGeneratingPlan() }
+      onComplete: {
+        // Hide profile before transitioning
+        appState.showProfile = false
+        startGeneratingPlan()
+        // Set selected tab to Training Plan view
+        appState.selectedTab = 1
+      }
     )
   }
 
