@@ -105,11 +105,7 @@ struct LandingPageView: View {
       }
       .padding()
       .frame(maxWidth: .infinity)
-      .background(
-        LinearGradient(
-          gradient: Gradient(colors: [ColorTheme.primary, ColorTheme.primaryLight]),
-          startPoint: .leading, endPoint: .trailing)
-      )
+      .background(ColorTheme.primary)
       .foregroundColor(ColorTheme.white)
       .cornerRadius(12)
       .shadow(radius: 5)

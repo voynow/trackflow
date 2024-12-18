@@ -354,7 +354,7 @@ class APIManager {
     }.resume()
   }
 
-  func startOnboarding(token: String, completion: @escaping (Result<Void, Error>) -> Void) {
+  func refresh(token: String, completion: @escaping (Result<Void, Error>) -> Void) {
     let startTime = CFAbsoluteTimeGetCurrent()
     guard let url = URL(string: "\(apiURL)/refresh/") else {
       completion(
@@ -370,7 +370,7 @@ class APIManager {
 
     session.dataTask(with: request) { data, response, error in
       let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime
-      print("APIManager: startOnboarding took \(timeElapsed) seconds")
+      print("APIManager: refresh took \(timeElapsed) seconds")
 
       if let httpResponse = response as? HTTPURLResponse,
         !(200..<300).contains(httpResponse.statusCode)
@@ -496,6 +496,48 @@ class APIManager {
         print("Decoding error: \(error)")
         completion(.failure(error))
       }
+    }.resume()
+  }
+
+  func updateEmail(
+    token: String,
+    email: String,
+    completion: @escaping (Result<Void, Error>) -> Void
+  ) {
+    guard let url = URL(string: "\(apiURL)/email/") else {
+      completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))
+      return
+    }
+
+    var request = URLRequest(url: url)
+    request.httpMethod = "POST"
+    request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+    let jsonString = "\"\(email)\""
+    request.httpBody = jsonString.data(using: .utf8)
+
+    session.dataTask(with: request) { data, response, error in
+      if let error = error {
+        completion(.failure(error))
+        return
+      }
+
+      if let httpResponse = response as? HTTPURLResponse {
+        if !(200..<300).contains(httpResponse.statusCode) {
+          if let data = data, let responseStr = String(data: data, encoding: .utf8) {
+            print("Email update error response: \(responseStr)")
+          }
+          completion(.failure(NSError(
+            domain: "",
+            code: httpResponse.statusCode,
+            userInfo: [NSLocalizedDescriptionKey: "Failed to update email (Status: \(httpResponse.statusCode))"]
+          )))
+          return
+        }
+      }
+
+      completion(.success(()))
     }.resume()
   }
 

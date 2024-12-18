@@ -12,6 +12,7 @@ from fastapi import (
     Request,
     Response,
 )
+from pydantic import BaseModel, EmailStr
 from src import activities, auth_manager, supabase_client, utils, webhook
 from src.middleware import log_and_handle_errors
 from src.types.training_plan import TrainingPlan
@@ -191,3 +192,24 @@ async def get_training_plan(
     Get the training plan for a user
     """
     return supabase_client.get_training_plan(user.athlete_id)
+
+
+@app.post("/email/")
+async def update_email(
+    email: str = Body(...), user: UserRow = Depends(auth_manager.validate_user)
+) -> dict:
+    """
+    Update user table with user's email
+
+    :param email: The email to update
+    :param user: The authenticated user
+    :return: Success status
+    """
+    try:
+        logger.info(f"Updating email for athlete {user.athlete_id} to {email}")
+        supabase_client.update_user_email(athlete_id=user.athlete_id, email=email)
+        logger.info(f"Successfully updated email for athlete {user.athlete_id}")
+        return {"success": True}
+    except Exception as e:
+        logger.error(f"Failed to update email for athlete {user.athlete_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to update email: {str(e)}")

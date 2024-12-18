@@ -28,8 +28,15 @@ struct ProfileView: View {
               .padding()
             }
           } else {
-            Text("Failed to load profile")
-              .foregroundColor(ColorTheme.lightGrey)
+            VStack {
+              VStack(spacing: 16) {
+                Text("Failed to load profile")
+                  .foregroundColor(ColorTheme.lightGrey)
+                Spacer()
+                SignOutButton(action: handleSignOut)
+              }
+            }
+            .frame(maxHeight: .infinity)
           }
         }
         .overlay(
