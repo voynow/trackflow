@@ -354,7 +354,7 @@ class APIManager {
     }.resume()
   }
 
-  func startOnboarding(token: String, completion: @escaping (Result<Void, Error>) -> Void) {
+  func refresh(token: String, completion: @escaping (Result<Void, Error>) -> Void) {
     let startTime = CFAbsoluteTimeGetCurrent()
     guard let url = URL(string: "\(apiURL)/refresh/") else {
       completion(
@@ -370,7 +370,7 @@ class APIManager {
 
     session.dataTask(with: request) { data, response, error in
       let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime
-      print("APIManager: startOnboarding took \(timeElapsed) seconds")
+      print("APIManager: refresh took \(timeElapsed) seconds")
 
       if let httpResponse = response as? HTTPURLResponse,
         !(200..<300).contains(httpResponse.statusCode)

@@ -28,7 +28,7 @@ struct OnboardingView: View {
       return
     }
 
-    APIManager.shared.startOnboarding(token: token) { result in
+    APIManager.shared.refresh(token: token) { result in
       DispatchQueue.main.async {
         switch result {
         case .success:
