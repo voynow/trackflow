@@ -47,7 +47,9 @@ def _update_training_week(
     )
 
 
-def update_training_week(user: UserRow, exe_type: ExeType, dt: datetime.datetime) -> dict:
+def update_training_week(
+    user: UserRow, exe_type: ExeType, dt: datetime.datetime
+) -> dict:
     """
     Full pipeline with update training week & push notification side effects
 
@@ -62,20 +64,24 @@ def update_training_week(user: UserRow, exe_type: ExeType, dt: datetime.datetime
         future_training_week=training_week.future_training_week,
         past_training_week=training_week.past_training_week,
     )
-    apn.send_push_notif_wrapper(user)
     return {"success": True}
 
 
-def update_training_week_wrapper(user: UserRow, exe_type: ExeType, dt: datetime.datetime) -> dict:
+def update_training_week_wrapper(
+    user: UserRow, exe_type: ExeType, dt: datetime.datetime
+) -> dict:
     """
     Wrapper to handle errors in the update pipeline
 
     :param user: UserRow object
     :param exe_type: ExeType object
+    :param dt: datetime injection, helpful for testing
     :return: dict
     """
     try:
-        return update_training_week(user, exe_type, dt)
+        response = update_training_week(user, exe_type, dt)
+        apn.send_push_notif_wrapper(user)
+        return response
     except Exception as e:
         error_message = f"Error updating training week for user {user.athlete_id}: {e}\n{traceback.format_exc()}"
         logger.error(error_message)
@@ -96,9 +102,13 @@ def update_all_users() -> dict:
     if utils.datetime_now_est().weekday() != 6:
         for user in supabase_client.list_users(debug=True):
             if not supabase_client.has_user_updated_today(user.athlete_id):
-                update_training_week_wrapper(user, ExeType.MID_WEEK, dt=utils.datetime_now_est())
+                update_training_week_wrapper(
+                    user, ExeType.MID_WEEK, dt=utils.datetime_now_est()
+                )
     else:
         # all users get a new training week on Sunday night
         for user in supabase_client.list_users(debug=True):
-            update_training_week_wrapper(user, ExeType.NEW_WEEK, dt=utils.get_last_sunday())
+            update_training_week_wrapper(
+                user, ExeType.NEW_WEEK, dt=utils.get_last_sunday()
+            )
     return {"success": True}
