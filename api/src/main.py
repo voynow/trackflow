@@ -12,7 +12,6 @@ from fastapi import (
     Request,
     Response,
 )
-from pydantic import BaseModel, EmailStr
 from src import activities, auth_manager, email_manager, supabase_client, utils, webhook
 from src.middleware import log_and_handle_errors
 from src.types.training_plan import TrainingPlan
