@@ -8,13 +8,12 @@ struct OnboardingEmailView: View {
   var body: some View {
     VStack(spacing: 40) {
       Spacer()
-      
+
       VStack(spacing: 32) {
-        // Branding section
+
         VStack(spacing: 16) {
-          Text("🏃‍♂️🎯")
-            .font(.system(size: 32))
-          
+          Spacer()
+            .frame(height: 20)
           HStack(spacing: 0) {
             Text("Track")
               .font(.system(size: 40, weight: .black))
@@ -24,13 +23,11 @@ struct OnboardingEmailView: View {
               .foregroundColor(ColorTheme.primary)
           }
         }
-        
         // Email input section
         VStack(spacing: 24) {
           Text("Welcome! Let's get started")
             .font(.system(size: 18))
             .foregroundColor(ColorTheme.lightGrey)
-          
           VStack(spacing: 8) {
             TextField("Enter your email", text: $email)
               .textFieldStyle(PlainTextFieldStyle())
@@ -43,7 +40,6 @@ struct OnboardingEmailView: View {
                 RoundedRectangle(cornerRadius: 12)
                   .stroke(isValid ? ColorTheme.primary : ColorTheme.redPink, lineWidth: 1)
               )
-            
             if !isValid {
               Text("Please enter a valid email")
                 .foregroundColor(ColorTheme.redPink)
@@ -51,7 +47,6 @@ struct OnboardingEmailView: View {
                 .transition(.opacity)
             }
           }
-          
           Button(action: {
             if isValidEmail(email) {
               isValid = true
@@ -76,7 +71,6 @@ struct OnboardingEmailView: View {
         }
       }
       .padding(32)
-      
       Spacer()
     }
     .background(
