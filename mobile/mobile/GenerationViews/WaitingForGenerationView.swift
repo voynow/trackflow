@@ -1,80 +1,76 @@
 import SwiftUI
-import Combine
 
 struct WaitingForGenerationView: View {
-  @State private var progress: Double = 0
-  @State private var currentStage: Int = 0
-  @State private var showExtendedWaitMessage: Bool = false
-  @State private var timer: Timer.TimerPublisher = Timer.publish(every: 0.25, on: .main, in: .common)
-  @State private var timerCancellable: AnyCancellable?
+  let onComplete: (() -> Void)?
+  @State private var animationPhase = 0
 
-  let stages: [String]
-  let title: String
-  let subtitle: String
-  let onComplete: () -> Void
-
-  var calculatedProgressIncrement: Double {
-    return 0.01  // 1% per tick, 100 ticks total
+  init(onComplete: (() -> Void)? = nil) {
+    self.onComplete = onComplete
   }
 
   var body: some View {
-    GeometryReader { geometry in
-      ZStack {
-        ColorTheme.black.edgesIgnoringSafeArea(.all)
+    ZStack {
+      ColorTheme.black.edgesIgnoringSafeArea(.all)
 
-        VStack(spacing: 20) {
-          Spacer()
+      VStack(spacing: 40) {
+        Spacer()
 
-          Text(title)
-            .font(.system(size: 28, weight: .bold))
-            .foregroundColor(ColorTheme.white)
+        Text("Track")
+          .font(.system(size: 28, weight: .black))
+          .foregroundColor(ColorTheme.primaryLight)
+          + Text("Flow")
+          .font(.system(size: 28, weight: .black))
+          .foregroundColor(ColorTheme.primary)
 
-          Text(subtitle)
-            .font(.system(size: 16, weight: .light))
+        VStack(spacing: 10) {
+          Text("We're generating your recommendations")
+            .font(.system(size: 16, weight: .bold))
             .foregroundColor(ColorTheme.lightGrey)
             .multilineTextAlignment(.center)
 
-          Spacer()
-
-          Text(stages[currentStage])
-            .font(.system(size: 18, weight: .bold))
-            .foregroundColor(ColorTheme.primaryLight)
-            .transition(.opacity)
-            .id(currentStage)
-            .multilineTextAlignment(.center)
-
-          ProgressView(value: progress)
-            .progressViewStyle(LinearProgressViewStyle(tint: ColorTheme.primary))
-            .frame(height: 4)
-
-          Spacer()
+          Text(
+            "This typically takes 20-30 seconds but can take as long as one minute. Thank you for your patience!"
+          )
+          .font(.system(size: 14, weight: .light))
+          .foregroundColor(ColorTheme.lightGrey)
+          .multilineTextAlignment(.center)
         }
-        .padding(.horizontal, 40)
+
+        // AI Thinking Animation
+        VStack(spacing: 8) {
+          HStack(spacing: 12) {
+            ForEach(0..<3) { index in
+              Circle()
+                .fill(ColorTheme.primary)
+                .frame(width: 12, height: 12)
+                .scaleEffect(animationPhase == index ? 1.5 : 1.0)
+                .opacity(animationPhase == index ? 1 : 0.5)
+                .animation(.easeInOut(duration: 0.5), value: animationPhase)
+            }
+          }
+        }
+        .padding(.top, 20)
+
+        Spacer()
       }
+      .padding(.horizontal, 40)
     }
     .onAppear {
-      timerCancellable = AnyCancellable(timer.connect())
-    }
-    .onDisappear {
-      timerCancellable?.cancel()
-    }
-    .onReceive(timer) { _ in
-      updateProgress()
+      withAnimation {
+        startAnimation()
+      }
+
+      DispatchQueue.main.asyncAfter(deadline: .now() + 25) {
+        onComplete?()
+      }
     }
   }
 
-  private func updateProgress() {
-    if progress < 1.0 {
-      progress = min(progress + calculatedProgressIncrement, 1.0)
-      let newStage = min(Int(progress * Double(stages.count)), stages.count - 1)
-      if newStage != currentStage {
-        withAnimation(.easeInOut(duration: 0.5)) {
-          currentStage = newStage
-        }
+  private func startAnimation() {
+    Timer.scheduledTimer(withTimeInterval: 0.6, repeats: true) { timer in
+      withAnimation {
+        animationPhase = (animationPhase + 1) % 3
       }
-    } else if progress >= 1.0 {
-      timerCancellable?.cancel()
-      onComplete()
     }
   }
 }

@@ -43,9 +43,8 @@ struct LoadingView: View {
 
   private var brandingView: some View {
     VStack(spacing: 16) {
-      Text("🏃‍♂️🎯")
-        .font(.system(size: 20))
-
+      Spacer()
+        .frame(height: 20)
       HStack(spacing: 0) {
         Text("Track")
           .font(.system(size: 40, weight: .black))

@@ -5,7 +5,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Callable
 
-from fastapi import Request, Response
+from fastapi import HTTPException, Request, Response
 from src.auth_manager import decode_jwt
 from src.email_manager import send_alert_email
 
@@ -144,4 +144,4 @@ async def log_and_handle_errors(request: Request, call_next: Callable) -> Respon
             subject=f"API Error: {endpoint} [{user_info}] - {type(e).__name__}",
             text_content=json.dumps(error, indent=4),
         )
-        return {"success": False, "error": error}
+        raise HTTPException(status_code=500, detail=f"Internal server error: {error}")

@@ -195,7 +195,7 @@ def authenticate_with_code(code: str) -> UserAuthRow:
     return user_auth_row
 
 
-def signup(user_auth: UserAuthRow, email: Optional[str] = None) -> dict:
+def signup(user_auth: UserAuthRow) -> dict:
     """
     Sign up a new user
 
@@ -203,15 +203,11 @@ def signup(user_auth: UserAuthRow, email: Optional[str] = None) -> dict:
     :param email: User's email (optional)
     :return: Dictionary with success status and JWT token
     """
-    email_manager.send_alert_email(
-        subject="TrackFlow Alert: New Signup Attempt",
-        text_content=f"You have a new client {email=} attempting to signup",
-    )
     supabase_client.upsert_user(UserRow(athlete_id=user_auth.athlete_id))
     return {"success": True, "jwt_token": user_auth.jwt_token, "is_new_user": True}
 
 
-def authenticate_on_signin(code: str, email: Optional[str] = None) -> dict:
+def authenticate_on_signin(code: str) -> dict:
     """
     Authenticate with Strava code, and sign up the user if they don't exist.
 
@@ -222,7 +218,7 @@ def authenticate_on_signin(code: str, email: Optional[str] = None) -> dict:
     user_auth = authenticate_with_code(code)
 
     if not supabase_client.does_user_exist(user_auth.athlete_id):
-        return signup(user_auth, email)
+        return signup(user_auth)
 
     return {
         "success": True,

@@ -106,21 +106,7 @@ private struct RaceSetupPromptView: View {
 
 private struct GenerationProgressView: View {
   var body: some View {
-    WaitingForGenerationView(
-      stages: [
-        "Our AI is getting to know you",
-        "Analyzing your Strava data",
-        "Our AI Agent is impressed!",
-        "Analyzing your workouts",
-        "Considering volume and intensity",
-        "Generating candidate training plans",
-        "Selecting the best plan for you",
-        "Fine-tuning recommendations",
-      ],
-      title: "TrackFlow",
-      subtitle: "Account setup typically takes 30 seconds. Thank you for your patience!",
-      onComplete: { /* Generation view handles its own completion */  }
-    )
+    WaitingForGenerationView()
   }
 }
 
@@ -149,7 +135,8 @@ final class OnboardingViewModel: ObservableObject {
       return
     }
 
-    APIManager.shared.savePreferences(token: token, preferences: preferences) { [weak self] result in
+    APIManager.shared.savePreferences(token: token, preferences: preferences) {
+      [weak self] result in
       DispatchQueue.main.async {
         switch result {
         case .success:
@@ -171,6 +158,7 @@ final class OnboardingViewModel: ObservableObject {
 
     APIManager.shared.updateEmail(token: token, email: email) { [weak self] result in
       if case .failure(let error) = result {
+        print("Email update error details: \(error)")
         DispatchQueue.main.async {
           self?.showError(message: "Email update error: \(error.localizedDescription)")
         }
@@ -183,6 +171,7 @@ final class OnboardingViewModel: ObservableObject {
           case .success:
             self?.appState?.status = .loggedIn
           case .failure(let error):
+            print("Refresh user error details: \(error)")
             self?.showError(message: "Failed to complete setup: \(error.localizedDescription)")
           }
         }
