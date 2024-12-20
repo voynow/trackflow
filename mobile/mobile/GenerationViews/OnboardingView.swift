@@ -106,21 +106,7 @@ private struct RaceSetupPromptView: View {
 
 private struct GenerationProgressView: View {
   var body: some View {
-    WaitingForGenerationView(
-      stages: [
-        "Our AI is getting to know you",
-        "Analyzing your Strava data",
-        "Our AI Agent is impressed!",
-        "Analyzing your workouts",
-        "Considering volume and intensity",
-        "Generating candidate training plans",
-        "Selecting the best plan for you",
-        "Fine-tuning recommendations",
-      ],
-      title: "TrackFlow",
-      subtitle: "Account setup typically takes 30 seconds. Thank you for your patience!",
-      onComplete: { /* Generation view handles its own completion */  }
-    )
+    WaitingForGenerationView()
   }
 }
 
@@ -149,7 +135,8 @@ final class OnboardingViewModel: ObservableObject {
       return
     }
 
-    APIManager.shared.savePreferences(token: token, preferences: preferences) { [weak self] result in
+    APIManager.shared.savePreferences(token: token, preferences: preferences) {
+      [weak self] result in
       DispatchQueue.main.async {
         switch result {
         case .success:

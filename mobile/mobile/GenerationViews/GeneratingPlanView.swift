@@ -5,25 +5,11 @@ struct GeneratingPlanView: View {
   @State private var errorMessage: String?
 
   var body: some View {
-    WaitingForGenerationView(
-      stages: [
-        "Analyzing your race goals",
-        "Calculating optimal progression",
-        "Designing your build phase",
-        "Planning peak weeks",
-        "Optimizing taper period",
-        "Finalizing your training plan",
-      ],
-      title: "Generating Your Training Plan",
-      subtitle: "This typically takes 20-30 seconds",
-      onComplete: {
-        // Hide profile before transitioning
-        appState.showProfile = false
-        startGeneratingPlan()
-        // Set selected tab to Training Plan view
-        appState.selectedTab = 1
-      }
-    )
+    WaitingForGenerationView(onComplete: {
+      appState.showProfile = false
+      startGeneratingPlan()
+      appState.selectedTab = 1
+    })
   }
 
   private func startGeneratingPlan() {
