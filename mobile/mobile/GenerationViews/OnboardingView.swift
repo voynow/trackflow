@@ -158,6 +158,7 @@ final class OnboardingViewModel: ObservableObject {
 
     APIManager.shared.updateEmail(token: token, email: email) { [weak self] result in
       if case .failure(let error) = result {
+        print("Email update error details: \(error)")
         DispatchQueue.main.async {
           self?.showError(message: "Email update error: \(error.localizedDescription)")
         }
@@ -170,6 +171,7 @@ final class OnboardingViewModel: ObservableObject {
           case .success:
             self?.appState?.status = .loggedIn
           case .failure(let error):
+            print("Refresh user error details: \(error)")
             self?.showError(message: "Failed to complete setup: \(error.localizedDescription)")
           }
         }

@@ -13,7 +13,7 @@ from fastapi import (
     Response,
 )
 from pydantic import BaseModel, EmailStr
-from src import activities, auth_manager, supabase_client, utils, webhook
+from src import activities, auth_manager, email_manager, supabase_client, utils, webhook
 from src.middleware import log_and_handle_errors
 from src.types.training_plan import TrainingPlan
 from src.types.training_week import FullTrainingWeek
@@ -199,17 +199,15 @@ async def update_email(
     email: str = Body(...), user: UserRow = Depends(auth_manager.validate_user)
 ) -> dict:
     """
-    Update user table with user's email
+    This endpoint is used specifically during the onboarding pipeline
 
     :param email: The email to update
     :param user: The authenticated user
     :return: Success status
     """
-    try:
-        logger.info(f"Updating email for athlete {user.athlete_id} to {email}")
-        supabase_client.update_user_email(athlete_id=user.athlete_id, email=email)
-        logger.info(f"Successfully updated email for athlete {user.athlete_id}")
-        return {"success": True}
-    except Exception as e:
-        logger.error(f"Failed to update email for athlete {user.athlete_id}: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to update email: {str(e)}")
+    supabase_client.update_user_email(athlete_id=user.athlete_id, email=email)
+    email_manager.send_alert_email(
+        subject=f"TrackFlow Alert: Welcome {email}!",
+        text_content=f"You have a new user {email=} attempting to signup",
+    )
+    return {"success": True}
