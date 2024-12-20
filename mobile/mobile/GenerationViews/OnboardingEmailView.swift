@@ -6,64 +6,87 @@ struct OnboardingEmailView: View {
   let onSubmit: (String) -> Void
 
   var body: some View {
-    VStack(spacing: 32) {
+    VStack(spacing: 40) {
       Spacer()
       
-      VStack(spacing: 24) {
-        Text("Welcome to TrackFlow!")
-          .font(.system(size: 32, weight: .bold))
-          .foregroundColor(ColorTheme.white)
-        
-        Text("Please enter your email to complete setup")
-          .font(.system(size: 18))
-          .foregroundColor(ColorTheme.lightGrey)
-        
+      VStack(spacing: 32) {
+        // Branding section
         VStack(spacing: 16) {
-          TextField("Email", text: $email)
-            .textFieldStyle(RoundedBorderTextFieldStyle())
-            .keyboardType(.emailAddress)
-            .autocapitalization(.none)
-            .padding()
-            .background(ColorTheme.darkGrey)
-            .cornerRadius(12)
-            .overlay(
-              RoundedRectangle(cornerRadius: 12)
-                .stroke(ColorTheme.darkGrey, lineWidth: 1)
-            )
+          Text("🏃‍♂️🎯")
+            .font(.system(size: 32))
           
-          if !isValid {
-            Text("Please enter a valid email")
-              .foregroundColor(ColorTheme.redPink)
-              .font(.system(size: 14))
+          HStack(spacing: 0) {
+            Text("Track")
+              .font(.system(size: 40, weight: .black))
+              .foregroundColor(ColorTheme.primaryLight)
+            Text("Flow")
+              .font(.system(size: 40, weight: .black))
+              .foregroundColor(ColorTheme.primary)
           }
         }
-        .padding(.horizontal, 24)
         
-        Button(action: {
-          if isValidEmail(email) {
-            isValid = true
-            onSubmit(email)
-          } else {
-            isValid = false
+        // Email input section
+        VStack(spacing: 24) {
+          Text("Welcome! Let's get started")
+            .font(.system(size: 18))
+            .foregroundColor(ColorTheme.lightGrey)
+          
+          VStack(spacing: 8) {
+            TextField("Enter your email", text: $email)
+              .textFieldStyle(PlainTextFieldStyle())
+              .keyboardType(.emailAddress)
+              .autocapitalization(.none)
+              .padding()
+              .background(ColorTheme.darkDarkGrey)
+              .cornerRadius(12)
+              .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                  .stroke(isValid ? ColorTheme.primary : ColorTheme.redPink, lineWidth: 1)
+              )
+            
+            if !isValid {
+              Text("Please enter a valid email")
+                .foregroundColor(ColorTheme.redPink)
+                .font(.system(size: 14))
+                .transition(.opacity)
+            }
           }
-        }) {
-          Text("Continue")
-            .font(.system(size: 18, weight: .semibold))
-            .foregroundColor(ColorTheme.white)
-            .frame(maxWidth: .infinity)
-            .padding()
-            .background(ColorTheme.primary)
-            .cornerRadius(12)
+          
+          Button(action: {
+            if isValidEmail(email) {
+              isValid = true
+              onSubmit(email)
+            } else {
+              withAnimation {
+                isValid = false
+              }
+            }
+          }) {
+            Text("Continue")
+              .font(.system(size: 18, weight: .semibold))
+              .foregroundColor(ColorTheme.white)
+              .frame(maxWidth: .infinity)
+              .padding()
+              .background(ColorTheme.primary)
+              .cornerRadius(12)
+              .shadow(color: ColorTheme.primary.opacity(0.3), radius: 8, x: 0, y: 4)
+          }
+          .disabled(email.isEmpty)
+          .opacity(email.isEmpty ? 0.6 : 1)
         }
-        .padding(.horizontal, 24)
       }
       .padding(32)
-      .background(ColorTheme.darkDarkGrey)
-      .cornerRadius(20)
-      .padding(.horizontal, 24)
       
       Spacer()
     }
+    .background(
+      LinearGradient(
+        gradient: Gradient(colors: [ColorTheme.black, ColorTheme.darkDarkGrey]),
+        startPoint: .top,
+        endPoint: .bottom
+      )
+    )
+    .ignoresSafeArea()
   }
 
   private func isValidEmail(_ email: String) -> Bool {

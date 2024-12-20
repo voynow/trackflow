@@ -37,6 +37,7 @@
 				ProfileSkeletonView.swift,
 				ProfileView.swift,
 				RaceDetailsWidgetSkeleton.swift,
+				RaceSetupSheet.swift,
 				StravaAuthManager.swift,
 				TrainingPlanChartSkeleton.swift,
 				TrainingPlanView.swift,

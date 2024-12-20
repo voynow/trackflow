@@ -354,7 +354,7 @@ class APIManager {
     }.resume()
   }
 
-  func refresh(token: String, completion: @escaping (Result<Void, Error>) -> Void) {
+  func refreshUser(token: String, completion: @escaping (Result<Void, Error>) -> Void) {
     let startTime = CFAbsoluteTimeGetCurrent()
     guard let url = URL(string: "\(apiURL)/refresh/") else {
       completion(
