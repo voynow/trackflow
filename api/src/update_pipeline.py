@@ -100,14 +100,14 @@ def update_all_users() -> dict:
     :return: dict
     """
     if utils.datetime_now_est().weekday() != 6:
-        for user in supabase_client.list_users(debug=True):
+        for user in supabase_client.list_users():
             if not supabase_client.has_user_updated_today(user.athlete_id):
                 update_training_week_wrapper(
                     user, ExeType.MID_WEEK, dt=utils.datetime_now_est()
                 )
     else:
         # all users get a new training week on Sunday night
-        for user in supabase_client.list_users(debug=True):
+        for user in supabase_client.list_users():
             update_training_week_wrapper(
                 user, ExeType.NEW_WEEK, dt=utils.get_last_sunday()
             )
