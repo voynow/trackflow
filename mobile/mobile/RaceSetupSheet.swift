@@ -7,6 +7,11 @@ struct RaceSetupSheet: View {
 
   @State private var selectedDistance: String = ""
   @State private var selectedDate: Date = Date()
+  @State private var isLoading = false
+  @State private var errorMessage: String?
+  @State private var showError = false
+
+  @EnvironmentObject var appState: AppState
 
   var body: some View {
     NavigationView {
@@ -54,16 +59,17 @@ struct RaceSetupSheet: View {
       }
       .navigationTitle("Set a Race Goal")
       .navigationBarItems(
-        leading: Button("Cancel") { isPresented = false },
-        trailing: Button("Save") {
-          guard !selectedDistance.isEmpty else { return }
-          preferences.raceDistance = selectedDistance
-          preferences.raceDate = selectedDate
-
-          onSave()
-          isPresented = false
+        leading: Button("Cancel") { isPresented = false }
+          .disabled(isLoading),
+        trailing: Button(action: handleSave) {
+          if isLoading {
+            ProgressView()
+              .progressViewStyle(CircularProgressViewStyle())
+          } else {
+            Text("Save")
+          }
         }
-        .disabled(selectedDistance.isEmpty)
+        .disabled(selectedDistance.isEmpty || isLoading)
       )
     }
     .onAppear {
@@ -74,6 +80,36 @@ struct RaceSetupSheet: View {
         selectedDate = existingDate
       }
     }
+  }
+
+  private func handleSave() {
+    guard !selectedDistance.isEmpty else { return }
+    guard let token = appState.jwtToken else {
+      showError(message: "No token found")
+      return
+    }
+
+    isLoading = true
+    preferences.raceDistance = selectedDistance
+    preferences.raceDate = selectedDate
+
+    APIManager.shared.savePreferences(token: token, preferences: preferences) { result in
+      DispatchQueue.main.async {
+        isLoading = false
+        switch result {
+        case .success:
+          onSave()
+          isPresented = false
+        case .failure(let error):
+          showError(message: "Failed to save preferences: \(error.localizedDescription)")
+        }
+      }
+    }
+  }
+
+  private func showError(message: String) {
+    errorMessage = message
+    showError = true
   }
 }
 

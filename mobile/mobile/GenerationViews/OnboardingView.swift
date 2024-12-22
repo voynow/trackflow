@@ -130,24 +130,9 @@ final class OnboardingViewModel: ObservableObject {
   }
 
   func savePreferencesAndCompleteOnboarding() {
-    guard let token = appState?.jwtToken else {
-      showError(message: "No token found")
-      return
-    }
-
-    APIManager.shared.savePreferences(token: token, preferences: preferences) {
-      [weak self] result in
-      DispatchQueue.main.async {
-        switch result {
-        case .success:
-          self?.showRaceSetup = false
-          self?.isGenerating = true
-          self?.completeOnboarding(skipRaceSetup: false)
-        case .failure(let error):
-          self?.showError(message: "Failed to save preferences: \(error.localizedDescription)")
-        }
-      }
-    }
+    showRaceSetup = false
+    isGenerating = true
+    completeOnboarding(skipRaceSetup: false)
   }
 
   func completeOnboarding(skipRaceSetup: Bool) {
@@ -156,24 +141,37 @@ final class OnboardingViewModel: ObservableObject {
       return
     }
 
-    APIManager.shared.updateEmail(token: token, email: email) { [weak self] result in
-      if case .failure(let error) = result {
-        print("Email update error details: \(error)")
-        DispatchQueue.main.async {
-          self?.showError(message: "Email update error: \(error.localizedDescription)")
-        }
-        return
-      }
+    if skipRaceSetup {
+      showRaceSetup = false
+      isGenerating = true
+    }
 
-      APIManager.shared.refreshUser(token: token) { [weak self] result in
-        DispatchQueue.main.async {
-          switch result {
-          case .success:
-            self?.appState?.status = .loggedIn
-          case .failure(let error):
-            print("Refresh user error details: \(error)")
-            self?.showError(message: "Failed to complete setup: \(error.localizedDescription)")
+    if UserDefaults.standard.bool(forKey: "email_updated") || skipRaceSetup {
+      refreshUserAndComplete(token: token)
+    } else {
+      APIManager.shared.updateEmail(token: token, email: email) { [weak self] result in
+        if case .failure(let error) = result {
+          DispatchQueue.main.async {
+            self?.showError(message: "Email update error: \(error.localizedDescription)")
           }
+          return
+        }
+
+        UserDefaults.standard.set(true, forKey: "email_updated")
+        self?.refreshUserAndComplete(token: token)
+      }
+    }
+  }
+
+  private func refreshUserAndComplete(token: String) {
+    APIManager.shared.refreshUser(token: token) { [weak self] result in
+      DispatchQueue.main.async {
+        switch result {
+        case .success:
+          self?.appState?.status = .loggedIn
+        case .failure(let error):
+          print("Refresh user error details: \(error)")
+          self?.showError(message: "Failed to complete setup: \(error.localizedDescription)")
         }
       }
     }
