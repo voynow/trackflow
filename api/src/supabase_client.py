@@ -97,7 +97,7 @@ def get_user(athlete_id: int) -> UserRow:
     return UserRow(**response.data[0])
 
 
-def list_users(debug: bool = False) -> list[UserRow]:
+def list_users() -> list[UserRow]:
     """
     List all users in the user_auth table
 
@@ -106,20 +106,7 @@ def list_users(debug: bool = False) -> list[UserRow]:
     table = client.table("user")
     response = table.select("*").execute()
 
-    users = [UserRow(**row) for row in response.data]
-
-    if debug:
-        users = [
-            user
-            for user in users
-            if user.email
-            in [
-                "rachel.decker122@gmail.com",
-                "voynow99@gmail.com",
-                "voynowtestaddress@gmail.com",
-            ]
-        ]
-    return users
+    return [UserRow(**row) for row in response.data]
 
 
 def list_user_auths() -> list[UserAuthRow]:
