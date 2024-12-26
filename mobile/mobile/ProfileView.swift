@@ -42,16 +42,6 @@ struct ProfileView: View {
     }
     .onAppear {
       fetchProfileData()
-      NotificationCenter.default.addObserver(
-        forName: .didSetupRace,
-        object: nil,
-        queue: .main
-      ) { _ in
-        print("DEBUG: didSetupRace notification received in ProfileView")
-        appState.status = .generatingPlan
-        appState.showProfile = false
-        appState.selectedTab = 1
-      }
     }
   }
 
@@ -218,8 +208,4 @@ struct LoadingIcon: View {
       )
       .frame(width: 50, height: 50)
   }
-}
-
-extension Notification.Name {
-  static let didSetupRace = Notification.Name("didSetupRace")
 }
