@@ -62,14 +62,20 @@ struct RaceSetupSheet: View {
         leading: Button("Cancel") { isPresented = false }
           .disabled(isLoading),
         trailing: Button(action: handleSave) {
-          if isLoading {
-            ProgressView()
-              .progressViewStyle(CircularProgressViewStyle())
-          } else {
-            Text("Save")
+          HStack(spacing: 8) {
+            if isLoading {
+              ProgressView()
+                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                .scaleEffect(0.8)
+            }
+            Text(isLoading ? "Saving..." : "Save")
+              .foregroundColor(.white)
           }
+          .frame(minWidth: isLoading ? 100 : 60)
+          .animation(.easeInOut(duration: 0.2), value: isLoading)
         }
         .disabled(selectedDistance.isEmpty || isLoading)
+        .opacity(selectedDistance.isEmpty ? 0.6 : 1)
       )
     }
     .onAppear {

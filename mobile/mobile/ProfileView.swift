@@ -7,7 +7,6 @@ struct ProfileView: View {
   @EnvironmentObject var appState: AppState
   @State private var isSaving: Bool = false
   @State private var isLoading: Bool = true
-  @State private var showTrainingPlanPrompt: Bool = false
 
   var body: some View {
     ZStack {
@@ -39,20 +38,6 @@ struct ProfileView: View {
             .frame(maxHeight: .infinity)
           }
         }
-        .overlay(
-          Group {
-            if showTrainingPlanPrompt {
-              TrainingPlanPrompt(
-                isPresented: $showTrainingPlanPrompt,
-                raceDistance: preferencesBinding.wrappedValue.raceDistance ?? "",
-                onGenerate: {
-                  appState.status = .generatingPlan
-                }
-              )
-              .animation(.easeInOut, value: showTrainingPlanPrompt)
-            }
-          }
-        )
       }
     }
     .onAppear {
@@ -62,7 +47,10 @@ struct ProfileView: View {
         object: nil,
         queue: .main
       ) { _ in
-        showTrainingPlanPrompt = true
+        print("DEBUG: didSetupRace notification received in ProfileView")
+        appState.status = .generatingPlan
+        appState.showProfile = false
+        appState.selectedTab = 1
       }
     }
   }
@@ -234,69 +222,4 @@ struct LoadingIcon: View {
 
 extension Notification.Name {
   static let didSetupRace = Notification.Name("didSetupRace")
-}
-
-struct TrainingPlanPrompt: View {
-  @Binding var isPresented: Bool
-  let raceDistance: String
-  let onGenerate: () -> Void
-
-  var body: some View {
-    ZStack {
-      Color.black.opacity(0.8)
-        .edgesIgnoringSafeArea(.all)
-
-      VStack(spacing: 24) {
-        VStack(spacing: 8) {
-          HStack(alignment: .firstTextBaseline) {
-            Image(systemName: "figure.run")
-              .font(.system(size: 24))
-              .foregroundColor(ColorTheme.primary)
-
-            Text("Ready to Start Training?")
-              .font(.system(size: 24, weight: .bold))
-              .foregroundColor(ColorTheme.white)
-          }
-
-          Text("Let's generate your personalized \(raceDistance) training plan.")
-            .font(.system(size: 16))
-            .foregroundColor(ColorTheme.lightGrey)
-            .multilineTextAlignment(.center)
-        }
-
-        HStack(spacing: 16) {
-          Button(action: { isPresented = false }) {
-            Text("Maybe Later")
-              .font(.system(size: 16, weight: .medium))
-              .foregroundColor(ColorTheme.lightGrey)
-              .frame(maxWidth: .infinity)
-              .padding(.vertical, 12)
-              .background(ColorTheme.darkDarkGrey)
-              .cornerRadius(8)
-          }
-
-          Button(action: {
-            onGenerate()
-            isPresented = false
-          }) {
-            HStack {
-              Text("Generate Plan")
-              Image(systemName: "chevron.right")
-            }
-            .font(.system(size: 16, weight: .semibold))
-            .foregroundColor(ColorTheme.black)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 12)
-            .background(ColorTheme.primary)
-            .cornerRadius(8)
-          }
-        }
-      }
-      .padding(24)
-      .background(ColorTheme.darkGrey)
-      .cornerRadius(16)
-      .padding(.horizontal, 40)
-    }
-    .transition(.opacity)
-  }
 }
