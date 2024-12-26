@@ -116,6 +116,10 @@ struct Preferences: Codable {
   }
 }
 
+extension Notification.Name {
+  static let didSetupRace = Notification.Name("didSetupRace")
+}
+
 struct SavePreferencesResponse: Codable {
   let success: Bool
   let error: String?

@@ -335,11 +335,12 @@ def get_mileage_recommendation(
     :return: A MileageRecommendation object
     """
     table = client.table(get_mileage_recommendation_table_name())
+    tomorrow = dt + datetime.timedelta(days=1)
     response = (
         table.select("*")
         .eq("athlete_id", athlete_id)
-        .eq("year", dt.year)
-        .eq("week_of_year", dt.isocalendar()[1])
+        .eq("year", tomorrow.year)
+        .eq("week_of_year", tomorrow.isocalendar()[1])
         .order("created_at", desc=True)
         .limit(1)
         .execute()

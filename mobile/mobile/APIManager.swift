@@ -164,6 +164,7 @@ class APIManager {
     preferences: Preferences,
     completion: @escaping (Result<Void, Error>) -> Void
   ) {
+    let startTime = CFAbsoluteTimeGetCurrent()
     guard let url = URL(string: "\(apiURL)/preferences/") else {
       completion(
         .failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"]))
@@ -188,6 +189,9 @@ class APIManager {
     }
 
     session.dataTask(with: request) { [weak self] data, response, error in
+      let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime
+      print("APIManager: savePreferences took \(timeElapsed) seconds")
+
       if let error = error {
         completion(.failure(error))
         return
@@ -504,8 +508,11 @@ class APIManager {
     email: String,
     completion: @escaping (Result<Void, Error>) -> Void
   ) {
+    let startTime = CFAbsoluteTimeGetCurrent()
     guard let url = URL(string: "\(apiURL)/email/") else {
-      completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))
+      completion(
+        .failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"]))
+      )
       return
     }
 
@@ -518,6 +525,9 @@ class APIManager {
     request.httpBody = jsonString.data(using: .utf8)
 
     session.dataTask(with: request) { data, response, error in
+      let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime
+      print("APIManager: updateEmail took \(timeElapsed) seconds")
+
       if let error = error {
         completion(.failure(error))
         return
@@ -528,11 +538,16 @@ class APIManager {
           if let data = data, let responseStr = String(data: data, encoding: .utf8) {
             print("Email update error response: \(responseStr)")
           }
-          completion(.failure(NSError(
-            domain: "",
-            code: httpResponse.statusCode,
-            userInfo: [NSLocalizedDescriptionKey: "Failed to update email (Status: \(httpResponse.statusCode))"]
-          )))
+          completion(
+            .failure(
+              NSError(
+                domain: "",
+                code: httpResponse.statusCode,
+                userInfo: [
+                  NSLocalizedDescriptionKey:
+                    "Failed to update email (Status: \(httpResponse.statusCode))"
+                ]
+              )))
           return
         }
       }

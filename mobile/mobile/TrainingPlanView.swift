@@ -10,6 +10,8 @@ struct TrainingPlanView: View {
   @State private var errorMessage: String?
   let historicalWeeks: [WeekSummary]
   let preloadedPlan: TrainingPlan?
+  @State private var showRaceSetupSheet = false
+  @State private var preferences = Preferences()
 
   var body: some View {
     VStack {
@@ -25,15 +27,15 @@ struct TrainingPlanView: View {
                 Text("Lets get you a training plan!")
                   .font(.title3)
                   .foregroundColor(ColorTheme.lightGrey)
-                
-                Text("Fill out the race details section in your profile to get started.")
+
+                Text("Set up your race details to get started.")
                   .font(.subheadline)
                   .foregroundColor(ColorTheme.midLightGrey)
                   .multilineTextAlignment(.center)
                   .padding(.horizontal)
-                
+
                 Button(action: {
-                  appState.showProfile = true
+                  showRaceSetupSheet = true
                 }) {
                   Text("Set Up Race Details")
                     .font(.system(size: 16, weight: .semibold))
@@ -79,6 +81,19 @@ struct TrainingPlanView: View {
         .padding()
       }
     }
+    .sheet(isPresented: $showRaceSetupSheet) {
+      RaceSetupSheet(
+        preferences: $preferences,
+        isPresented: $showRaceSetupSheet,
+        onSave: {
+          print("DEBUG: RaceSetupSheet onSave triggered")
+          fetchTrainingPlanData()
+          print("DEBUG: Posting didSetupRace notification")
+          NotificationCenter.default.post(name: .didSetupRace, object: nil)
+          print("DEBUG: didSetupRace notification posted")
+        }
+      )
+    }
     .background(ColorTheme.black.edgesIgnoringSafeArea(.all))
     .onAppear {
       if let plan = preloadedPlan {
@@ -106,19 +121,23 @@ struct TrainingPlanView: View {
 
   private func fetchTrainingPlanData() {
     guard let token = appState.jwtToken else {
+      print("DEBUG: No valid token found in fetchTrainingPlanData")
       errorMessage = "No valid token"
       isLoadingTrainingPlan = false
       return
     }
 
+    print("DEBUG: Starting fetchTrainingPlan API call")
     APIManager.shared.fetchTrainingPlan(token: token) { result in
       DispatchQueue.main.async {
         switch result {
         case .success(let plan):
+          print("DEBUG: Successfully fetched training plan")
           withAnimation {
             self.trainingPlan = plan
           }
         case .failure(let error):
+          print("DEBUG: Failed to fetch training plan: \(error)")
           self.errorMessage = error.localizedDescription
         }
         self.isLoadingTrainingPlan = false
@@ -215,7 +234,12 @@ struct TrainingPlanChart: View {
   init(trainingWeeks: [TrainingPlanWeek], historicalWeeks: [WeekSummary] = []) {
     self.trainingWeeks = trainingWeeks
     self.historicalWeeks = historicalWeeks
-    _selectedWeek = State(initialValue: trainingWeeks.first.map { .future($0) } ?? .past(historicalWeeks.first ?? WeekSummary(year: 0, weekOfYear: 0, weekStartDate: "", longestRun: 0, totalDistance: 0)))
+    _selectedWeek = State(
+      initialValue: trainingWeeks.first.map { .future($0) }
+        ?? .past(
+          historicalWeeks.first
+            ?? WeekSummary(
+              year: 0, weekOfYear: 0, weekStartDate: "", longestRun: 0, totalDistance: 0)))
     _selectedX = State(initialValue: trainingWeeks.first?.weekNumber ?? 0)
   }
 
