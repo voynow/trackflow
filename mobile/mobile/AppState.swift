@@ -8,17 +8,10 @@ class AppState: ObservableObject {
   @Published var showProfile: Bool = false
   @Published var selectedTab: Int = 0
 
-  init() {
-    NotificationCenter.default.addObserver(
-      forName: .didSetupRace,
-      object: nil,
-      queue: .main
-    ) { [weak self] _ in
-      print("DEBUG: didSetupRace notification received in AppState")
-      self?.status = .generatingPlan
-      self?.showProfile = false
-      self?.selectedTab = 1
-    }
+  func setGeneratingPlanState() {
+    status = .generatingPlan
+    showProfile = false
+    selectedTab = 1
   }
 
   func checkNotificationStatus() {

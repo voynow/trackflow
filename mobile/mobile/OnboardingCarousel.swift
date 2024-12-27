@@ -6,14 +6,25 @@ struct OnboardingCarousel: View {
   let showCloseButton: Bool
 
   let pages: [(image: String, title: String, subtitle: String)] = [
-    ("AppDashboard", "Train Smarter", "AI-powered plans that adapt to your progress"),
-    ("AppDashboardAlt", "Connect with Strava", "Seamless integration with your activities"),
-    ("AppProfile", "Achieve Your Goals", "From 5K to marathon, we've got you covered"),
+    ("AppDashboard", "Next Gen Training", "Our AI curates your week and gives you feedback daily"),
+    (
+      "AppDashboardAlt", "Achieve Your Goals",
+      "Training plans updated weekly based on your training history"
+    ),
+    (
+      "AppProfile", "Tailored For You",
+      "Update your preferences to get the most out of your training"
+    ),
   ]
 
   var body: some View {
     ZStack {
-      ColorTheme.black.edgesIgnoringSafeArea(.all)
+      LinearGradient(
+        gradient: Gradient(colors: [ColorTheme.darkDarkGrey, ColorTheme.black]),
+        startPoint: .top,
+        endPoint: .bottom
+      )
+      .edgesIgnoringSafeArea(.all)
 
       VStack(spacing: 0) {
         if showCloseButton {
@@ -43,11 +54,12 @@ struct OnboardingCarousel: View {
     HStack {
       Spacer()
       Button(action: { dismiss() }) {
-        Image(systemName: "xmark.circle.fill")
-          .font(.system(size: 28))
-          .foregroundColor(ColorTheme.midLightGrey2)
+        Image(systemName: "xmark")
+          .foregroundColor(ColorTheme.lightGrey)
+          .font(.system(size: 20, weight: .semibold))
       }
-      .padding(.trailing, 24)
+      .padding(.trailing)
+      .padding(.top, 4)
     }
   }
 
@@ -69,44 +81,53 @@ struct OnboardingPage: View {
   let subtitle: String
 
   var body: some View {
-    VStack(spacing: 8) {
-      Image(image)
-        .resizable()
-        .aspectRatio(contentMode: .fit)
-        .frame(maxHeight: UIScreen.main.bounds.height * 0.65)
-        .clipShape(RoundedRectangle(cornerRadius: 24))
-        .padding(.horizontal, 16)
-        .shadow(
-          color: Color.black.opacity(0.12),
-          radius: 25,
-          x: 0,
-          y: 10
-        )
-        .overlay(
-          LinearGradient(
-            gradient: Gradient(
-              colors: [
-                .clear,
-                .black.opacity(0.15),
-              ]
-            ),
-            startPoint: .center,
-            endPoint: .bottom
-          )
+    VStack(spacing: 0) {
+      ZStack(alignment: .bottom) {
+        Image(image)
+          .resizable()
+          .aspectRatio(contentMode: .fit)
+          .frame(maxHeight: UIScreen.main.bounds.height * 0.75)
           .clipShape(RoundedRectangle(cornerRadius: 24))
-        )
+          .padding(.horizontal, 16)
+          .shadow(
+            color: Color.black.opacity(0.12),
+            radius: 25,
+            x: 0,
+            y: 10
+          )
+          .overlay(
+            LinearGradient(
+              gradient: Gradient(
+                colors: [
+                  .clear,
+                  .black.opacity(0.8),
+                ]
+              ),
+              startPoint: .center,
+              endPoint: .bottom
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 24))
+          )
 
-      VStack(spacing: 4) {
-        Text(title)
-          .font(.system(size: 28, weight: .bold))
-          .foregroundColor(ColorTheme.white)
+        VStack(spacing: 8) {
+          Text(title)
+            .font(.system(size: 32, weight: .bold))
+            .foregroundColor(ColorTheme.white)
+            .padding(.horizontal)
 
-        Text(subtitle)
-          .font(.system(size: 14))
-          .foregroundColor(ColorTheme.lightGrey)
-          .multilineTextAlignment(.center)
-          .padding(.horizontal)
+          Text(subtitle)
+            .font(.system(size: 16))
+            .foregroundColor(ColorTheme.lightGrey)
+            .multilineTextAlignment(.center)
+            .padding(.horizontal, 32)
+            .padding(.bottom, 32)
+        }
+        .padding(.bottom, 16)
       }
     }
   }
+}
+
+#Preview {
+  OnboardingCarousel(showCloseButton: true)
 }

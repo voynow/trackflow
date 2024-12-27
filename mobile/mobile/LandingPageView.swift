@@ -1,7 +1,12 @@
 import SwiftUI
 
 struct LandingPageView: View {
+  @EnvironmentObject var appState: AppState
   @ObservedObject var authManager: StravaAuthManager
+
+  init(authManager: StravaAuthManager) {
+    self.authManager = authManager
+  }
 
   var body: some View {
     VStack(spacing: 0) {
@@ -44,4 +49,10 @@ struct LandingPageView: View {
       .shadow(radius: 5)
     }
   }
+}
+
+#Preview {
+  let appState = AppState()
+  return LandingPageView(authManager: StravaAuthManager(appState: appState))
+    .environmentObject(appState)
 }
