@@ -88,9 +88,7 @@ struct TrainingPlanView: View {
         onSave: {
           print("DEBUG: RaceSetupSheet onSave triggered")
           fetchTrainingPlanData()
-          print("DEBUG: Posting didSetupRace notification")
-          NotificationCenter.default.post(name: .didSetupRace, object: nil)
-          print("DEBUG: didSetupRace notification posted")
+          appState.setGeneratingPlanState()
         }
       )
     }

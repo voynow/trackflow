@@ -3,6 +3,7 @@ import SwiftUI
 struct WaitingForGenerationView: View {
   let onComplete: (() -> Void)?
   @State private var animationPhase = 0
+  @State private var showOnboarding: Bool = false
 
   init(onComplete: (() -> Void)? = nil) {
     self.onComplete = onComplete
@@ -12,6 +13,7 @@ struct WaitingForGenerationView: View {
     ZStack {
       ColorTheme.black.edgesIgnoringSafeArea(.all)
 
+      // Centered content
       VStack(spacing: 40) {
         Spacer()
 
@@ -54,6 +56,29 @@ struct WaitingForGenerationView: View {
         Spacer()
       }
       .padding(.horizontal, 40)
+
+      VStack {
+        Spacer()
+        Button(action: { showOnboarding = true }) {
+          Text("About TrackFlow")
+            .font(.system(size: 16, weight: .medium))
+            .foregroundColor(ColorTheme.midLightGrey2)
+            .padding(.vertical, 16)
+            .frame(maxWidth: .infinity)
+            .overlay(
+              Rectangle()
+                .frame(height: 1)
+                .foregroundColor(ColorTheme.darkGrey),
+              alignment: .top
+            )
+            .background(ColorTheme.black)
+        }
+        .padding(.bottom, 16)
+      }
+      .edgesIgnoringSafeArea(.bottom)
+    }
+    .fullScreenCover(isPresented: $showOnboarding) {
+      OnboardingCarousel(showCloseButton: true)
     }
     .onAppear {
       withAnimation {

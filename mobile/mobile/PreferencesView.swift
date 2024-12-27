@@ -70,6 +70,7 @@ struct SaveBanner: View {
 
 struct PreferencesContent: View {
   @Binding var preferences: Preferences
+  @EnvironmentObject var appState: AppState
   var onUpdate: () -> Void
   @State private var activeSaveSection: String?
   @State private var showRaceSetupSheet: Bool = false
@@ -152,7 +153,7 @@ struct PreferencesContent: View {
         onSave: {
           onUpdate()
           showSaveBanner(for: "race")
-          NotificationCenter.default.post(name: .didSetupRace, object: nil)
+          appState.setGeneratingPlanState()
         }
       )
     }
