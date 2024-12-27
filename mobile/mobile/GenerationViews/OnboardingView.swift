@@ -45,7 +45,6 @@ struct OnboardingView: View {
   }
 }
 
-// MARK: - Subviews
 private struct EmailSetupView: View {
   @Binding var email: String
   let onSubmit: (String) -> Void
@@ -123,10 +122,23 @@ final class OnboardingViewModel: ObservableObject {
   var appState: AppState?
 
   func handleEmailSubmission(_ email: String) {
-    self.email = email
-    hasSubmittedEmail = true
-    UserDefaults.standard.set(email, forKey: "user_email")
-    showRaceSetup = true
+    guard let token = appState?.jwtToken else {
+      showError(message: "No token found")
+      return
+    }
+
+    APIManager.shared.updateEmail(token: token, email: email) { [weak self] result in
+      DispatchQueue.main.async {
+        switch result {
+        case .success:
+          self?.email = email
+          self?.hasSubmittedEmail = true
+          self?.showRaceSetup = true
+        case .failure(let error):
+          self?.showError(message: "Failed to update email: \(error.localizedDescription)")
+        }
+      }
+    }
   }
 
   func savePreferencesAndCompleteOnboarding() {
@@ -146,21 +158,7 @@ final class OnboardingViewModel: ObservableObject {
       isGenerating = true
     }
 
-    if UserDefaults.standard.bool(forKey: "email_updated") || skipRaceSetup {
-      refreshUserAndComplete(token: token)
-    } else {
-      APIManager.shared.updateEmail(token: token, email: email) { [weak self] result in
-        if case .failure(let error) = result {
-          DispatchQueue.main.async {
-            self?.showError(message: "Email update error: \(error.localizedDescription)")
-          }
-          return
-        }
-
-        UserDefaults.standard.set(true, forKey: "email_updated")
-        self?.refreshUserAndComplete(token: token)
-      }
-    }
+    refreshUserAndComplete(token: token)
   }
 
   private func refreshUserAndComplete(token: String) {

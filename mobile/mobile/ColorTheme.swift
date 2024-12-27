@@ -9,6 +9,7 @@ struct ColorTheme {
   static let darkGrey = Color(white: 0.166)
   static let darkDarkGrey = Color(white: 0.133)
   static let black = Color(white: 0.1)
+  static let darkBlack = Color(white: 0.05)
 
   static let primary: Color = Color(red: 0.28, green: 0.5, blue: 1.0)  // #477eff
   static let primaryLight: Color = Color(red: 0.55, green: 0.68, blue: 1.0)  // #8caeff

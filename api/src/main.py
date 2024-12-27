@@ -39,7 +39,7 @@ async def health():
     return {"status": "healthy"}
 
 
-@app.get("/training_week/", response_model=FullTrainingWeek)
+@app.get("/training-week/", response_model=FullTrainingWeek)
 async def training_week(user: UserRow = Depends(auth_manager.validate_user)):
     """
     Retrieve the most recent training_week row by athlete_id
@@ -52,7 +52,7 @@ async def training_week(user: UserRow = Depends(auth_manager.validate_user)):
     return supabase_client.get_training_week(user.athlete_id)
 
 
-@app.post("/device_token/")
+@app.post("/device-token/")
 async def update_device_token(
     device_token: str = Body(..., embed=True),
     user: UserRow = Depends(auth_manager.validate_user),
@@ -108,7 +108,7 @@ async def get_profile(user: UserRow = Depends(auth_manager.validate_user)) -> di
     }
 
 
-@app.get("/weekly_summaries/")
+@app.get("/weekly-summaries/")
 async def get_weekly_summaries(
     user: UserRow = Depends(auth_manager.validate_user),
 ) -> dict:

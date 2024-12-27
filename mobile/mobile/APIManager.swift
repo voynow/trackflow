@@ -103,7 +103,7 @@ class APIManager {
     completion: @escaping (Result<FullTrainingWeek, Error>) -> Void
   ) {
     let startTime = CFAbsoluteTimeGetCurrent()
-    guard let url = URL(string: "\(apiURL)/training_week/") else {
+    guard let url = URL(string: "\(apiURL)/training-week/") else {
       completion(
         .failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"]))
       )
@@ -220,7 +220,7 @@ class APIManager {
 
   func refreshToken(token: String, completion: @escaping (Result<String, Error>) -> Void) {
     let startTime = CFAbsoluteTimeGetCurrent()
-    guard let url = URL(string: "\(apiURL)/refresh_token/") else {
+    guard let url = URL(string: "\(apiURL)/refresh-token/") else {
       completion(
         .failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"]))
       )
@@ -289,7 +289,7 @@ class APIManager {
     token: String, completion: @escaping (Result<[WeekSummary], Error>) -> Void
   ) {
     let startTime = CFAbsoluteTimeGetCurrent()
-    guard let url = URL(string: "\(apiURL)/weekly_summaries/") else {
+    guard let url = URL(string: "\(apiURL)/weekly-summaries/") else {
       completion(
         .failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"]))
       )
@@ -404,7 +404,7 @@ class APIManager {
     completion: @escaping (Result<Void, Error>) -> Void
   ) {
     let startTime = CFAbsoluteTimeGetCurrent()
-    guard let url = URL(string: "\(apiURL)/device_token/") else {
+    guard let url = URL(string: "\(apiURL)/device-token/") else {
       completion(
         .failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"]))
       )
