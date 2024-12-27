@@ -32,6 +32,7 @@
 				mobileApp.swift,
 				Models.swift,
 				NotificationManager.swift,
+				OnboardingCarousel.swift,
 				PreferencesView.swift,
 				"Preview Content/Preview Assets.xcassets",
 				ProfileSkeletonView.swift,
