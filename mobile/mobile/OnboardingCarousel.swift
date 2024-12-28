@@ -45,7 +45,8 @@ struct OnboardingCarousel: View {
         .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
 
         pageControl
-          .padding(.bottom, 16)
+          .padding(.top, 12)
+          .padding(.bottom, 8)
       }
     }
   }

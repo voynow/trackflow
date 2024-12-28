@@ -1,20 +1,24 @@
+import AuthenticationServices
 import SwiftUI
 
 struct LandingPageView: View {
   @EnvironmentObject var appState: AppState
-  @ObservedObject var authManager: StravaAuthManager
+  @ObservedObject var authManager: AuthManager
 
-  init(authManager: StravaAuthManager) {
+  init(authManager: AuthManager) {
     self.authManager = authManager
   }
 
   var body: some View {
-    VStack(spacing: 0) {
+    VStack(spacing: 8) {
       OnboardingCarousel(showCloseButton: false)
 
-      signInButton
-        .padding(.horizontal, 24)
-        .padding(.bottom, 32)
+      VStack(spacing: 16) {
+        signInWithStravaButton
+        signInWithAppleButton
+      }
+      .padding(.horizontal, 24)
+      .padding(.bottom, 32)
     }
     .background(ColorTheme.black)
     .onOpenURL { url in
@@ -29,30 +33,46 @@ struct LandingPageView: View {
     }
   }
 
-  private var signInButton: some View {
+  private var signInWithStravaButton: some View {
     Button(action: {
       authManager.authenticateWithStrava()
     }) {
       HStack {
-        Text("Sign in with Strava")
-          .fontWeight(.semibold)
         Image("stravaIcon")
           .resizable()
           .aspectRatio(contentMode: .fit)
-          .frame(height: 25)
+          .frame(height: 20)
+        Text("Sign in with Strava")
+          .font(.system(size: 19))
+          .fontWeight(.medium)
       }
-      .padding()
+      .padding(.horizontal)
       .frame(maxWidth: .infinity)
+      .frame(height: 50)
       .background(ColorTheme.primary)
-      .foregroundColor(ColorTheme.white)
+      .foregroundColor(Color.white)
       .cornerRadius(12)
       .shadow(radius: 5)
     }
+  }
+
+  private var signInWithAppleButton: some View {
+    SignInWithAppleButton(
+      onRequest: { request in
+        request.requestedScopes = [.email]
+      },
+      onCompletion: { result in
+        authManager.handleAppleSignIn(result)
+      }
+    )
+    .signInWithAppleButtonStyle(.black)
+    .frame(height: 50)
+    .cornerRadius(12)
   }
 }
 
 #Preview {
   let appState = AppState()
-  return LandingPageView(authManager: StravaAuthManager(appState: appState))
+  return LandingPageView(authManager: AuthManager(appState: appState))
     .environmentObject(appState)
 }

@@ -1,7 +1,8 @@
+import AuthenticationServices
 import SwiftUI
 import UIKit
 
-class StravaAuthManager: ObservableObject {
+class AuthManager: ObservableObject {
   private let clientID = "95101"
   private let redirectURI = "trackflow://www.trackflow.xyz"
   private let scope = "read_all,profile:read_all,activity:read_all"
@@ -91,4 +92,72 @@ class StravaAuthManager: ObservableObject {
     }
   }
 
+  func handleAppleSignIn(_ result: Result<ASAuthorization, Error>) {
+    switch result {
+    case .success(let auth):
+      if let appleIDCredential = auth.credential as? ASAuthorizationAppleIDCredential {
+        let userId = appleIDCredential.user
+        let identityToken = appleIDCredential.identityToken
+        let email = appleIDCredential.email
+
+        Task {
+          do {
+            guard let url = URL(string: "\(APIManager.shared.apiURL)/authenticate/") else {
+              throw NSError(
+                domain: "AuthError", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])
+            }
+
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            request.setValue(
+              "application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+
+            let formData = [
+              "user_id": userId,
+              "identity_token": String(data: identityToken ?? Data(), encoding: .utf8) ?? "",
+              "email": email ?? "",
+            ]
+            .map { key, value in
+              "\(key)=\(value.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
+            }
+            .joined(separator: "&")
+
+            request.httpBody = formData.data(using: .utf8)
+
+            let (data, response) = try await APIManager.shared.session.data(for: request)
+
+            if let httpResponse = response as? HTTPURLResponse,
+              !(200..<300).contains(httpResponse.statusCode)
+            {
+              throw NSError(domain: "AuthError", code: httpResponse.statusCode)
+            }
+
+            let authResponse = try JSONDecoder().decode(SignupResponse.self, from: data)
+
+            if authResponse.success {
+              DispatchQueue.main.async {
+                UserDefaults.standard.set(authResponse.jwt_token, forKey: "jwt_token")
+                self.appState.jwtToken = authResponse.jwt_token
+                if let isNewUser = authResponse.is_new_user, isNewUser {
+                  self.appState.status = .newUser
+                } else {
+                  self.appState.status = .loggedIn
+                }
+              }
+            }
+          } catch {
+            print("Apple Sign In error: \(error.localizedDescription)")
+            DispatchQueue.main.async {
+              self.appState.status = .loggedOut
+            }
+          }
+        }
+      }
+    case .failure(let error):
+      print("Apple Sign In failed: \(error.localizedDescription)")
+      DispatchQueue.main.async {
+        self.appState.status = .loggedOut
+      }
+    }
+  }
 }

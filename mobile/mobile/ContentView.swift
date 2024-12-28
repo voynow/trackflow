@@ -2,10 +2,10 @@ import SwiftUI
 
 struct ContentView: View {
   @EnvironmentObject var appState: AppState
-  @StateObject private var authManager: StravaAuthManager
+  @StateObject private var authManager: AuthManager
 
   init(appState: AppState) {
-    _authManager = StateObject(wrappedValue: StravaAuthManager(appState: appState))
+    _authManager = StateObject(wrappedValue: AuthManager(appState: appState))
   }
 
   var body: some View {

@@ -41,14 +41,29 @@ async def get_response_body(response: Response) -> bytes:
     return body
 
 
-def log_request(request_id: str, request: Request, user_info: str) -> None:
+async def log_request(request_id: str, request: Request, user_info: str) -> None:
     """
-    Log incoming request details
+    Log incoming request details with request body while preserving it for endpoint use
 
     :param request_id: unique request identifier
     :param request: FastAPI Request object
     :param user_info: user's athlete_id or "unauthenticated"
+    :return: None
     """
+    # Create a copy of the body
+    body = await request.body()
+
+    # Store the body for later use by endpoints
+    async def receive():
+        return {"type": "http.request", "body": body}
+
+    request._receive = receive
+
+    try:
+        body_str = body.decode() if body else None
+    except UnicodeDecodeError:
+        body_str = "<binary>"
+
     log_data = {
         "request_id": request_id,
         "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -57,6 +72,7 @@ def log_request(request_id: str, request: Request, user_info: str) -> None:
         "path": request.url.path,
         "query": dict(request.query_params),
         "client_ip": request.client.host,
+        "body": body_str,
     }
     logger.info(f"REQUEST: {log_data}")
 
@@ -117,7 +133,7 @@ async def log_and_handle_errors(request: Request, call_next: Callable) -> Respon
     endpoint = f"{request.method} {request.url.path}"
 
     try:
-        log_request(request_id, request, user_info)
+        await log_request(request_id, request, user_info)
 
         response = await call_next(request)
         response_body = await get_response_body(response)
@@ -144,4 +160,4 @@ async def log_and_handle_errors(request: Request, call_next: Callable) -> Respon
             subject=f"API Error: {endpoint} [{user_info}] - {type(e).__name__}",
             text_content=json.dumps(error, indent=4),
         )
-        raise HTTPException(status_code=500, detail=f"Internal server error: {error}")
+        return HTTPException(status_code=500, detail=f"Internal server error: {error}")

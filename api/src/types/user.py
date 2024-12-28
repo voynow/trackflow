@@ -33,16 +33,19 @@ class Preferences(BaseModel):
 
 
 class UserRow(BaseModel):
-    athlete_id: int
+    athlete_id: Optional[int] = None
     preferences: Optional[Preferences] = Preferences()
     email: Optional[str] = None
     created_at: datetime.datetime = datetime.datetime.now()
+    user_id: Optional[str] = None  # for apple sign in
 
 
 class UserAuthRow(BaseModel):
-    athlete_id: int
-    access_token: str
-    refresh_token: str
-    expires_at: datetime.datetime
-    jwt_token: str
+    athlete_id: Optional[int] = None
+    access_token: Optional[str] = None
+    refresh_token: Optional[str] = None
+    expires_at: Optional[datetime.datetime] = None
+    jwt_token: Optional[str] = "no_token"
     device_token: Optional[str] = None
+    user_id: Optional[str] = None  # for apple sign in
+    identity_token: Optional[str] = None  # for apple sign in

@@ -205,7 +205,7 @@ def upsert_user_auth(user_auth_row: UserAuthRow) -> None:
         user_auth_row["expires_at"] = user_auth_row["expires_at"].isoformat()
 
     table = client.table("user_auth")
-    table.upsert(user_auth_row, on_conflict="athlete_id").execute()
+    table.upsert(user_auth_row, on_conflict="athlete_id,user_id").execute()
 
 
 def update_user_device_token(athlete_id: str, device_token: str) -> None:

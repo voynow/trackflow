@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Callable
+from typing import Callable, Optional
 
 from fastapi import (
     BackgroundTasks,
@@ -129,14 +129,29 @@ async def get_weekly_summaries(
 
 
 @app.post("/authenticate/")
-async def authenticate(code: str = Form(...)) -> dict:
+async def authenticate(
+    code: Optional[str] = Form(None),
+    user_id: Optional[str] = Form(None),
+    identity_token: Optional[str] = Form(None),
+    email: Optional[str] = Form(None),
+):
     """
-    Authenticate with Strava code and sign up new users
+    Authenticate with Strava code or Apple credentials
 
-    :param code: Strava authorization code from form data
-    :return: Dictionary with success status, JWT token and new user flag
+    :param code: Strava code
+    :param user_id: Apple user ID
+    :param identity_token: Apple identity token
+    :param email: Apple email (optional, currently/temporarily unused)
+    :return: Success status
     """
-    return auth_manager.authenticate_on_signin(code=code)
+    if code:
+        return auth_manager.strava_authenticate(code=code)
+    elif user_id and identity_token:
+        return auth_manager.apple_authenticate(
+            user_id=user_id, identity_token=identity_token
+        )
+    else:
+        raise HTTPException(status_code=400, detail="Invalid request")
 
 
 @app.post("/strava-webhook/")
