@@ -196,16 +196,18 @@ def get_training_week(athlete_id: int) -> FullTrainingWeek:
 def upsert_user_auth(user_auth_row: UserAuthRow) -> None:
     """
     Convert UserAuthRow to a dictionary, ensure json serializable expires_at,
-    and upsert into user_auth table handling duplicates on athlete_id
+    and upsert into user_auth table handling duplicates on athlete_id and user_id
 
     :param user_auth_row: A dictionary representation of UserAuthRow
     """
-    user_auth_row = user_auth_row.dict()
-    if isinstance(user_auth_row["expires_at"], datetime.datetime):
-        user_auth_row["expires_at"] = user_auth_row["expires_at"].isoformat()
+    row_data = user_auth_row.dict()
+    if isinstance(row_data["expires_at"], datetime.datetime):
+        row_data["expires_at"] = row_data["expires_at"].isoformat()
 
     table = client.table("user_auth")
-    table.upsert(user_auth_row, on_conflict="athlete_id,user_id").execute()
+    table.upsert(
+        row_data, on_conflict="athlete_id,user_id", returning="minimal"
+    ).execute()
 
 
 def update_user_device_token(athlete_id: str, device_token: str) -> None:
@@ -247,18 +249,22 @@ def upsert_user(user_row: UserRow):
         row_data["created_at"] = row_data["created_at"].isoformat()
 
     table = client.table("user")
-    table.upsert(row_data, on_conflict="athlete_id").execute()
+    table.upsert(row_data, on_conflict="athlete_id,user_id").execute()
 
 
-def does_user_exist(athlete_id: int) -> bool:
+def does_user_exist(athlete_id: Optional[int], user_id: Optional[str]) -> bool:
     """
     Check if a user exists in the user table
 
     :param athlete_id: The ID of the athlete
+    :param user_id: The ID of the user
     :return: True if the user exists, False otherwise
     """
     table = client.table("user")
-    response = table.select("*").eq("athlete_id", athlete_id).execute()
+    if athlete_id is None:
+        response = table.select("*").eq("user_id", user_id).execute()
+    else:
+        response = table.select("*").eq("athlete_id", athlete_id).execute()
     return bool(response.data)
 
 

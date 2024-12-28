@@ -238,7 +238,9 @@ def strava_authenticate(code: str) -> dict:
     """
     user_auth = authenticate_with_code(code)
 
-    if not supabase_client.does_user_exist(user_auth.athlete_id):
+    if not supabase_client.does_user_exist(
+        athlete_id=user_auth.athlete_id, user_id=user_auth.user_id
+    ):
         return signup(user_auth)
 
     return {
@@ -258,7 +260,9 @@ def apple_authenticate(user_id: str, identity_token: str) -> dict:
     :return: Dictionary with success status and JWT token
     """
     user_auth = authenticate_without_code(user_id, identity_token)
-    if not supabase_client.does_user_exist(user_auth.athlete_id):
+    if not supabase_client.does_user_exist(
+        athlete_id=user_auth.athlete_id, user_id=user_auth.user_id
+    ):
         return signup(user_auth)
 
     return {

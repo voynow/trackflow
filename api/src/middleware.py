@@ -160,4 +160,8 @@ async def log_and_handle_errors(request: Request, call_next: Callable) -> Respon
             subject=f"API Error: {endpoint} [{user_info}] - {type(e).__name__}",
             text_content=json.dumps(error, indent=4),
         )
-        return HTTPException(status_code=500, detail=f"Internal server error: {error}")
+        return Response(
+            content=json.dumps({"detail": f"Internal server error: {error}"}),
+            status_code=500,
+            media_type="application/json",
+        )
