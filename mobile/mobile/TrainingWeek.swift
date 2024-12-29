@@ -302,6 +302,5 @@ struct MultiWeekProgressSkeletonView: View {
       }
       .padding(.top, 8)
     }
-    .dashboardShimmering()
   }
 }

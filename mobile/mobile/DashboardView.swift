@@ -20,11 +20,15 @@ struct DashboardView: View {
               .zIndex(1)
 
             ScrollView {
-              if let data = trainingWeekData {
-                // Show training week as soon as it's available
+              if appState.authStrategy == .apple {
+                VStack(spacing: 16) {
+                  DashboardSkeletonView()
+                    .overlay(StravaConnectOverlay())
+                }
+              } else if let data = trainingWeekData {
                 TrainingWeekView(
                   trainingWeekData: data,
-                  weeklySummaries: weeklySummaries  // Can be nil
+                  weeklySummaries: weeklySummaries
                 )
               } else if isLoadingTrainingWeek {
                 DashboardSkeletonView()
@@ -35,7 +39,9 @@ struct DashboardView: View {
               }
             }
             .refreshable {
-              fetchData()
+              if appState.authStrategy != .apple {
+                fetchData()
+              }
             }
           }
           .background(ColorTheme.black.edgesIgnoringSafeArea(.all))

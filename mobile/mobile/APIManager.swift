@@ -530,8 +530,6 @@ class APIManager {
     }
 
     request.httpBody = try? JSONSerialization.data(withJSONObject: body)
-    
-    print("DEBUG: Request body: \(String(data: request.httpBody ?? Data(), encoding: .utf8) ?? "")")
 
     session.dataTask(with: request) { data, response, error in
       let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime

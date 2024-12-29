@@ -12,30 +12,74 @@ struct ProfileView: View {
     ZStack {
       ColorTheme.black.edgesIgnoringSafeArea(.all)
 
-      if isLoading {
-        ProfileSkeletonView()
-      } else {
-        VStack(spacing: 24) {
-          profileHeader
-          if let profileData = profileData {
-            ScrollView {
-              VStack(spacing: 24) {
-                ProfileInfoCard(profileData: profileData)
-                PreferencesContainer(preferences: preferencesBinding)
-                SignOutButton(action: handleSignOut)
-              }
-              .padding()
+      VStack {
+        HStack {
+          Button(action: {
+            withAnimation {
+              isPresented = false
+              showProfile = false
             }
-          } else {
-            VStack {
-              VStack(spacing: 16) {
-                Text("Failed to load profile")
-                  .foregroundColor(ColorTheme.lightGrey)
-                Spacer()
-                SignOutButton(action: handleSignOut)
-              }
+          }) {
+            Text("Track")
+              .font(.system(size: 28, weight: .black))
+              .foregroundColor(ColorTheme.primaryLight)
+              + Text("Flow")
+              .font(.system(size: 28, weight: .black))
+              .foregroundColor(ColorTheme.primary)
+          }
+          .buttonStyle(PlainButtonStyle())
+
+          Spacer()
+
+          Button(action: {
+            withAnimation {
+              isPresented = false
+              showProfile = false
             }
-            .frame(maxHeight: .infinity)
+          }) {
+            Image(systemName: "xmark")
+              .foregroundColor(ColorTheme.lightGrey)
+              .font(.system(size: 20, weight: .semibold))
+          }
+        }
+        .padding(.horizontal)
+        .background(ColorTheme.black)
+        .zIndex(1)
+
+        if appState.authStrategy == .apple {
+          VStack(spacing: 16) {
+            ProfileSkeletonView()
+              .overlay(StravaConnectOverlay())
+
+            SignOutButton(action: handleSignOut)
+              .padding(.horizontal)
+              .padding(.bottom)
+          }
+        } else if isLoading {
+          ProfileSkeletonView()
+        } else {
+          VStack(spacing: 24) {
+            profileHeader
+            if let profileData = profileData {
+              ScrollView {
+                VStack(spacing: 24) {
+                  ProfileInfoCard(profileData: profileData)
+                  PreferencesContainer(preferences: preferencesBinding)
+                  SignOutButton(action: handleSignOut)
+                }
+                .padding()
+              }
+            } else {
+              VStack {
+                VStack(spacing: 16) {
+                  Text("Failed to load profile")
+                    .foregroundColor(ColorTheme.lightGrey)
+                  Spacer()
+                  SignOutButton(action: handleSignOut)
+                }
+              }
+              .frame(maxHeight: .infinity)
+            }
           }
         }
       }
@@ -51,7 +95,12 @@ struct ProfileView: View {
         .font(.system(size: 28, weight: .black))
         .foregroundColor(ColorTheme.white)
       Spacer()
-      Button(action: { showProfile = false }) {
+      Button(action: {
+        withAnimation {
+          isPresented = false
+          showProfile = false
+        }
+      }) {
         Image(systemName: "xmark")
           .foregroundColor(ColorTheme.lightGrey)
           .font(.system(size: 20, weight: .semibold))

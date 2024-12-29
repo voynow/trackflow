@@ -1,12 +1,14 @@
 import SwiftUI
 
 struct WaitingForGenerationView: View {
-  let onComplete: (() -> Void)?
+  let onComplete: () -> Void
+  let isAppleAuth: Bool
   @State private var animationPhase = 0
   @State private var showOnboarding: Bool = false
 
-  init(onComplete: (() -> Void)? = nil) {
+  init(onComplete: @escaping () -> Void, isAppleAuth: Bool = false) {
     self.onComplete = onComplete
+    self.isAppleAuth = isAppleAuth
   }
 
   var body: some View {
@@ -85,8 +87,9 @@ struct WaitingForGenerationView: View {
         startAnimation()
       }
 
-      DispatchQueue.main.asyncAfter(deadline: .now() + 25) {
-        onComplete?()
+      let waitDuration: Double = isAppleAuth ? 3 : 25
+      DispatchQueue.main.asyncAfter(deadline: .now() + waitDuration) {
+        onComplete()
       }
     }
   }

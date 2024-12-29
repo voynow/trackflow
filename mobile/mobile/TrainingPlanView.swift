@@ -21,19 +21,22 @@ struct TrainingPlanView: View {
 
       ScrollView {
         VStack(spacing: 16) {
-          if let plan = trainingPlan {
+          if appState.authStrategy == .apple {
+            VStack(spacing: 16) {
+              TrainingPlanSkeleton()
+                .overlay(StravaConnectOverlay())
+            }
+          } else if let plan = trainingPlan {
             if plan.isEmpty {
               VStack(spacing: 16) {
                 Text("Lets get you a training plan!")
                   .font(.title3)
                   .foregroundColor(ColorTheme.lightGrey)
-
                 Text("Set up your race details to get started.")
                   .font(.subheadline)
                   .foregroundColor(ColorTheme.midLightGrey)
                   .multilineTextAlignment(.center)
                   .padding(.horizontal)
-
                 Button(action: {
                   showRaceSetupSheet = true
                 }) {
@@ -52,18 +55,11 @@ struct TrainingPlanView: View {
               .frame(maxHeight: .infinity, alignment: .center)
               .padding()
             } else {
-              if let preferences = decodePreferences() {
-                RaceDetailsWidget(
-                  preferences: preferences,
-                  weeksCount: plan.trainingPlanWeeks.map(\.nWeeksUntilRace).max() ?? 0
-                )
-                .padding(.bottom, 8)
-              } else {
-                RaceDetailsWidgetSkeleton(
-                  weeksCount: plan.trainingPlanWeeks.map(\.nWeeksUntilRace).max() ?? 0
-                )
-                .padding(.bottom, 8)
-              }
+              RaceDetailsWidget(
+                preferences: decodePreferences() ?? Preferences(),
+                weeksCount: plan.trainingPlanWeeks.map(\.nWeeksUntilRace).max() ?? 0
+              )
+              .padding(.bottom, 8)
 
               TrainingPlanChart(
                 trainingWeeks: plan.trainingPlanWeeks,
@@ -71,11 +67,7 @@ struct TrainingPlanView: View {
               )
             }
           } else {
-            RaceDetailsWidgetSkeleton(weeksCount: 0)
-              .padding(.bottom, 8)
-
-            TrainingPlanChartSkeleton()
-              .padding(.bottom, 8)
+            TrainingPlanSkeleton()
           }
         }
         .padding()
@@ -93,19 +85,23 @@ struct TrainingPlanView: View {
     }
     .background(ColorTheme.black.edgesIgnoringSafeArea(.all))
     .onAppear {
-      if let plan = preloadedPlan {
-        self.trainingPlan = plan
-        self.isLoadingTrainingPlan = false
-      } else if trainingPlan == nil {
-        fetchTrainingPlanData()
-      }
-      if profileData == nil {
-        fetchProfileData()
+      if appState.authStrategy != .apple {
+        if let plan = preloadedPlan {
+          self.trainingPlan = plan
+          self.isLoadingTrainingPlan = false
+        } else if trainingPlan == nil {
+          fetchTrainingPlanData()
+        }
+        if profileData == nil {
+          fetchProfileData()
+        }
       }
     }
     .refreshable {
-      fetchTrainingPlanData()
-      fetchProfileData()
+      if appState.authStrategy != .apple {
+        fetchTrainingPlanData()
+        fetchProfileData()
+      }
     }
     .navigationBarHidden(true)
   }
