@@ -212,15 +212,16 @@ async def get_training_plan(
 @app.post("/email/")
 async def update_email(
     email: str = Body(...),
-    token: Optional[str] = Header(None),
+    token: Optional[str] = Body(None),
     user_id: Optional[str] = Body(None),
 ) -> dict:
     """
-    Update email for a user during onboarding or post-authentication
+    Update email for a user during onboarding (no auth required, instead a valid
+    token or id will suffice)
 
-    :param email: Required email to update
-    :param token: Optional JWT token for authenticated users
-    :param user_id: Optional user_id for new signups
+    :param email: The email to update
+    :param token: The token to validate the request
+    :param user_id: The user ID to update
     :return: Success status
     """
     supabase_client.update_user_email(email=email, jwt_token=token, user_id=user_id)

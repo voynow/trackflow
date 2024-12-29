@@ -122,10 +122,6 @@ final class OnboardingViewModel: ObservableObject {
   var appState: AppState?
 
   func handleEmailSubmission(_ email: String) {
-    print(
-      "DEBUG: handleEmailSubmission - userId from appState: \(String(describing: appState?.userId))"
-    )
-    print("DEBUG: Auth strategy: \(String(describing: appState?.authStrategy))")
 
     guard let appState = appState else {
       showError(message: "AppState not available")

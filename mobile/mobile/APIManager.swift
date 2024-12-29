@@ -521,16 +521,17 @@ class APIManager {
     request.httpMethod = "POST"
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
+    var body: [String: Any] = ["email": email]
     if let token = token {
-      request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+      body["token"] = token
+    }
+    if let userId = userId {
+      body["user_id"] = userId
     }
 
-    let body: [String: Any] = [
-      "email": email,
-      "user_id": userId as Any,
-    ]
-
     request.httpBody = try? JSONSerialization.data(withJSONObject: body)
+    
+    print("DEBUG: Request body: \(String(data: request.httpBody ?? Data(), encoding: .utf8) ?? "")")
 
     session.dataTask(with: request) { data, response, error in
       let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime

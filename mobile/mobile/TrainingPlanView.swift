@@ -86,7 +86,6 @@ struct TrainingPlanView: View {
         preferences: $preferences,
         isPresented: $showRaceSetupSheet,
         onSave: {
-          print("DEBUG: RaceSetupSheet onSave triggered")
           fetchTrainingPlanData()
           appState.setGeneratingPlanState()
         }
@@ -119,23 +118,19 @@ struct TrainingPlanView: View {
 
   private func fetchTrainingPlanData() {
     guard let token = appState.jwtToken else {
-      print("DEBUG: No valid token found in fetchTrainingPlanData")
       errorMessage = "No valid token"
       isLoadingTrainingPlan = false
       return
     }
 
-    print("DEBUG: Starting fetchTrainingPlan API call")
     APIManager.shared.fetchTrainingPlan(token: token) { result in
       DispatchQueue.main.async {
         switch result {
         case .success(let plan):
-          print("DEBUG: Successfully fetched training plan")
           withAnimation {
             self.trainingPlan = plan
           }
         case .failure(let error):
-          print("DEBUG: Failed to fetch training plan: \(error)")
           self.errorMessage = error.localizedDescription
         }
         self.isLoadingTrainingPlan = false
