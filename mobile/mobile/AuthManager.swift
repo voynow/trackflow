@@ -70,6 +70,7 @@ class AuthManager: ObservableObject {
           UserDefaults.standard.set(authResponse.jwt_token, forKey: "jwt_token")
           DispatchQueue.main.async {
             self.appState.jwtToken = authResponse.jwt_token
+            self.appState.authStrategy = .strava
             if let isNewUser = authResponse.is_new_user, isNewUser {
               self.appState.status = .newUser
             } else {
@@ -137,7 +138,10 @@ class AuthManager: ObservableObject {
             if authResponse.success {
               DispatchQueue.main.async {
                 UserDefaults.standard.set(authResponse.jwt_token, forKey: "jwt_token")
+                UserDefaults.standard.set(authResponse.user_id, forKey: "user_id")
                 self.appState.jwtToken = authResponse.jwt_token
+                self.appState.userId = authResponse.user_id
+                self.appState.authStrategy = .apple
                 if let isNewUser = authResponse.is_new_user, isNewUser {
                   self.appState.status = .newUser
                 } else {

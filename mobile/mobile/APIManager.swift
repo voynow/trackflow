@@ -504,7 +504,8 @@ class APIManager {
   }
 
   func updateEmail(
-    token: String,
+    token: String? = nil,
+    userId: String? = nil,
     email: String,
     completion: @escaping (Result<Void, Error>) -> Void
   ) {
@@ -518,11 +519,18 @@ class APIManager {
 
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
-    request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
-    let jsonString = "\"\(email)\""
-    request.httpBody = jsonString.data(using: .utf8)
+    if let token = token {
+      request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+    }
+
+    let body: [String: Any] = [
+      "email": email,
+      "user_id": userId as Any,
+    ]
+
+    request.httpBody = try? JSONSerialization.data(withJSONObject: body)
 
     session.dataTask(with: request) { data, response, error in
       let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime

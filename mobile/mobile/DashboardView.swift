@@ -76,7 +76,9 @@ struct DashboardView: View {
   private func handleLogout() {
     appState.status = .loggedOut
     appState.jwtToken = nil
+    appState.userId = nil
     UserDefaults.standard.removeObject(forKey: "jwt_token")
+    UserDefaults.standard.removeObject(forKey: "user_id")
   }
 
   private func fetchData() {
@@ -93,7 +95,7 @@ struct DashboardView: View {
           print("Error pre-fetching profile: \(error)")
         }
       }
-      
+
       APIManager.shared.fetchTrainingPlan(token: token) { result in
         DispatchQueue.main.async {
           if case .success(let plan) = result {

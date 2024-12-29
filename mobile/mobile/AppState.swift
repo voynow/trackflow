@@ -1,12 +1,20 @@
 import SwiftUI
 import UserNotifications
 
+enum AuthStrategy {
+  case none
+  case apple
+  case strava
+}
+
 class AppState: ObservableObject {
   @Published var status: AppStateStatus = .loggedOut
   @Published var jwtToken: String? = nil
+  @Published var userId: String? = nil
   @Published var notificationStatus: UNAuthorizationStatus = .notDetermined
   @Published var showProfile: Bool = false
   @Published var selectedTab: Int = 0
+  @Published var authStrategy: AuthStrategy = .none
 
   func setGeneratingPlanState() {
     status = .generatingPlan

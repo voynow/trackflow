@@ -122,22 +122,52 @@ final class OnboardingViewModel: ObservableObject {
   var appState: AppState?
 
   func handleEmailSubmission(_ email: String) {
-    guard let token = appState?.jwtToken else {
-      showError(message: "No token found")
+    print(
+      "DEBUG: handleEmailSubmission - userId from appState: \(String(describing: appState?.userId))"
+    )
+    print("DEBUG: Auth strategy: \(String(describing: appState?.authStrategy))")
+
+    guard let appState = appState else {
+      showError(message: "AppState not available")
       return
     }
 
-    APIManager.shared.updateEmail(token: token, email: email) { [weak self] result in
-      DispatchQueue.main.async {
-        switch result {
-        case .success:
-          self?.email = email
-          self?.hasSubmittedEmail = true
-          self?.showRaceSetup = true
-        case .failure(let error):
-          self?.showError(message: "Failed to update email: \(error.localizedDescription)")
+    switch appState.authStrategy {
+    case .strava:
+      if let token = appState.jwtToken {
+        APIManager.shared.updateEmail(token: token, email: email) { [weak self] result in
+          DispatchQueue.main.async {
+            self?.handleEmailUpdateResult(result, email: email)
+          }
         }
+      } else {
+        showError(message: "No token found")
       }
+
+    case .apple:
+      if let userId = appState.userId {
+        APIManager.shared.updateEmail(userId: userId, email: email) { [weak self] result in
+          DispatchQueue.main.async {
+            self?.handleEmailUpdateResult(result, email: email)
+          }
+        }
+      } else {
+        showError(message: "No user ID found")
+      }
+
+    case .none:
+      showError(message: "No authentication strategy found")
+    }
+  }
+
+  private func handleEmailUpdateResult(_ result: Result<Void, Error>, email: String) {
+    switch result {
+    case .success:
+      self.email = email
+      self.hasSubmittedEmail = true
+      self.showRaceSetup = true
+    case .failure(let error):
+      self.showError(message: "Failed to update email: \(error.localizedDescription)")
     }
   }
 
