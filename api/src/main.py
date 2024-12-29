@@ -8,6 +8,7 @@ from fastapi import (
     Depends,
     FastAPI,
     Form,
+    Header,
     HTTPException,
     Request,
     Response,
@@ -210,16 +211,19 @@ async def get_training_plan(
 
 @app.post("/email/")
 async def update_email(
-    email: str = Body(...), user: UserRow = Depends(auth_manager.validate_user)
+    email: str = Body(...),
+    token: Optional[str] = Header(None),
+    user_id: Optional[str] = Body(None),
 ) -> dict:
     """
-    This endpoint is used specifically during the onboarding pipeline
+    Update email for a user during onboarding or post-authentication
 
-    :param email: The email to update
-    :param user: The authenticated user
+    :param email: Required email to update
+    :param token: Optional JWT token for authenticated users
+    :param user_id: Optional user_id for new signups
     :return: Success status
     """
-    supabase_client.update_user_email(athlete_id=user.athlete_id, email=email)
+    supabase_client.update_user_email(email=email, jwt_token=token, user_id=user_id)
     email_manager.send_alert_email(
         subject=f"TrackFlow Alert: Welcome {email}!",
         text_content=f"You have a new user {email=} attempting to signup",

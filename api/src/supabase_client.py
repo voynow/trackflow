@@ -6,6 +6,7 @@ from uuid import uuid4
 
 import orjson
 from dotenv import load_dotenv
+from src import auth_manager
 from src.types.mileage_recommendation import (
     MileageRecommendationRow,
 )
@@ -413,12 +414,22 @@ def get_training_plan(athlete_id: int) -> TrainingPlan:
     return TrainingPlan(training_plan_weeks=training_weeks)
 
 
-def update_user_email(athlete_id: int, email: str):
+def update_user_email(
+    email: str, jwt_token: Optional[str] = None, user_id: Optional[str] = None
+):
     """
     Update user email
 
-    :param athlete_id: The ID of the athlete
     :param email: The email to update
+    :param jwt_token: Optional JWT token for authenticated users
+    :param user_id: Optional user_id for new signups
     """
     table = client.table("user")
-    table.update({"email": email}).eq("athlete_id", athlete_id).execute()
+
+    if jwt_token:
+        athlete_id = auth_manager.decode_jwt(jwt_token, verify_exp=True)
+        table.update({"email": email}).eq("athlete_id", athlete_id).execute()
+    elif user_id:
+        table.update({"email": email}).eq("user_id", user_id).execute()
+    else:
+        raise ValueError("Either jwt_token or user_id must be provided")
