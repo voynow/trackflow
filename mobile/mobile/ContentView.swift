@@ -16,7 +16,7 @@ struct ContentView: View {
       case .loggedIn:
         ZStack {
           DashboardView()
-          
+
           if appState.showProfile {
             ProfileView(
               isPresented: $appState.showProfile,
@@ -31,7 +31,26 @@ struct ContentView: View {
       case .loading:
         LoadingView()
       case .generatingPlan:
-        GeneratingPlanView()
+        WaitingForGenerationView(onComplete: {
+          appState.showProfile = false
+          appState.selectedTab = 1
+
+          guard let token = appState.jwtToken else {
+            print("No token found")
+            return
+          }
+
+          APIManager.shared.refreshUser(token: token) { result in
+            DispatchQueue.main.async {
+              switch result {
+              case .success:
+                appState.status = .loggedIn
+              case .failure(let error):
+                print("Failed to generate plan: \(error.localizedDescription)")
+              }
+            }
+          }
+        })
       }
     }
   }

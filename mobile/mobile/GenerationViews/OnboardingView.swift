@@ -20,18 +20,16 @@ struct OnboardingView: View {
         )
       } else if viewModel.showRaceSetup {
         RaceSetupPromptView(
-          onSkip: { viewModel.completeOnboarding(skipRaceSetup: true) },
+          onSkip: { viewModel.completeOnboarding() },
           onSetupRace: { viewModel.showRaceSetupSheet = true }
         )
         .sheet(isPresented: $viewModel.showRaceSetupSheet) {
           RaceSetupSheet(
             preferences: $viewModel.preferences,
             isPresented: $viewModel.showRaceSetupSheet,
-            onSave: viewModel.savePreferencesAndCompleteOnboarding
+            onSave: viewModel.completeOnboarding
           )
         }
-      } else if viewModel.isGenerating {
-        GenerationProgressView()
       }
     }
     .alert("Error", isPresented: $viewModel.showError) {
@@ -103,19 +101,12 @@ private struct RaceSetupPromptView: View {
   }
 }
 
-private struct GenerationProgressView: View {
-  var body: some View {
-    WaitingForGenerationView()
-  }
-}
-
 final class OnboardingViewModel: ObservableObject {
   @Published var email: String = ""
   @Published var hasSubmittedEmail = false
   @Published var showRaceSetup = false
   @Published var showRaceSetupSheet = false
   @Published var preferences = Preferences()
-  @Published var isGenerating = false
   @Published var errorMessage: String?
   @Published var showError = false
 
@@ -167,38 +158,9 @@ final class OnboardingViewModel: ObservableObject {
     }
   }
 
-  func savePreferencesAndCompleteOnboarding() {
+  func completeOnboarding() {
     showRaceSetup = false
-    isGenerating = true
-    completeOnboarding(skipRaceSetup: false)
-  }
-
-  func completeOnboarding(skipRaceSetup: Bool) {
-    guard let token = appState?.jwtToken else {
-      showError(message: "No token found")
-      return
-    }
-
-    if skipRaceSetup {
-      showRaceSetup = false
-      isGenerating = true
-    }
-
-    refreshUserAndComplete(token: token)
-  }
-
-  private func refreshUserAndComplete(token: String) {
-    APIManager.shared.refreshUser(token: token) { [weak self] result in
-      DispatchQueue.main.async {
-        switch result {
-        case .success:
-          self?.appState?.status = .loggedIn
-        case .failure(let error):
-          print("Refresh user error details: \(error)")
-          self?.showError(message: "Failed to complete setup: \(error.localizedDescription)")
-        }
-      }
-    }
+    appState?.setGeneratingPlanState()
   }
 
   private func showError(message: String) {

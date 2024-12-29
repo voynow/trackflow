@@ -24,7 +24,6 @@
 				DashboardNavbar.swift,
 				DashboardSkeletonView.swift,
 				DashboardView.swift,
-				GenerationViews/GeneratingPlanView.swift,
 				GenerationViews/OnboardingEmailView.swift,
 				GenerationViews/OnboardingView.swift,
 				GenerationViews/WaitingForGenerationView.swift,
