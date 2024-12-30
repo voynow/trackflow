@@ -141,9 +141,6 @@ final class OnboardingViewModel: ObservableObject {
       } else {
         showError(message: "No user ID found")
       }
-
-    case .none:
-      showError(message: "No authentication strategy found")
     }
   }
 

@@ -22,7 +22,6 @@ struct ContentView: View {
               isPresented: $appState.showProfile,
               showProfile: $appState.showProfile
             )
-            .transition(.move(edge: .trailing))
             .zIndex(2)
           }
         }
@@ -31,14 +30,7 @@ struct ContentView: View {
       case .loading:
         LoadingView()
       case .generatingPlan:
-        WaitingForGenerationView(
-          onComplete: {
-            appState.showProfile = false
-            appState.selectedTab = 1
-            appState.status = .loggedIn
-          },
-          isAppleAuth: appState.authStrategy == .apple
-        )
+        WaitingForGenerationView(isAppleAuth: appState.authStrategy == .apple)
       }
     }
   }

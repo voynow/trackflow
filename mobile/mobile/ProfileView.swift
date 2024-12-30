@@ -15,10 +15,8 @@ struct ProfileView: View {
       VStack {
         HStack {
           Button(action: {
-            withAnimation {
-              isPresented = false
-              showProfile = false
-            }
+            isPresented = false
+            showProfile = false
           }) {
             Text("Track")
               .font(.system(size: 28, weight: .black))
@@ -32,10 +30,8 @@ struct ProfileView: View {
           Spacer()
 
           Button(action: {
-            withAnimation {
-              isPresented = false
-              showProfile = false
-            }
+            isPresented = false
+            showProfile = false
           }) {
             Image(systemName: "xmark")
               .foregroundColor(ColorTheme.lightGrey)
@@ -59,7 +55,6 @@ struct ProfileView: View {
           ProfileSkeletonView()
         } else {
           VStack(spacing: 24) {
-            profileHeader
             if let profileData = profileData {
               ScrollView {
                 VStack(spacing: 24) {
@@ -87,27 +82,6 @@ struct ProfileView: View {
     .onAppear {
       fetchProfileData()
     }
-  }
-
-  private var profileHeader: some View {
-    HStack {
-      Text("Profile")
-        .font(.system(size: 28, weight: .black))
-        .foregroundColor(ColorTheme.white)
-      Spacer()
-      Button(action: {
-        withAnimation {
-          isPresented = false
-          showProfile = false
-        }
-      }) {
-        Image(systemName: "xmark")
-          .foregroundColor(ColorTheme.lightGrey)
-          .font(.system(size: 20, weight: .semibold))
-      }
-    }
-    .padding(.horizontal)
-    .padding(.top, 4)
   }
 
   private func handleSignOut() {

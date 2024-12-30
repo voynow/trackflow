@@ -1,21 +1,15 @@
 import SwiftUI
 
 struct WaitingForGenerationView: View {
-  let onComplete: () -> Void
-  let isAppleAuth: Bool
+  @EnvironmentObject var appState: AppState
   @State private var animationPhase = 0
   @State private var showOnboarding: Bool = false
-
-  init(onComplete: @escaping () -> Void, isAppleAuth: Bool = false) {
-    self.onComplete = onComplete
-    self.isAppleAuth = isAppleAuth
-  }
+  let isAppleAuth: Bool
 
   var body: some View {
     ZStack {
       ColorTheme.black.edgesIgnoringSafeArea(.all)
 
-      // Centered content
       VStack(spacing: 40) {
         Spacer()
 
@@ -40,7 +34,6 @@ struct WaitingForGenerationView: View {
           .multilineTextAlignment(.center)
         }
 
-        // AI Thinking Animation
         VStack(spacing: 8) {
           HStack(spacing: 12) {
             ForEach(0..<3) { index in
@@ -87,9 +80,12 @@ struct WaitingForGenerationView: View {
         startAnimation()
       }
 
-      let waitDuration: Double = isAppleAuth ? 3 : 25
-      DispatchQueue.main.asyncAfter(deadline: .now() + waitDuration) {
-        onComplete()
+      if isAppleAuth {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+          completeGeneration()
+        }
+      } else {
+        triggerRefreshUser()
       }
     }
   }
@@ -100,5 +96,31 @@ struct WaitingForGenerationView: View {
         animationPhase = (animationPhase + 1) % 3
       }
     }
+  }
+
+  private func triggerRefreshUser() {
+    guard let token = appState.jwtToken else {
+      print("No token found")
+      completeGeneration()
+      return
+    }
+
+    APIManager.shared.refreshUser(token: token) { result in
+      DispatchQueue.main.async {
+        switch result {
+        case .success:
+          completeGeneration()
+        case .failure(let error):
+          print("Failed to generate plan: \(error.localizedDescription)")
+          completeGeneration()
+        }
+      }
+    }
+  }
+
+  private func completeGeneration() {
+    appState.showProfile = false
+    appState.selectedTab = 1
+    appState.status = .loggedIn
   }
 }

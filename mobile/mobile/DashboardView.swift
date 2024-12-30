@@ -15,9 +15,11 @@ struct DashboardView: View {
       ZStack {
         TabView(selection: $appState.selectedTab) {
           VStack {
-            DashboardNavbar(onLogout: handleLogout, showProfile: $appState.showProfile)
-              .background(ColorTheme.black)
-              .zIndex(1)
+            DashboardNavbar(
+              onLogout: { appState.clearAuthState() }, showProfile: $appState.showProfile
+            )
+            .background(ColorTheme.black)
+            .zIndex(1)
 
             ScrollView {
               if appState.authStrategy == .apple {
@@ -77,14 +79,6 @@ struct DashboardView: View {
         dismissButton: .default(Text("OK"))
       )
     }
-  }
-
-  private func handleLogout() {
-    appState.status = .loggedOut
-    appState.jwtToken = nil
-    appState.userId = nil
-    UserDefaults.standard.removeObject(forKey: "jwt_token")
-    UserDefaults.standard.removeObject(forKey: "user_id")
   }
 
   private func fetchData() {

@@ -14,8 +14,11 @@ struct mobileApp: App {
             appState.status = .loggedIn
             appState.jwtToken = token
             appState.userId = UserDefaults.standard.string(forKey: "user_id")
-            appState.authStrategy =
-              UserDefaults.standard.string(forKey: "user_id") != nil ? .apple : .strava
+            if let storedStrategy = UserDefaults.standard.string(forKey: "auth_strategy"),
+              let strategy = AuthStrategy(rawValue: storedStrategy)
+            {
+              appState.authStrategy = strategy
+            }
           }
         }
     }

@@ -3,20 +3,6 @@ import SwiftUI
 struct ProfileSkeletonView: View {
   var body: some View {
     VStack(spacing: 24) {
-      // Skeleton Header
-      HStack {
-        Rectangle()
-          .foregroundColor(ColorTheme.darkGrey.opacity(0.3))
-          .frame(width: 100, height: 28)
-          .cornerRadius(4)
-        Spacer()
-        Circle()
-          .foregroundColor(ColorTheme.darkGrey.opacity(0.3))
-          .frame(width: 20, height: 20)
-      }
-      .padding(.horizontal)
-      .padding(.top, 4)
-
       // Profile Info Card
       VStack(alignment: .leading, spacing: 16) {
         HStack(spacing: 16) {

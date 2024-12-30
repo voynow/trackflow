@@ -15,9 +15,11 @@ struct TrainingPlanView: View {
 
   var body: some View {
     VStack {
-      DashboardNavbar(onLogout: handleLogout, showProfile: $appState.showProfile)
-        .background(ColorTheme.black)
-        .zIndex(1)
+      DashboardNavbar(
+        onLogout: { appState.clearAuthState() }, showProfile: $appState.showProfile
+      )
+      .background(ColorTheme.black)
+      .zIndex(1)
 
       ScrollView {
         VStack(spacing: 16) {
@@ -104,12 +106,6 @@ struct TrainingPlanView: View {
       }
     }
     .navigationBarHidden(true)
-  }
-
-  private func handleLogout() {
-    appState.status = .loggedOut
-    appState.jwtToken = nil
-    UserDefaults.standard.removeObject(forKey: "jwt_token")
   }
 
   private func fetchTrainingPlanData() {

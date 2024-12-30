@@ -68,6 +68,7 @@ class AuthManager: ObservableObject {
 
         if authResponse.success {
           UserDefaults.standard.set(authResponse.jwt_token, forKey: "jwt_token")
+          UserDefaults.standard.set("strava", forKey: "auth_strategy")
           DispatchQueue.main.async {
             self.appState.jwtToken = authResponse.jwt_token
             self.appState.authStrategy = .strava
@@ -139,6 +140,7 @@ class AuthManager: ObservableObject {
               DispatchQueue.main.async {
                 UserDefaults.standard.set(authResponse.jwt_token, forKey: "jwt_token")
                 UserDefaults.standard.set(authResponse.user_id, forKey: "user_id")
+                UserDefaults.standard.set("apple", forKey: "auth_strategy")
                 self.appState.jwtToken = authResponse.jwt_token
                 self.appState.userId = authResponse.user_id
                 self.appState.authStrategy = .apple
