@@ -150,6 +150,11 @@ struct TrainingPlanView: View {
   }
 
   private func fetchProfileData() {
+    if appState.authStrategy == .apple {
+      isLoadingProfile = false
+      return
+    }
+
     guard let token = appState.jwtToken else { return }
 
     APIManager.shared.fetchProfileData(token: token) { result in

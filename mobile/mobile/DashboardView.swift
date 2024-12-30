@@ -82,6 +82,10 @@ struct DashboardView: View {
   }
 
   private func fetchData() {
+    if appState.authStrategy == .apple {
+      return
+    }
+
     isLoadingTrainingWeek = true
     fetchTrainingWeekData {
       isLoadingTrainingWeek = false

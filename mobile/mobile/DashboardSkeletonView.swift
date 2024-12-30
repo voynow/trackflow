@@ -35,7 +35,7 @@ struct WeeklyProgressSkeletonView: View {
         .fill(ColorTheme.darkGrey.opacity(0.3))
         .frame(height: 10)
     }
-    .padding(.horizontal, 16)
+    .padding(16)
     .background(ColorTheme.darkDarkGrey)
     .cornerRadius(16)
   }
@@ -43,7 +43,7 @@ struct WeeklyProgressSkeletonView: View {
 
 struct SessionListSkeletonView: View {
   var body: some View {
-    VStack(spacing: 24) {
+    VStack(spacing: 12) {
       ForEach(0..<5) { _ in
         SessionSkeletonView()
       }
