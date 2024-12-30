@@ -103,7 +103,7 @@ class APIManager {
     completion: @escaping (Result<FullTrainingWeek, Error>) -> Void
   ) {
     let startTime = CFAbsoluteTimeGetCurrent()
-    guard let url = URL(string: "\(apiURL)/training_week/") else {
+    guard let url = URL(string: "\(apiURL)/training-week/") else {
       completion(
         .failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"]))
       )
@@ -220,7 +220,7 @@ class APIManager {
 
   func refreshToken(token: String, completion: @escaping (Result<String, Error>) -> Void) {
     let startTime = CFAbsoluteTimeGetCurrent()
-    guard let url = URL(string: "\(apiURL)/refresh_token/") else {
+    guard let url = URL(string: "\(apiURL)/refresh-token/") else {
       completion(
         .failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"]))
       )
@@ -289,7 +289,7 @@ class APIManager {
     token: String, completion: @escaping (Result<[WeekSummary], Error>) -> Void
   ) {
     let startTime = CFAbsoluteTimeGetCurrent()
-    guard let url = URL(string: "\(apiURL)/weekly_summaries/") else {
+    guard let url = URL(string: "\(apiURL)/weekly-summaries/") else {
       completion(
         .failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"]))
       )
@@ -404,7 +404,7 @@ class APIManager {
     completion: @escaping (Result<Void, Error>) -> Void
   ) {
     let startTime = CFAbsoluteTimeGetCurrent()
-    guard let url = URL(string: "\(apiURL)/device_token/") else {
+    guard let url = URL(string: "\(apiURL)/device-token/") else {
       completion(
         .failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"]))
       )
@@ -504,7 +504,8 @@ class APIManager {
   }
 
   func updateEmail(
-    token: String,
+    token: String? = nil,
+    userId: String? = nil,
     email: String,
     completion: @escaping (Result<Void, Error>) -> Void
   ) {
@@ -518,11 +519,17 @@ class APIManager {
 
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
-    request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
-    let jsonString = "\"\(email)\""
-    request.httpBody = jsonString.data(using: .utf8)
+    var body: [String: Any] = ["email": email]
+    if let token = token {
+      body["token"] = token
+    }
+    if let userId = userId {
+      body["user_id"] = userId
+    }
+
+    request.httpBody = try? JSONSerialization.data(withJSONObject: body)
 
     session.dataTask(with: request) { data, response, error in
       let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime

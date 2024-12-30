@@ -1,6 +1,6 @@
+import datetime
 import logging
 import os
-import datetime
 from typing import Optional
 
 import jwt
@@ -164,8 +164,8 @@ def get_strava_client(athlete_id: int) -> Client:
 
 def authenticate_with_code(code: str) -> UserAuthRow:
     """
-    Authenticate athlete with code, exchange with strava client for token,
-    generate new JWT, and update database
+    Authenticate athlete with code from Strava, exchange with strava client for
+    token, generate new JWT, and update database
 
     :param code: temporary authorization code
     :return: UserAuthRow
@@ -195,19 +195,40 @@ def authenticate_with_code(code: str) -> UserAuthRow:
     return user_auth_row
 
 
+def authenticate_without_code(user_id: str, identity_token: str) -> UserAuthRow:
+    """
+    Authenticate athlete with Apple code, exchange with strava client for token,
+    generate new JWT, and update database
+
+    :param user_id: Apple user ID
+    :param identity_token: Apple identity token
+    :param email: User's email (optional)
+    :return: UserAuthRow
+    """
+    user_auth_row = UserAuthRow(user_id=user_id, identity_token=identity_token)
+    supabase_client.upsert_user_auth(user_auth_row)
+    return user_auth_row
+
+
 def signup(user_auth: UserAuthRow) -> dict:
     """
     Sign up a new user
 
     :param user_auth: UserAuthRow
-    :param email: User's email (optional)
     :return: Dictionary with success status and JWT token
     """
-    supabase_client.upsert_user(UserRow(athlete_id=user_auth.athlete_id))
-    return {"success": True, "jwt_token": user_auth.jwt_token, "is_new_user": True}
+    supabase_client.upsert_user(
+        UserRow(athlete_id=user_auth.athlete_id, user_id=user_auth.user_id)
+    )
+    return {
+        "success": True,
+        "jwt_token": user_auth.jwt_token,
+        "user_id": user_auth.user_id,
+        "is_new_user": True,
+    }
 
 
-def authenticate_on_signin(code: str) -> dict:
+def strava_authenticate(code: str) -> dict:
     """
     Authenticate with Strava code, and sign up the user if they don't exist.
 
@@ -217,11 +238,36 @@ def authenticate_on_signin(code: str) -> dict:
     """
     user_auth = authenticate_with_code(code)
 
-    if not supabase_client.does_user_exist(user_auth.athlete_id):
+    if not supabase_client.does_user_exist(
+        athlete_id=user_auth.athlete_id, user_id=user_auth.user_id
+    ):
         return signup(user_auth)
 
     return {
         "success": True,
         "jwt_token": user_auth.jwt_token,
+        "user_id": user_auth.user_id,
+        "is_new_user": False,
+    }
+
+
+def apple_authenticate(user_id: str, identity_token: str) -> dict:
+    """
+    Authenticate with Apple code, and sign up the user if they don't exist.
+
+    :param user_id: Apple user ID
+    :param identity_token: Apple identity token
+    :return: Dictionary with success status and JWT token
+    """
+    user_auth = authenticate_without_code(user_id, identity_token)
+    if not supabase_client.does_user_exist(
+        athlete_id=user_auth.athlete_id, user_id=user_auth.user_id
+    ):
+        return signup(user_auth)
+
+    return {
+        "success": True,
+        "jwt_token": user_auth.jwt_token,
+        "user_id": user_auth.user_id,
         "is_new_user": False,
     }

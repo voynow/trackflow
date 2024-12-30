@@ -12,30 +12,65 @@ struct ProfileView: View {
     ZStack {
       ColorTheme.black.edgesIgnoringSafeArea(.all)
 
-      if isLoading {
-        ProfileSkeletonView()
-      } else {
-        VStack(spacing: 24) {
-          profileHeader
-          if let profileData = profileData {
-            ScrollView {
-              VStack(spacing: 24) {
-                ProfileInfoCard(profileData: profileData)
-                PreferencesContainer(preferences: preferencesBinding)
-                SignOutButton(action: handleSignOut)
+      VStack {
+        HStack {
+          Button(action: {
+            isPresented = false
+            showProfile = false
+          }) {
+            Text("Track")
+              .font(.system(size: 28, weight: .black))
+              .foregroundColor(ColorTheme.primaryLight)
+              + Text("Flow")
+              .font(.system(size: 28, weight: .black))
+              .foregroundColor(ColorTheme.primary)
+          }
+          .buttonStyle(PlainButtonStyle())
+
+          Spacer()
+
+          Button(action: {
+            isPresented = false
+            showProfile = false
+          }) {
+            Image(systemName: "xmark")
+              .foregroundColor(ColorTheme.lightGrey)
+              .font(.system(size: 20, weight: .semibold))
+          }
+        }
+        .padding(.horizontal)
+        .background(ColorTheme.black)
+        .zIndex(1)
+
+        if appState.authStrategy == .apple {
+          VStack(spacing: 16) {
+            ProfileSkeletonView()
+              .overlay(StravaConnectOverlay())
+          }
+        } else if isLoading {
+          ProfileSkeletonView()
+        } else {
+          VStack(spacing: 24) {
+            if let profileData = profileData {
+              ScrollView {
+                VStack(spacing: 24) {
+                  ProfileInfoCard(profileData: profileData)
+                  PreferencesContainer(preferences: preferencesBinding)
+                  SignOutSection(action: handleSignOut)
+                }
+                .padding()
               }
-              .padding()
-            }
-          } else {
-            VStack {
-              VStack(spacing: 16) {
-                Text("Failed to load profile")
-                  .foregroundColor(ColorTheme.lightGrey)
-                Spacer()
-                SignOutButton(action: handleSignOut)
+            } else {
+              VStack {
+                VStack(spacing: 16) {
+                  Text("Failed to load profile")
+                    .foregroundColor(ColorTheme.lightGrey)
+                  Spacer()
+                  SignOutSection(action: handleSignOut)
+                }
               }
+              .frame(maxHeight: .infinity)
             }
-            .frame(maxHeight: .infinity)
           }
         }
       }
@@ -43,22 +78,6 @@ struct ProfileView: View {
     .onAppear {
       fetchProfileData()
     }
-  }
-
-  private var profileHeader: some View {
-    HStack {
-      Text("Profile")
-        .font(.system(size: 28, weight: .black))
-        .foregroundColor(ColorTheme.white)
-      Spacer()
-      Button(action: { showProfile = false }) {
-        Image(systemName: "xmark")
-          .foregroundColor(ColorTheme.lightGrey)
-          .font(.system(size: 20, weight: .semibold))
-      }
-    }
-    .padding(.horizontal)
-    .padding(.top, 4)
   }
 
   private func handleSignOut() {
@@ -179,21 +198,51 @@ struct ProfileInfoCard: View {
   }
 }
 
-struct SignOutButton: View {
+struct SignOutSection: View {
   let action: () -> Void
+  @State private var showOnboarding: Bool = false
 
   var body: some View {
-    Button(action: action) {
-      Text("Sign Out")
-        .font(.system(size: 18, weight: .semibold))
-        .foregroundColor(ColorTheme.primaryDark)
-        .frame(maxWidth: .infinity)
-        .padding()
-        .background(ColorTheme.darkDarkGrey)
-        .overlay(
-          RoundedRectangle(cornerRadius: 12)
-            .stroke(ColorTheme.primaryDark, lineWidth: 2)
-        )
+    VStack {
+
+      HStack(spacing: 12) {
+        Button(action: { showOnboarding = true }) {
+          HStack {
+            Image(systemName: "info.circle")
+            Text("About")
+          }
+          .font(.system(size: 16, weight: .medium))
+          .foregroundColor(ColorTheme.lightGrey)
+          .frame(maxWidth: .infinity)
+          .padding(.vertical, 12)
+          .background(ColorTheme.darkDarkGrey)
+          .overlay(
+            RoundedRectangle(cornerRadius: 8)
+              .stroke(ColorTheme.midDarkGrey, lineWidth: 1)
+          )
+          .cornerRadius(8)
+        }
+
+        Button(action: action) {
+          HStack {
+            Image(systemName: "rectangle.portrait.and.arrow.right")
+            Text("Sign Out")
+          }
+          .font(.system(size: 16, weight: .medium))
+          .foregroundColor(ColorTheme.primaryDark)
+          .frame(maxWidth: .infinity)
+          .padding(.vertical, 12)
+          .background(ColorTheme.darkDarkGrey)
+          .overlay(
+            RoundedRectangle(cornerRadius: 8)
+              .stroke(ColorTheme.primaryDark, lineWidth: 1)
+          )
+          .cornerRadius(8)
+        }
+      }
+    }
+    .fullScreenCover(isPresented: $showOnboarding) {
+      OnboardingCarousel(showCloseButton: true)
     }
   }
 }

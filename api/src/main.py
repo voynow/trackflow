@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Callable
+from typing import Callable, Optional
 
 from fastapi import (
     BackgroundTasks,
@@ -8,6 +8,7 @@ from fastapi import (
     Depends,
     FastAPI,
     Form,
+    Header,
     HTTPException,
     Request,
     Response,
@@ -39,7 +40,7 @@ async def health():
     return {"status": "healthy"}
 
 
-@app.get("/training_week/", response_model=FullTrainingWeek)
+@app.get("/training-week/", response_model=FullTrainingWeek)
 async def training_week(user: UserRow = Depends(auth_manager.validate_user)):
     """
     Retrieve the most recent training_week row by athlete_id
@@ -52,7 +53,7 @@ async def training_week(user: UserRow = Depends(auth_manager.validate_user)):
     return supabase_client.get_training_week(user.athlete_id)
 
 
-@app.post("/device_token/")
+@app.post("/device-token/")
 async def update_device_token(
     device_token: str = Body(..., embed=True),
     user: UserRow = Depends(auth_manager.validate_user),
@@ -108,7 +109,7 @@ async def get_profile(user: UserRow = Depends(auth_manager.validate_user)) -> di
     }
 
 
-@app.get("/weekly_summaries/")
+@app.get("/weekly-summaries/")
 async def get_weekly_summaries(
     user: UserRow = Depends(auth_manager.validate_user),
 ) -> dict:
@@ -129,14 +130,29 @@ async def get_weekly_summaries(
 
 
 @app.post("/authenticate/")
-async def authenticate(code: str = Form(...)) -> dict:
+async def authenticate(
+    code: Optional[str] = Form(None),
+    user_id: Optional[str] = Form(None),
+    identity_token: Optional[str] = Form(None),
+    email: Optional[str] = Form(None),
+):
     """
-    Authenticate with Strava code and sign up new users
+    Authenticate with Strava code or Apple credentials
 
-    :param code: Strava authorization code from form data
-    :return: Dictionary with success status, JWT token and new user flag
+    :param code: Strava code
+    :param user_id: Apple user ID
+    :param identity_token: Apple identity token
+    :param email: Apple email (optional, currently/temporarily unused)
+    :return: Success status
     """
-    return auth_manager.authenticate_on_signin(code=code)
+    if code:
+        return auth_manager.strava_authenticate(code=code)
+    elif user_id and identity_token:
+        return auth_manager.apple_authenticate(
+            user_id=user_id, identity_token=identity_token
+        )
+    else:
+        raise HTTPException(status_code=400, detail="Invalid request")
 
 
 @app.post("/strava-webhook/")
@@ -195,16 +211,20 @@ async def get_training_plan(
 
 @app.post("/email/")
 async def update_email(
-    email: str = Body(...), user: UserRow = Depends(auth_manager.validate_user)
+    email: str = Body(...),
+    token: Optional[str] = Body(None),
+    user_id: Optional[str] = Body(None),
 ) -> dict:
     """
-    This endpoint is used specifically during the onboarding pipeline
+    Update email for a user during onboarding (no auth required, instead a valid
+    token or id will suffice)
 
     :param email: The email to update
-    :param user: The authenticated user
+    :param token: The token to validate the request
+    :param user_id: The user ID to update
     :return: Success status
     """
-    supabase_client.update_user_email(athlete_id=user.athlete_id, email=email)
+    supabase_client.update_user_email(email=email, jwt_token=token, user_id=user_id)
     email_manager.send_alert_email(
         subject=f"TrackFlow Alert: Welcome {email}!",
         text_content=f"You have a new user {email=} attempting to signup",

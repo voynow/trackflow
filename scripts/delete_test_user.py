@@ -26,10 +26,16 @@ def delete_test_user() -> None:
         "training_plan",
         "mileage_recommendation",
     ]
+    user_id_tables = ["user_auth", "user"]
 
     for table in clear_tables:
         client.table(table).delete().eq(
             column="athlete_id", value=os.environ["TEST_USER_ATHLETE_ID"]
+        ).execute()
+
+    for table in user_id_tables:
+        client.table(table).delete().eq(
+            column="user_id", value=os.environ["TEST_USER_USER_ID"]
         ).execute()
 
 

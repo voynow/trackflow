@@ -18,12 +18,13 @@
 				AppDelegate.swift,
 				AppState.swift,
 				Assets.xcassets,
+				AuthManager.swift,
 				ColorTheme.swift,
 				ContentView.swift,
 				DashboardNavbar.swift,
 				DashboardSkeletonView.swift,
 				DashboardView.swift,
-				GenerationViews/GeneratingPlanView.swift,
+				GenerationViews/OnboardingCarousel.swift,
 				GenerationViews/OnboardingEmailView.swift,
 				GenerationViews/OnboardingView.swift,
 				GenerationViews/WaitingForGenerationView.swift,
@@ -32,15 +33,13 @@
 				mobileApp.swift,
 				Models.swift,
 				NotificationManager.swift,
-				OnboardingCarousel.swift,
 				PreferencesView.swift,
 				"Preview Content/Preview Assets.xcassets",
 				ProfileSkeletonView.swift,
 				ProfileView.swift,
-				RaceDetailsWidgetSkeleton.swift,
 				RaceSetupSheet.swift,
-				StravaAuthManager.swift,
-				TrainingPlanChartSkeleton.swift,
+				StravaConnectOverlay.swift,
+				TrainingPlanSkeleton.swift,
 				TrainingPlanView.swift,
 				TrainingWeek.swift,
 			);
@@ -290,7 +289,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.15;
+				MARKETING_VERSION = 1.16;
 				PRODUCT_BUNDLE_IDENTIFIER = voynow.mobile;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -321,7 +320,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.15;
+				MARKETING_VERSION = 1.16;
 				PRODUCT_BUNDLE_IDENTIFIER = voynow.mobile;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;

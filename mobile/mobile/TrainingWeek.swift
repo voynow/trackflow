@@ -27,7 +27,7 @@ struct TrainingWeekView: View {
         isCompleted: false
       )
     }
-    .padding(20)
+    .padding(.horizontal, 16)
     .background(ColorTheme.black)
     .cornerRadius(16)
   }
@@ -302,6 +302,5 @@ struct MultiWeekProgressSkeletonView: View {
       }
       .padding(.top, 8)
     }
-    .dashboardShimmering()
   }
 }

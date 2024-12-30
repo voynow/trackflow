@@ -15,16 +15,22 @@ struct DashboardView: View {
       ZStack {
         TabView(selection: $appState.selectedTab) {
           VStack {
-            DashboardNavbar(onLogout: handleLogout, showProfile: $appState.showProfile)
-              .background(ColorTheme.black)
-              .zIndex(1)
+            DashboardNavbar(
+              onLogout: { appState.clearAuthState() }, showProfile: $appState.showProfile
+            )
+            .background(ColorTheme.black)
+            .zIndex(1)
 
             ScrollView {
-              if let data = trainingWeekData {
-                // Show training week as soon as it's available
+              if appState.authStrategy == .apple {
+                VStack(spacing: 16) {
+                  DashboardSkeletonView()
+                    .overlay(StravaConnectOverlay())
+                }
+              } else if let data = trainingWeekData {
                 TrainingWeekView(
                   trainingWeekData: data,
-                  weeklySummaries: weeklySummaries  // Can be nil
+                  weeklySummaries: weeklySummaries
                 )
               } else if isLoadingTrainingWeek {
                 DashboardSkeletonView()
@@ -35,7 +41,9 @@ struct DashboardView: View {
               }
             }
             .refreshable {
-              fetchData()
+              if appState.authStrategy != .apple {
+                fetchData()
+              }
             }
           }
           .background(ColorTheme.black.edgesIgnoringSafeArea(.all))
@@ -73,12 +81,6 @@ struct DashboardView: View {
     }
   }
 
-  private func handleLogout() {
-    appState.status = .loggedOut
-    appState.jwtToken = nil
-    UserDefaults.standard.removeObject(forKey: "jwt_token")
-  }
-
   private func fetchData() {
     isLoadingTrainingWeek = true
     fetchTrainingWeekData {
@@ -93,7 +95,7 @@ struct DashboardView: View {
           print("Error pre-fetching profile: \(error)")
         }
       }
-      
+
       APIManager.shared.fetchTrainingPlan(token: token) { result in
         DispatchQueue.main.async {
           if case .success(let plan) = result {

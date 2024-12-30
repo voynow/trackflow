@@ -20,7 +20,7 @@ struct OnboardingCarousel: View {
   var body: some View {
     ZStack {
       LinearGradient(
-        gradient: Gradient(colors: [ColorTheme.darkDarkGrey, ColorTheme.black]),
+        gradient: Gradient(colors: [ColorTheme.darkBlack, ColorTheme.black]),
         startPoint: .top,
         endPoint: .bottom
       )
@@ -45,7 +45,8 @@ struct OnboardingCarousel: View {
         .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
 
         pageControl
-          .padding(.bottom, 16)
+          .padding(.top, 12)
+          .padding(.bottom, 8)
       }
     }
   }

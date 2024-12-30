@@ -15,25 +15,30 @@ struct TrainingPlanView: View {
 
   var body: some View {
     VStack {
-      DashboardNavbar(onLogout: handleLogout, showProfile: $appState.showProfile)
-        .background(ColorTheme.black)
-        .zIndex(1)
+      DashboardNavbar(
+        onLogout: { appState.clearAuthState() }, showProfile: $appState.showProfile
+      )
+      .background(ColorTheme.black)
+      .zIndex(1)
 
       ScrollView {
         VStack(spacing: 16) {
-          if let plan = trainingPlan {
+          if appState.authStrategy == .apple {
+            VStack(spacing: 16) {
+              TrainingPlanSkeleton()
+                .overlay(StravaConnectOverlay())
+            }
+          } else if let plan = trainingPlan {
             if plan.isEmpty {
               VStack(spacing: 16) {
                 Text("Lets get you a training plan!")
                   .font(.title3)
                   .foregroundColor(ColorTheme.lightGrey)
-
                 Text("Set up your race details to get started.")
                   .font(.subheadline)
                   .foregroundColor(ColorTheme.midLightGrey)
                   .multilineTextAlignment(.center)
                   .padding(.horizontal)
-
                 Button(action: {
                   showRaceSetupSheet = true
                 }) {
@@ -52,33 +57,24 @@ struct TrainingPlanView: View {
               .frame(maxHeight: .infinity, alignment: .center)
               .padding()
             } else {
-              if let preferences = decodePreferences() {
+              VStack(spacing: 0) {
                 RaceDetailsWidget(
-                  preferences: preferences,
+                  preferences: decodePreferences() ?? Preferences(),
                   weeksCount: plan.trainingPlanWeeks.map(\.nWeeksUntilRace).max() ?? 0
                 )
                 .padding(.bottom, 8)
-              } else {
-                RaceDetailsWidgetSkeleton(
-                  weeksCount: plan.trainingPlanWeeks.map(\.nWeeksUntilRace).max() ?? 0
-                )
-                .padding(.bottom, 8)
-              }
 
-              TrainingPlanChart(
-                trainingWeeks: plan.trainingPlanWeeks,
-                historicalWeeks: historicalWeeks
-              )
+                TrainingPlanChart(
+                  trainingWeeks: plan.trainingPlanWeeks,
+                  historicalWeeks: historicalWeeks
+                )
+              }
+              .padding(.horizontal, 16)
             }
           } else {
-            RaceDetailsWidgetSkeleton(weeksCount: 0)
-              .padding(.bottom, 8)
-
-            TrainingPlanChartSkeleton()
-              .padding(.bottom, 8)
+            TrainingPlanSkeleton()
           }
         }
-        .padding()
       }
     }
     .sheet(isPresented: $showRaceSetupSheet) {
@@ -86,7 +82,6 @@ struct TrainingPlanView: View {
         preferences: $preferences,
         isPresented: $showRaceSetupSheet,
         onSave: {
-          print("DEBUG: RaceSetupSheet onSave triggered")
           fetchTrainingPlanData()
           appState.setGeneratingPlanState()
         }
@@ -94,48 +89,42 @@ struct TrainingPlanView: View {
     }
     .background(ColorTheme.black.edgesIgnoringSafeArea(.all))
     .onAppear {
-      if let plan = preloadedPlan {
-        self.trainingPlan = plan
-        self.isLoadingTrainingPlan = false
-      } else if trainingPlan == nil {
-        fetchTrainingPlanData()
-      }
-      if profileData == nil {
-        fetchProfileData()
+      if appState.authStrategy != .apple {
+        if let plan = preloadedPlan {
+          self.trainingPlan = plan
+          self.isLoadingTrainingPlan = false
+        } else if trainingPlan == nil {
+          fetchTrainingPlanData()
+        }
+        if profileData == nil {
+          fetchProfileData()
+        }
       }
     }
     .refreshable {
-      fetchTrainingPlanData()
-      fetchProfileData()
+      if appState.authStrategy != .apple {
+        fetchTrainingPlanData()
+        fetchProfileData()
+      }
     }
     .navigationBarHidden(true)
   }
 
-  private func handleLogout() {
-    appState.status = .loggedOut
-    appState.jwtToken = nil
-    UserDefaults.standard.removeObject(forKey: "jwt_token")
-  }
-
   private func fetchTrainingPlanData() {
     guard let token = appState.jwtToken else {
-      print("DEBUG: No valid token found in fetchTrainingPlanData")
       errorMessage = "No valid token"
       isLoadingTrainingPlan = false
       return
     }
 
-    print("DEBUG: Starting fetchTrainingPlan API call")
     APIManager.shared.fetchTrainingPlan(token: token) { result in
       DispatchQueue.main.async {
         switch result {
         case .success(let plan):
-          print("DEBUG: Successfully fetched training plan")
           withAnimation {
             self.trainingPlan = plan
           }
         case .failure(let error):
-          print("DEBUG: Failed to fetch training plan: \(error)")
           self.errorMessage = error.localizedDescription
         }
         self.isLoadingTrainingPlan = false

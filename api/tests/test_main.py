@@ -26,7 +26,7 @@ def test_get_training_week():
     user_auth = supabase_client.get_user_auth(os.environ["JAMIES_ATHLETE_ID"])
 
     response = client.get(
-        "/training_week/", headers={"Authorization": f"Bearer {user_auth.jwt_token}"}
+        "/training-week/", headers={"Authorization": f"Bearer {user_auth.jwt_token}"}
     )
     assert FullTrainingWeek(**response.json())
     assert response.status_code == 200
@@ -36,7 +36,7 @@ def test_update_device_token():
     """Test successful update of device token"""
     user_auth = supabase_client.get_user_auth(os.environ["JAMIES_ATHLETE_ID"])
     response = client.post(
-        "/device_token/",
+        "/device-token/",
         json={"device_token": user_auth.device_token},
         headers={"Authorization": f"Bearer {user_auth.jwt_token}"},
     )
@@ -68,7 +68,7 @@ def test_get_weekly_summaries():
     """Test successful retrieval of weekly summaries"""
     user_auth = supabase_client.get_user_auth(os.environ["JAMIES_ATHLETE_ID"])
     response = client.get(
-        "/weekly_summaries/", headers={"Authorization": f"Bearer {user_auth.jwt_token}"}
+        "/weekly-summaries/", headers={"Authorization": f"Bearer {user_auth.jwt_token}"}
     )
     assert response.status_code == 200
 
@@ -76,7 +76,9 @@ def test_get_weekly_summaries():
 def test_authenticate():
     """Test successful authentication, only covering does_user_exist"""
     user = supabase_client.get_user(os.environ["JAMIES_ATHLETE_ID"])
-    assert supabase_client.does_user_exist(user.athlete_id)
+    assert supabase_client.does_user_exist(
+        athlete_id=user.athlete_id, user_id=user.user_id
+    )
 
 
 def test_strava_webhook():
