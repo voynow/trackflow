@@ -6,7 +6,7 @@ struct DashboardSkeletonView: View {
       WeeklyProgressSkeletonView()
       SessionListSkeletonView()
     }
-    .padding(20)
+    .padding(16)
     .background(ColorTheme.black)
     .cornerRadius(16)
   }
@@ -35,7 +35,7 @@ struct WeeklyProgressSkeletonView: View {
         .fill(ColorTheme.darkGrey.opacity(0.3))
         .frame(height: 10)
     }
-    .padding()
+    .padding(.horizontal, 16)
     .background(ColorTheme.darkDarkGrey)
     .cornerRadius(16)
   }

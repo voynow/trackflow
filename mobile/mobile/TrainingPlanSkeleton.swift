@@ -73,5 +73,6 @@ struct TrainingPlanSkeleton: View {
       .cornerRadius(12)
     }
     .padding(.top, 8)
+    .padding(.horizontal, 16)
   }
 }

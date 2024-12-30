@@ -57,22 +57,24 @@ struct TrainingPlanView: View {
               .frame(maxHeight: .infinity, alignment: .center)
               .padding()
             } else {
-              RaceDetailsWidget(
-                preferences: decodePreferences() ?? Preferences(),
-                weeksCount: plan.trainingPlanWeeks.map(\.nWeeksUntilRace).max() ?? 0
-              )
-              .padding(.bottom, 8)
+              VStack(spacing: 0) {
+                RaceDetailsWidget(
+                  preferences: decodePreferences() ?? Preferences(),
+                  weeksCount: plan.trainingPlanWeeks.map(\.nWeeksUntilRace).max() ?? 0
+                )
+                .padding(.bottom, 8)
 
-              TrainingPlanChart(
-                trainingWeeks: plan.trainingPlanWeeks,
-                historicalWeeks: historicalWeeks
-              )
+                TrainingPlanChart(
+                  trainingWeeks: plan.trainingPlanWeeks,
+                  historicalWeeks: historicalWeeks
+                )
+              }
+              .padding(.horizontal, 16)
             }
           } else {
             TrainingPlanSkeleton()
           }
         }
-        .padding()
       }
     }
     .sheet(isPresented: $showRaceSetupSheet) {
