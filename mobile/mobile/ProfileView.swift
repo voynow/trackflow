@@ -39,6 +39,7 @@ struct ProfileView: View {
           }
         }
         .padding(.horizontal)
+        .padding(.top, 4)
         .background(ColorTheme.black)
         .zIndex(1)
 
@@ -212,10 +213,10 @@ struct SignOutSection: View {
             Text("About")
           }
           .font(.system(size: 16, weight: .medium))
-          .foregroundColor(ColorTheme.lightGrey)
+          .foregroundColor(ColorTheme.midLightGrey)
           .frame(maxWidth: .infinity)
           .padding(.vertical, 12)
-          .background(ColorTheme.darkDarkGrey)
+          .background(ColorTheme.black)
           .overlay(
             RoundedRectangle(cornerRadius: 8)
               .stroke(ColorTheme.midDarkGrey, lineWidth: 1)
@@ -232,7 +233,7 @@ struct SignOutSection: View {
           .foregroundColor(ColorTheme.primaryDark)
           .frame(maxWidth: .infinity)
           .padding(.vertical, 12)
-          .background(ColorTheme.darkDarkGrey)
+          .background(ColorTheme.black)
           .overlay(
             RoundedRectangle(cornerRadius: 8)
               .stroke(ColorTheme.primaryDark, lineWidth: 1)
