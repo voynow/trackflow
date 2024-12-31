@@ -28,7 +28,7 @@ class TrainingPlanWeek(BaseModel):
     n_weeks_until_race: int
     week_type: WeekType
     notes: str = Field(
-        description="How will this week contribute to the athlete's goal of running race_distance miles by the race_date?"
+        description="2-3 Sentences. How will this week contribute to the athlete's goal of running race_distance miles by the race_date?"
     )
     total_distance: float = Field(
         description="How many miles the athlete should aim to run in this week"

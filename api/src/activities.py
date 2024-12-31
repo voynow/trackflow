@@ -72,8 +72,8 @@ def aggregate_daily_metrics(activities: List[Activity]) -> List[DailyMetrics]:
                 DailyMetrics(
                     date=activity_date,
                     day_of_week=activity_date.strftime("%a").lower(),
-                    week_of_year=activity_date.isocalendar()[1],
-                    year=activity_date.year,
+                    week_of_year=activity_date.isocalendar().week,
+                    year=activity_date.isocalendar().year,
                     distance_in_miles=total_distance / constants.METERS_PER_MILE,
                     elevation_gain_in_feet=total_elevation_gain
                     * constants.FEET_PER_METER,
@@ -84,9 +84,12 @@ def aggregate_daily_metrics(activities: List[Activity]) -> List[DailyMetrics]:
             )
         )
 
+    # chop off remainder/leftover days near start date
     results = sorted(results, key=lambda x: x.date)
-    first_week = min(item.week_of_year for item in results)
-    results = [item for item in results if item.week_of_year != first_week]
+    first_year_week = min((item.year, item.week_of_year) for item in results)
+    results = [
+        item for item in results if (item.year, item.week_of_year) != first_year_week
+    ]
 
     return results
 

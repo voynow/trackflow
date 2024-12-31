@@ -346,8 +346,8 @@ def get_mileage_recommendation(
     response = (
         table.select("*")
         .eq("athlete_id", athlete_id)
-        .eq("year", tomorrow.year)
-        .eq("week_of_year", tomorrow.isocalendar()[1])
+        .eq("year", tomorrow.isocalendar().year)
+        .eq("week_of_year", tomorrow.isocalendar().week)
         .order("created_at", desc=True)
         .limit(1)
         .execute()
@@ -355,7 +355,7 @@ def get_mileage_recommendation(
 
     if not response.data:
         raise ValueError(
-            f"Could not find mileage recommendation for {athlete_id=}, year={dt.year}, week={dt.isocalendar()[1]}"
+            f"Could not find mileage recommendation for {athlete_id=}, year={dt.isocalendar().year}, week={dt.isocalendar().week}"
         )
     return MileageRecommendationRow(**response.data[0])
 

@@ -100,8 +100,8 @@ def create_new_mileage_recommendation(
     tomorrow = dt + datetime.timedelta(days=1)
     supabase_client.insert_mileage_recommendation(
         MileageRecommendationRow(
-            week_of_year=tomorrow.isocalendar()[1],
-            year=tomorrow.year,
+            week_of_year=tomorrow.isocalendar().week,
+            year=tomorrow.isocalendar().year,
             thoughts=mileage_recommendation.thoughts,
             total_volume=mileage_recommendation.total_volume,
             long_run=mileage_recommendation.long_run,
