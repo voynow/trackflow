@@ -2,7 +2,7 @@
 
 **TrackFlow** is the next generation of running coach apps, powered by AI to deliver hyper-personalized training plans and dynamic feedback based on real-time performance data. Designed with runners in mind, TrackFlow integrates seamlessly with **Strava**, offering a streamlined experience for athletes aiming to optimize their training through data-driven insights.
 
-## Principles: Building the Future of Running with TrackFlow
+## Principles
 
 1. **AI Will Outperform Human Coaches**  
    We are placing a bet on AI surpassing the capabilities of human coaching within the next 5–10 years. This eliminates the need for cookie-cutter training plans or reliance on human input, enabling truly personalized coaching at scale.
