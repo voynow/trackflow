@@ -100,7 +100,7 @@ def send_push_notif_wrapper(user: UserRow):
     try:
         send_push_notification(
             device_token=user_auth.device_token,
-            title="TrackFlow 🏃‍♂️🎯",
+            title="TrackFlow",
             body="Your training week has been updated!",
         )
     except Exception as e:

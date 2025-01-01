@@ -95,14 +95,14 @@ export default function Home(): JSX.Element {
           transition={{ duration: 1 }}
         >
           <h1 className="text-6xl sm:text-7xl md:text-8xl font-extrabold tracking-tight mb-8 mt-12">
-            <span className="text-blue-300">Track</span><span className="text-blue-500">Flow</span> 🏃‍♂️🎯
+            <span className="text-blue-300">Track</span><span className="text-blue-500">Flow</span>
           </h1>
           <p className="text-2xl sm:text-3xl text-gray-100 mb-16">
             Step into the Next Generation of Training
           </p>
           <div className="bg-gray-700 bg-opacity-50 backdrop-blur-sm p-10 rounded-lg max-w-2xl mx-auto">
             <h3 className="text-3xl font-semibold mb-6 text-center">
-              <span className="line-through">$9.99/month</span>{" "}
+              <span className="line-through">$5 per month</span>{" "}
               <span className="text-green-400">Free for a limited time!</span>
             </h3>
             <ul className="list-disc list-inside mb-8 text-left sm:text-lg md:text-xl">
