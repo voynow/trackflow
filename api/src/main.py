@@ -15,6 +15,7 @@ from fastapi import (
 )
 from src import activities, auth_manager, email_manager, supabase_client, utils, webhook
 from src.middleware import log_and_handle_errors
+from src.types.feedback import FeedbackRow
 from src.types.training_plan import TrainingPlan
 from src.types.training_week import FullTrainingWeek
 from src.types.update_pipeline import ExeType
@@ -229,4 +230,10 @@ async def update_email(
         subject=f"TrackFlow Alert: Welcome {email}!",
         text_content=f"You have a new user {email=} attempting to signup",
     )
+    return {"success": True}
+
+
+@app.post("/feedback/")
+async def feedback(feedback: FeedbackRow):
+    supabase_client.insert_feedback(feedback=feedback)
     return {"success": True}

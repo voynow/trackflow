@@ -120,3 +120,16 @@ def test_get_training_plan():
     assert response.status_code == 200
     assert TrainingPlan(**response.json())
 
+
+def test_feedback():
+    """Test successful feedback"""
+    response = client.post(
+        "/feedback/",
+        json={
+            "feedback": "Test feedback",
+            "athlete_id": os.environ["JAMIES_ATHLETE_ID"],
+            "email": "voynow99@gmail.com",
+            "name": "Jamie Voynow",
+        },
+    )
+    assert response.status_code == 200
