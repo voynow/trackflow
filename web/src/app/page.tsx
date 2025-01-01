@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import Footer from './components/Footer';
+import ImageCarousel from './components/ImageCarousel';
 import Navbar from './components/Navbar';
 
 export default function Home(): JSX.Element {
@@ -40,50 +41,6 @@ export default function Home(): JSX.Element {
     transition: { duration: 0.6 }
   };
 
-  const renderFeatures = (): JSX.Element => {
-    if (features.length === 1) {
-      return (
-        <div className="max-w-2xl mx-auto">
-          <FeatureItem feature={features[0]} />
-        </div>
-      );
-    } else if (features.length === 2) {
-      return (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-          {features.map((feature, index) => (
-            <FeatureItem key={index} feature={feature} />
-          ))}
-        </div>
-      );
-    } else if (features.length === 4) {
-      return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
-          {features.map((feature, index) => (
-            <FeatureItem key={index} feature={feature} />
-          ))}
-        </div>
-      );
-    } else {
-      return (
-        <div className="flex flex-col gap-8 max-w-2xl mx-auto">
-          {features.map((feature, index) => (
-            <FeatureItem key={index} feature={feature} />
-          ))}
-        </div>
-      );
-    }
-  };
-
-  const FeatureItem = ({ feature }: { feature: { title: string; description: string } }): JSX.Element => (
-    <motion.div
-      className="bg-gray-800 p-8 rounded-lg"
-      {...fadeInUp}
-    >
-      <h3 className="text-2xl font-semibold mb-4 bg-gradient-to-r from-blue-300 to-indigo-600 bg-clip-text text-transparent">{feature.title}</h3>
-      <p className="text-lg">{feature.description}</p>
-    </motion.div>
-  );
-
   return (
     <div className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-100 min-h-screen">
       <Navbar />
@@ -100,6 +57,17 @@ export default function Home(): JSX.Element {
           <p className="text-2xl sm:text-3xl text-gray-100 mb-16">
             Step into the Next Generation of Training
           </p>
+
+          <motion.section
+            className="mb-24 mt-24"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+          >
+            <ImageCarousel />
+          </motion.section>
+
           <div className="bg-gray-700 bg-opacity-50 backdrop-blur-sm p-10 rounded-lg max-w-2xl mx-auto">
             <h3 className="text-3xl font-semibold mb-6 text-center">
               <span className="line-through">$5 per month</span>{" "}
@@ -118,17 +86,6 @@ export default function Home(): JSX.Element {
             </button>
           </div>
         </motion.div>
-
-        <motion.section
-          className="mb-24"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
-        >
-          <h2 className="text-4xl font-bold mb-12 text-center">Key Features</h2>
-          {renderFeatures()}
-        </motion.section>
 
         <motion.section
           className="mb-24"
