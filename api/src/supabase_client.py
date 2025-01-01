@@ -6,7 +6,8 @@ from uuid import uuid4
 
 import orjson
 from dotenv import load_dotenv
-from src import auth_manager
+from src import auth_manager, supabase_helpers
+from src.types.feedback import FeedbackRow
 from src.types.mileage_recommendation import (
     MileageRecommendationRow,
 )
@@ -33,39 +34,6 @@ def init() -> Client:
 
 
 client = init()
-
-
-def get_training_week_table_name() -> str:
-    """
-    Inject test_training_week table name during testing
-
-    :return: The name of the training_week table
-    """
-    if os.environ.get("TEST_FLAG", "false") == "true":
-        return "test_training_week"
-    return "training_week"
-
-
-def get_mileage_recommendation_table_name() -> str:
-    """
-    Inject test_mileage_recommendation table name during testing
-
-    :return: The name of the mileage_recommendation table
-    """
-    if os.environ.get("TEST_FLAG", "false") == "true":
-        return "test_mileage_recommendation"
-    return "mileage_recommendation"
-
-
-def get_training_plan_table_name() -> str:
-    """
-    Inject test_training_plan table name during testing
-
-    :return: The name of the training_plan table
-    """
-    if os.environ.get("TEST_FLAG", "false") == "true":
-        return "test_training_plan"
-    return "training_plan"
 
 
 def get_device_token(athlete_id: int) -> Optional[str]:
@@ -127,7 +95,7 @@ def list_mileage_recommendations() -> list[MileageRecommendationRow]:
 
     :return: list of MileageRecommendationRow
     """
-    table = client.table(get_mileage_recommendation_table_name())
+    table = client.table(supabase_helpers.get_mileage_recommendation_table_name())
     response = table.select("*").execute()
     return [MileageRecommendationRow(**row) for row in response.data]
 
@@ -155,7 +123,7 @@ def get_training_week(athlete_id: int) -> FullTrainingWeek:
     :param athlete_id: int
     :return: FullTrainingWeek
     """
-    table = client.table(get_training_week_table_name())
+    table = client.table(supabase_helpers.get_training_week_table_name())
     response = (
         table.select("future_training_week, past_training_week")
         .eq("athlete_id", athlete_id)
@@ -288,7 +256,7 @@ def upsert_training_week(
         "future_training_week": orjson.dumps(future_sessions).decode("utf-8"),
         "past_training_week": orjson.dumps(past_sessions).decode("utf-8"),
     }
-    table = client.table(get_training_week_table_name())
+    table = client.table(supabase_helpers.get_training_week_table_name())
     table.upsert(row_data).execute()
 
 
@@ -301,7 +269,7 @@ def has_user_updated_today(athlete_id: int) -> bool:
     :param athlete_id: The ID of the athlete
     :return: True if the user has received an update today, False otherwise
     """
-    table = client.table(get_training_week_table_name())
+    table = client.table(supabase_helpers.get_training_week_table_name())
     response = (
         table.select("*")
         .eq("athlete_id", athlete_id)
@@ -326,7 +294,7 @@ def insert_mileage_recommendation(mileage_recommendation_row: MileageRecommendat
 
     :param mileage_recommendation_row: A MileageRecommendationRow object
     """
-    table = client.table(get_mileage_recommendation_table_name())
+    table = client.table(supabase_helpers.get_mileage_recommendation_table_name())
     table.insert(mileage_recommendation_row.dict()).execute()
 
 
@@ -341,7 +309,7 @@ def get_mileage_recommendation(
     :param week_of_year: The week of the year of the recommendation
     :return: A MileageRecommendation object
     """
-    table = client.table(get_mileage_recommendation_table_name())
+    table = client.table(supabase_helpers.get_mileage_recommendation_table_name())
     tomorrow = dt + datetime.timedelta(days=1)
     response = (
         table.select("*")
@@ -368,7 +336,7 @@ def insert_training_plan(athlete_id: int, training_plan: TrainingPlan):
     :param training_plan: A TrainingPlan object
     """
     plan_id = str(uuid4())
-    table = client.table(get_training_plan_table_name())
+    table = client.table(supabase_helpers.get_training_plan_table_name())
     for week in training_plan.training_plan_weeks:
         row = {"athlete_id": athlete_id, "plan_id": plan_id, **week.dict()}
         try:
@@ -387,7 +355,7 @@ def get_training_plan(athlete_id: int) -> TrainingPlan:
     :param athlete_id: The ID of the athlete
     :return: A TrainingPlan object containing the most recent set of training weeks
     """
-    table = client.table(get_training_plan_table_name())
+    table = client.table(supabase_helpers.get_training_plan_table_name())
 
     # First get the most recent created_at timestamp for this athlete
     latest_timestamp = (
@@ -433,3 +401,14 @@ def update_user_email(
         table.update({"email": email}).eq("user_id", user_id).execute()
     else:
         raise ValueError("Either jwt_token or user_id must be provided")
+
+
+def insert_feedback(feedback: FeedbackRow) -> None:
+    """
+    Insert a feedback row into the feedback table
+
+    :param feedback: A FeedbackRow object
+    :return: None
+    """
+    table = client.table(supabase_helpers.get_feedback_table_name())
+    table.insert(feedback.dict()).execute()
