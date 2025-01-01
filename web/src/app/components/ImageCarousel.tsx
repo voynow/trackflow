@@ -42,16 +42,16 @@ export default function ImageCarousel(): JSX.Element {
 
     return (
         <div className="flex justify-center w-full">
-            <div className="w-full max-w-[800px] xl:max-w-[1000px]">
-                <div className="hidden md:grid md:grid-cols-2 xl:grid-cols-3 md:gap-y-8 md:gap-x-4 px-4 justify-items-center">
+            <div className="w-full max-w-[1000px]">
+                <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-y-8 md:gap-x-4 px-4 justify-items-center">
                     {pages.map((page, index) => (
-                        <div key={index} className={`group relative w-full max-w-[320px] ${pages.length === 3 && index === 2 ? 'md:col-span-2 xl:col-span-1 md:mx-auto md:max-w-[320px]' : ''}`}>
-                            <div className="relative h-[42rem] flex items-center justify-center">
-                                <div className="relative w-[320px] rounded-2xl overflow-hidden">
+                        <div key={index} className={`group relative w-full md:max-w-[450px] lg:max-w-none ${pages.length === 3 && index === 2 ? 'md:col-span-2 lg:col-span-1' : ''}`}>
+                            <div className="relative flex items-center justify-center">
+                                <div className="relative w-full rounded-2xl overflow-hidden">
                                     <img
                                         src={page.image}
                                         alt={page.title}
-                                        className="h-[42rem] w-[320px] object-cover"
+                                        className="w-full h-auto"
                                     />
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
                                 </div>

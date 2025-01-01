@@ -58,6 +58,15 @@ export default function Home(): JSX.Element {
             Step into the Next Generation of Training
           </p>
 
+          <motion.button
+            className="px-8 py-4 text-xl text-gray-200 bg-blue-600 font-bold rounded-full hover:bg-blue-700 transition duration-300 ease-in-out shadow-lg hover:shadow-blue-500/50 mb-24"
+            onClick={() => router.push('/dashboard')}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            Get Started
+          </motion.button>
+
           <motion.section
             className="mb-24 mt-24"
             initial={{ opacity: 0 }}
