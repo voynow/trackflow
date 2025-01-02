@@ -25,4 +25,17 @@
    Performance fluctuates, and so does your training plan. TrackFlow makes live adjustments to ensure you stay on track with your weekly goals.
 
 
+## Roadmap
+
+- **Immediate Priorities (01/01/2025 - 01/15/2025)**
+  - Get MVP shipped (waiting on Apple App Store approval)
+  - Rebrand to {redacted} and secure the {redacted}.ai domain
+  - Onboard beta users
+
+- **Next Steps (01/15/2025 - 01/30/2025)**
+  - Set up payments: with a two-week free trial and $5/month subscription.
+  - Hard launch on Twitter, Reddit, and other social media platforms.
+  - Launch blog with product and development updates
+
+
 Join us in shaping the future of training. Let's run smarter, together.
