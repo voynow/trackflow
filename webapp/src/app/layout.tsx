@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Crush Your Run",
+  title: "Crush Your Race",
   description: "AI-Powered Training Plans for Runners",
 };
 
