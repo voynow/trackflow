@@ -9,10 +9,10 @@ struct DashboardNavbar: View {
       Button(action: {
         showProfile = false
       }) {
-        Text("Track")
+        Text("Crush ")
           .font(.system(size: 28, weight: .black))
           .foregroundColor(ColorTheme.primaryLight)
-          + Text("Flow")
+          + Text("Your Race")
           .font(.system(size: 28, weight: .black))
           .foregroundColor(ColorTheme.primary)
       }

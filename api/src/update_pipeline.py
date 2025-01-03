@@ -86,7 +86,7 @@ def update_training_week_wrapper(
         error_message = f"Error updating training week for user {user.athlete_id}: {e}\n{traceback.format_exc()}"
         logger.error(error_message)
         email_manager.send_alert_email(
-            subject="TrackFlow Update Pipeline Error 😵‍💫",
+            subject="Crush Your Race Update Pipeline Error 😵‍💫",
             text_content=error_message,
         )
         return {"success": False, "error": error_message}

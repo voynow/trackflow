@@ -227,7 +227,7 @@ async def update_email(
     """
     supabase_client.update_user_email(email=email, jwt_token=token, user_id=user_id)
     email_manager.send_alert_email(
-        subject=f"TrackFlow Alert: Welcome {email}!",
+        subject=f"Crush Your Race: Welcome {email}!",
         text_content=f"You have a new user {email=} attempting to signup",
     )
     return {"success": True}
