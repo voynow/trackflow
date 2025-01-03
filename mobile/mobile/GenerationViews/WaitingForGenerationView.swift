@@ -13,10 +13,10 @@ struct WaitingForGenerationView: View {
       VStack(spacing: 40) {
         Spacer()
 
-        Text("Track")
+        Text("Crush ")
           .font(.system(size: 28, weight: .black))
           .foregroundColor(ColorTheme.primaryLight)
-          + Text("Flow")
+          + Text("Your Race")
           .font(.system(size: 28, weight: .black))
           .foregroundColor(ColorTheme.primary)
 
@@ -55,7 +55,7 @@ struct WaitingForGenerationView: View {
       VStack {
         Spacer()
         Button(action: { showOnboarding = true }) {
-          Text("About TrackFlow")
+          Text("About Crush Your Race")
             .font(.system(size: 16, weight: .medium))
             .foregroundColor(ColorTheme.midLightGrey2)
             .padding(.vertical, 16)

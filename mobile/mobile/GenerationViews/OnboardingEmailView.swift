@@ -15,10 +15,10 @@ struct OnboardingEmailView: View {
           Spacer()
             .frame(height: 20)
           HStack(spacing: 0) {
-            Text("Track")
+            Text("Crush ")
               .font(.system(size: 40, weight: .black))
               .foregroundColor(ColorTheme.primaryLight)
-            Text("Flow")
+            Text("Your Race")
               .font(.system(size: 40, weight: .black))
               .foregroundColor(ColorTheme.primary)
           }
