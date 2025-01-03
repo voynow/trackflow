@@ -15,7 +15,7 @@ const DashboardPage = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8 }}
                 >
-                    <h1 className="text-blue-400 text-6xl sm:text-7xl font-extrabold tracking-tight mb-8 mt-12">
+                    <h1 className="text-blue-400 text-6xl sm:text-7xl font-bold tracking-tight mb-8 mt-12">
                         Coming Soon 🚧
                     </h1>
                     <p className="text-2xl sm:text-3xl text-gray-100 mb-16">
@@ -26,7 +26,7 @@ const DashboardPage = () => {
                             In the meantime...
                         </h3>
                         <ul className="list-disc list-inside mb-8 text-left sm:text-lg md:text-xl">
-                            <li className="mb-2">Download our mobile app TrackFlowAI from <a href="https://apps.apple.com/us/app/trackflowai/id6737172627" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline">the App Store</a></li>
+                            <li className="mb-2">Download our <a href="https://apps.apple.com/us/app/crush-your-race/id6737172627" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline">mobile app</a> from the App Store</li>
                             <li className="mb-2">Contact me at <a href="mailto:voynow99@gmail.com" className="text-blue-400 hover:text-blue-300 underline">voynow99@gmail.com</a> with any feedback</li>
                             <li>And or connect with me on <a href="https://twitter.com/jamievoynow" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline">X/Twitter</a></li>
                         </ul>
