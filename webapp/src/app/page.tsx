@@ -22,7 +22,7 @@ export default function Home(): React.ReactElement {
         >
           <h1 className={`text-6xl sm:text-7xl md:text-8xl font-extrabold tracking-tight mb-8 mt-12 ${montserrat.className}`}>
             <span className="text-blue-300">Crush</span>{' '}
-            <span className="text-blue-500">Your Run</span>
+            <span className="text-blue-500">Your Race</span>
           </h1>
           <p className={`text-2xl sm:text-3xl text-gray-100 mb-16 ${inter.className}`}>
             AI-Powered Training Plans for Runners
